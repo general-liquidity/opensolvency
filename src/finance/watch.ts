@@ -6,6 +6,7 @@
 
 import type { FinancialProfile } from "./profile.ts";
 import type { RailKind } from "../core/types.ts";
+import { findOptimizations, toConcerns, type MarketRates } from "./optimizations.ts";
 
 export interface SpendObservation {
   amountMinor: number;
@@ -36,6 +37,7 @@ const SUBSCRIPTION_CREEP_THRESHOLD = 3;
 export function watchSpending(
   recent: SpendObservation[],
   profile: FinancialProfile,
+  market?: MarketRates,
 ): Concern[] {
   const concerns: Concern[] = [];
 
@@ -84,6 +86,13 @@ export function watchSpending(
       reason: `${subs} subscription charges in the window`,
       suggestion: "offer a quick review of recurring subscriptions",
     });
+  }
+
+  // "Free money" the operator is leaving on the table — idle cash vs inflation,
+  // unswitched bonuses, unused ISA/LISA, scam/FOMO guards. Surfaced through the same
+  // non-punitive concern stream when a market source is supplied (else skipped).
+  if (market) {
+    concerns.push(...toConcerns(findOptimizations(profile, market)));
   }
 
   return concerns;

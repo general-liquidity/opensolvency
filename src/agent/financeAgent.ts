@@ -36,6 +36,10 @@ import { checkEmpowerment } from "../finance/ethics.ts";
 import { detectMoment, type MomentEvent } from "../finance/moments.ts";
 import { listSkills, loadSkill } from "../skills/loader.ts";
 import { evaluateOffer, type ServiceCatalog } from "../finance/offer.ts";
+import { detectTraps } from "../finance/cognitiveTraps.ts";
+import { forecastGoal, coverageReport } from "../finance/forecast.ts";
+import { checkInPrompt, readCheckIn, applyCheckIn } from "../finance/emotionalCheckIn.ts";
+import { findOptimizations, type MarketRates } from "../finance/optimizations.ts";
 
 export interface FinanceAgentDeps {
   model: LanguageModel;
@@ -47,6 +51,10 @@ export interface FinanceAgentDeps {
   maxSteps?: number;
   /** Optional service catalog for discover/evaluate-offer tools. */
   catalog?: ServiceCatalog;
+  /** Optional injected market source (a seam — already-fetched rates/offers, not
+   * a live API) powering find_optimizations. Absent → the tool degrades cleanly
+   * to a "no market data configured" result rather than failing. */
+  marketRates?: MarketRates;
 }
 
 export interface FinanceAgentResult {
@@ -172,6 +180,66 @@ function financeTools(deps: FinanceAgentDeps, anxietyDriven: boolean, sink: Exec
       }),
       execute: async (offer) =>
         evaluateOffer(offer, deps.store.listActiveMandates(deps.clock()), deps.clock()),
+    }),
+    forecast_goal: tool({
+      description:
+        "Project the savings timeline to a goal (e.g. a house deposit): the " +
+        "projected hit-date at the current rate, the £/month gap, and the " +
+        "action-first next step. Advisory — moves no money.",
+      inputSchema: GoalInput.extend({
+        currentMonthlyMinor: z.number().int().nonnegative().optional(),
+        monthlyGrowthRate: z.number().nonnegative().optional(),
+      }),
+      execute: async ({ currentMonthlyMinor, monthlyGrowthRate, ...goal }) =>
+        forecastGoal(deps.profile, goal, deps.clock(), {
+          currentMonthlyMinor,
+          monthlyGrowthRate,
+        }),
+    }),
+    coverage: tool({
+      description:
+        "The 'what you're missing' view: flags absent foundations (emergency " +
+        "buffer, high-cost debt, idle cash, unused LISA, pension, unclaimed " +
+        "support) and which goals are behind, each with a concrete next step.",
+      inputSchema: z.object({
+        goals: z.array(GoalInput),
+        monthlyGrowthRate: z.number().nonnegative().optional(),
+      }),
+      execute: async ({ goals, monthlyGrowthRate }) =>
+        coverageReport(deps.profile, goals, deps.clock(), { monthlyGrowthRate }),
+    }),
+    detect_traps: tool({
+      description:
+        "Detect the engagement-blocking beliefs active for this operator (e.g. " +
+        "'investing is gambling', 'I'll plan when I have a real job') and the " +
+        "action-first counter for each. Pass the operator's own words to sharpen it.",
+      inputSchema: z.object({ text: z.string().optional() }),
+      execute: async ({ text }) => detectTraps(deps.profile, text),
+    }),
+    check_in: tool({
+      description:
+        "Emotional check-in: with no `pick`, returns the emoji prompt to ask. " +
+        "With a `pick` (an emoji, label, or feeling), records the operator's " +
+        "money-feeling onto the profile so comms recalibrate. Moves no money.",
+      inputSchema: z.object({ pick: z.string().optional() }),
+      execute: async ({ pick }) => {
+        if (!pick) return { prompt: checkInPrompt() };
+        const state = readCheckIn(pick);
+        if (!state) return { recorded: false, reason: `unrecognised check-in: "${pick}"` };
+        deps.profile = applyCheckIn(deps.profile, state);
+        return { recorded: true, state };
+      },
+    }),
+    find_optimizations: tool({
+      description:
+        "Find the boring free-money wins (idle cash losing to inflation, better " +
+        "savings rates, switch bonuses, unused ISA/LISA allowance) plus scam/FOMO " +
+        "guardrails, sorted by £/year. Advisory — proposes, never moves money.",
+      inputSchema: z.object({}),
+      execute: async () =>
+        deps.marketRates
+          ? findOptimizations(deps.profile, deps.marketRates)
+          : { optimizations: [], note: "no market data configured" },
     }),
   };
 }
