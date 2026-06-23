@@ -1,0 +1,54 @@
+name: CI
+
+# OpenSolvency governance plane — additive CI.
+# Two independent jobs, both on Node 22 (the engines floor is >=22.18, and the
+# full suite touches node:sqlite, which lands in Node 22).
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: typecheck · full suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Clean, lockfile-exact install — fails if package-lock.json is stale.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # The full suite — gate, audit, executor, store (node:sqlite), rails,
+      # finance, agents, ingress, identity, reputation, earning, MCP.
+      - name: Test
+        run: npm test
+
+  demo:
+    name: end-to-end demo (smoke test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # In-memory walkthrough — no key, no network, no sqlite. A fast smoke test
+      # that the gate, executor, and rails wire together end to end.
+      - name: Demo
+        run: npm run demo
