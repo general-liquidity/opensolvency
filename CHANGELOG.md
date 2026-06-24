@@ -4,6 +4,31 @@ All notable changes to OpenSolvency are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to adhere to
 semantic versioning once it reaches 1.0.
 
+## [0.1.1] — 2026-06-24
+
+The full P1/P2 ecosystem build-out that landed after the `0.1.0` publish, plus a
+complete integrations catalog in the README.
+
+### Added
+- **New package subpath exports**: `@general-liquidity/opensolvency/integrations`
+  (framework adapters — `gatedPay` + AI SDK `createGatedPayTool`) and
+  `@general-liquidity/opensolvency/gate` (the portable, node-free gate kernel).
+- **SpendTrust benchmark**, **JSON-RPC interface**, **multi-tenant isolation**,
+  **audit-log export + standalone verifier**, **versioned config schema**,
+  **property/fuzz tests** on the gate, **Python + Go REST clients**, **reference
+  example agents**, a **CI spend-gating GitHub Action**, a **Biome lint gate**, and
+  an **mdBook docs site** — see the entries below.
+- **README integrations catalog** — every payment rail (x402, AP2, ACP, UCP, MPP,
+  Visa, Mastercard), settlement client (on-chain/USDC, Stripe Issuing, x402
+  facilitator), identity protocol (AIP, Visa Trusted Agent Protocol), transport
+  (HTTP, JSON-RPC, XMTP, MCP, ACP), and agentic-economy surface (earning desk,
+  service discovery, x402 gating proxy, non-custodial connector) is now listed.
+
+### Changed
+- The `@general-liquidity/opensolvency-mcp` wrapper is unchanged in behaviour
+  (the MCP surface is intentionally the gated `pay` + read-only tools); its version
+  tracks the main package at `0.1.1`.
+
 ## [0.1.0] — 2026-06-24
 
 First named release (graduated from the `opensolvency` placeholder). The kernel,

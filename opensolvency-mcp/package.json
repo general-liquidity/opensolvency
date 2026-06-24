@@ -1,6 +1,6 @@
 {
   "name": "@general-liquidity/opensolvency-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "MCP server for OpenSolvency — agents call the governance-gated `pay` plus read-only mandate/audit tools over the Model Context Protocol.",
   "license": "MIT",
@@ -20,6 +20,6 @@
     "node": ">=22.18"
   },
   "dependencies": {
-    "@general-liquidity/opensolvency": "^0.1.0"
+    "@general-liquidity/opensolvency": "^0.1.1"
   }
 }

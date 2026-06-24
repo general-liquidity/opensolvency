@@ -13,7 +13,7 @@
 [![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](#license)
 [![type](https://img.shields.io/badge/types-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](#tech-stack)
 
-**[Why](#why) · [Quickstart](#quickstart) · [Surfaces](#use-it-from-anywhere) · [What it enforces](#what-it-enforces) · [Architecture](#architecture) · [Tech stack](#tech-stack) · [From Gordon](#what-we-took-from-gordon)**
+**[Why](#why) · [Quickstart](#quickstart) · [Surfaces](#use-it-from-anywhere) · [Integrations](#integrations) · [What it enforces](#what-it-enforces) · [Architecture](#architecture) · [Tech stack](#tech-stack)**
 
 </div>
 
@@ -77,7 +77,9 @@ One gate, reached from everywhere agents live — the same executor, mandates, r
 | <img height="14" align="top" src="https://cdn.simpleicons.org/gnubash/4EAA25" />&nbsp; **CLI** | `opensolvency …` | `mandate` / `pay` / `agent` / `finance` / `approve` / `kill` / `audit` / `serve`. |
 | <img height="14" align="top" src="https://cdn.simpleicons.org/modelcontextprotocol" />&nbsp; **MCP** | `npx -y @general-liquidity/opensolvency-mcp` | An [MCP](https://modelcontextprotocol.io) server — Claude Code / Cursor call the gated `pay` + read-only tools (or `opensolvency mcp` from the main package). |
 | <img height="14" align="top" src="https://cdn.simpleicons.org/zedindustries/084CCF" />&nbsp; **ACP** | `opensolvency acp` | An [Agent Client Protocol](https://agentclientprotocol.com) surface — editors/IDEs drive the agent in-editor. |
-| <img height="14" align="top" src="https://cdn.simpleicons.org/openapiinitiative/6BA539" />&nbsp; **HTTP** | `opensolvency serve` | The ingress — same gate over HTTP, OpenAPI 3.1 at `/openapi.json`, bearer-token auth. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/openapiinitiative/6BA539" />&nbsp; **HTTP** | `opensolvency serve` | The ingress — same gate over HTTP, OpenAPI 3.1 at `/openapi.json`, bearer-token auth, idempotency keys, rate limiting. |
+| **JSON-RPC** | `handleJsonRpcCall` | The operator-side method API for low-latency embedding (`pay`, `mandate.*`, `approve`, `audit.verify`). |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/python/3776AB" />&nbsp; **Python** · <img height="14" align="top" src="https://cdn.simpleicons.org/go/00ADD8" />&nbsp; **Go** | [`clients/`](clients/) | Dependency-light REST clients over the ingress, for non-TS hosts. |
 
 ```ts
 import { OpenSolvency } from "@general-liquidity/opensolvency";
@@ -155,6 +157,52 @@ createTool({ id: "pay", description: GATED_PAY_DESCRIPTION, inputSchema: gatedPa
 The handler routes through `executor.execute`, so the gate governs every call no
 matter which framework calls it — auto-execute inside a mandate, park for approval,
 or block. No prompt can override it.
+
+## Integrations
+
+The gate sits at the centre of the agentic-economy stack — it speaks the payment
+protocols agents settle on, the identity protocols they authenticate with, and the
+surfaces they're driven from. Every rail **fails safe**: with no injected client it
+never fabricates a settlement.
+
+#### Payment rails & settlement
+
+| Integration | What it is |
+|:--|:--|
+| <img height="14" align="top" src="https://cdn.simpleicons.org/coinbase/0052FF" />&nbsp; **x402** | HTTP-402 + stablecoin settlement (Coinbase / Linux Foundation) — challenge → authorize → settle. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/google/4285F4" />&nbsp; **AP2** | Agent Payments Protocol (Google + FIDO) — SD-JWT payment mandates; an AP2 mandate maps onto an OpenSolvency mandate. |
+| **ACP · UCP · MPP** | Agentic Commerce Protocol, Universal Commerce Protocol, Machine Payments Protocol — checkout / delegated / rail-agnostic settlement. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/visa/1A1F71" />&nbsp; **Visa Intelligent Commerce** · <img height="14" align="top" src="https://cdn.simpleicons.org/mastercard/EB001B" />&nbsp; **Mastercard Agent Pay** | Card-network agentic-payment rails (coexist on the `card` kind). |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/ethereum/3C3C3D" />&nbsp; **On-chain (ERC-20 / USDC)** | Real stablecoin transfer via an injected viem-shaped signer (EVM / <img height="12" align="top" src="https://cdn.simpleicons.org/solana/9945FF" /> Solana). |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/stripe/635BFF" />&nbsp; **Stripe Issuing** | Single-use virtual card minted per intent, capped to exactly the amount. |
+
+#### Identity & trust
+
+| Integration | What it is |
+|:--|:--|
+| **AIP** (Agent Identity Protocol) | Ed25519 agent attestation tokens + registry JWKS — feeds the gate's risk via an `attestation` level. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/visa/1A1F71" />&nbsp; **Visa Trusted Agent Protocol** | RFC-9421 HTTP message signatures — the same `attestation` shape. |
+| **Network reputation** | An injected payee-reputation source feeds risk (never relaxes the floor). |
+| **Sanctions / OFAC + AML** | Screening wired into the deny-list + risk classifier as a pluggable provider. |
+
+#### Surfaces & transports
+
+| Integration | What it is |
+|:--|:--|
+| <img height="14" align="top" src="https://cdn.simpleicons.org/modelcontextprotocol" />&nbsp; **MCP** · <img height="14" align="top" src="https://cdn.simpleicons.org/zedindustries/084CCF" />&nbsp; **ACP** | The MCP server (Claude Code / Cursor) + the Agent Client Protocol surface (editors). |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/vercel/000000" />&nbsp; **AI SDK & frameworks** | `createGatedPayTool` (Vercel AI SDK) + the framework-agnostic `gatedPay` for Mastra / LangChain / OpenAI Agents / CrewAI. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/openapiinitiative/6BA539" />&nbsp; **HTTP + OpenAPI** · **JSON-RPC** | The ingress (auth / idempotency / rate-limit) + the operator-side RPC method API. |
+| **XMTP** | A second ingress transport — XMTP messages run through the same gate (consent-aware, sender crypto-identified). |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/githubactions/2088FF" />&nbsp; **GitHub Action** | `uses: general-liquidity/opensolvency` gates agent spend inside CI pipelines. |
+
+#### Agentic-economy surface
+
+| Integration | What it is |
+|:--|:--|
+| **Earning desk** | The inbound mirror of the gate — publish a quote, accept a *verified* inbound payment via an acceptance policy (income never recorded on faith). |
+| **Service discovery + price evaluation** | Find → evaluate an x402 service's machine-readable price against the mandate before paying. |
+| **x402 gating proxy** | A transparent proxy any HTTP-spending agent points at — outbound 402 challenges flow *through the gate* automatically, so agents that don't integrate explicitly are still governed. |
+| **Non-custodial account connector** | Read-only by design (no transfer method) — a structural non-custodial guarantee. |
 
 ## What it enforces
 
