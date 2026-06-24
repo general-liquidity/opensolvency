@@ -11,3 +11,5 @@ clients/c/example
 clients/c/example.exe
 __pycache__/
 *.pyc
+clients/python/dist/
+*.egg-info/
