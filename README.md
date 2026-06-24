@@ -80,7 +80,7 @@ One gate, reached from everywhere agents live — the same executor, mandates, r
 | <img height="14" align="top" src="https://cdn.simpleicons.org/openapiinitiative/6BA539" />&nbsp; **HTTP** | `opensolvency serve` | The ingress — same gate over HTTP, OpenAPI 3.1 at `/openapi.json`, bearer-token auth. |
 
 ```ts
-import { OpenSolvency } from "opensolvency";
+import { OpenSolvency } from "@general-liquidity/opensolvency";
 
 const os = new OpenSolvency();                       // in-memory by default; pass a Store for persistence
 os.grantMandate({
@@ -100,7 +100,7 @@ os.verifyAudit().valid;   // true — every decision is signed and hash-linked
 For durable, server-grade persistence, back it with Postgres (the operator brings the `pg` client):
 
 ```ts
-import { OpenSolvency, createPostgresStore } from "opensolvency";
+import { OpenSolvency, createPostgresStore } from "@general-liquidity/opensolvency";
 
 const { store, ready, flush } = createPostgresStore(pgPool);   // pgPool: a node-postgres Pool
 await ready;

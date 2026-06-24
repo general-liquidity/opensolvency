@@ -1,7 +1,10 @@
 {
-  "name": "opensolvency",
+  "name": "@general-liquidity/opensolvency",
   "version": "0.1.0",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "The operator-aligned governance plane for agentic spend. The 'secure enclave' of the money OS: a payment is structurally unable to execute outside an operator-granted mandate, and every decision is signed and replayable.",
   "license": "MIT",
   "author": "General Liquidity",
