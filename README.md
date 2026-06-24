@@ -170,8 +170,9 @@ never fabricates a settlement.
 | Integration | What it is |
 |:--|:--|
 | <img height="14" align="top" src="https://cdn.simpleicons.org/coinbase/0052FF" />&nbsp; **x402** | HTTP-402 + stablecoin settlement (Coinbase / Linux Foundation) — challenge → authorize → settle. |
-| <img height="14" align="top" src="https://cdn.simpleicons.org/google/4285F4" />&nbsp; **AP2** | Agent Payments Protocol (Google + FIDO) — SD-JWT payment mandates; an AP2 mandate maps onto an OpenSolvency mandate. |
-| **ACP · UCP · MPP** | Agentic Commerce Protocol, Universal Commerce Protocol, Machine Payments Protocol — checkout / delegated / rail-agnostic settlement. |
+| <img height="14" align="top" src="assets/integrations/ap2.svg" />&nbsp; **AP2** | [Agent Payments Protocol](https://ap2-protocol.org) (Google + FIDO) — SD-JWT payment mandates; an AP2 mandate maps onto an OpenSolvency mandate. |
+| **Agentic Commerce Protocol** | [ACP](https://www.agenticcommerce.dev) (OpenAI + Stripe) — an agent completes a merchant checkout via a delegated payment token, settled over card rails. |
+| <img height="14" align="top" src="assets/integrations/ucp.svg" />&nbsp; **UCP** · <img height="14" align="top" src="assets/integrations/mpp.svg" />&nbsp; **MPP** | [Universal Commerce Protocol](https://ucp.dev) (delegated checkout) · [Machine Payments Protocol](https://mpp.dev) (rail-agnostic, instant). |
 | <img height="14" align="top" src="https://cdn.simpleicons.org/visa/1A1F71" />&nbsp; **Visa Intelligent Commerce** · <img height="14" align="top" src="https://cdn.simpleicons.org/mastercard/EB001B" />&nbsp; **Mastercard Agent Pay** | Card-network agentic-payment rails (coexist on the `card` kind). |
 | <img height="14" align="top" src="https://cdn.simpleicons.org/ethereum/3C3C3D" />&nbsp; **On-chain (ERC-20 / USDC)** | Real stablecoin transfer via an injected viem-shaped signer (EVM / <img height="12" align="top" src="https://cdn.simpleicons.org/solana/9945FF" /> Solana). |
 | <img height="14" align="top" src="https://cdn.simpleicons.org/stripe/635BFF" />&nbsp; **Stripe Issuing** | Single-use virtual card minted per intent, capped to exactly the amount. |
@@ -189,7 +190,7 @@ never fabricates a settlement.
 
 | Integration | What it is |
 |:--|:--|
-| <img height="14" align="top" src="https://cdn.simpleicons.org/modelcontextprotocol" />&nbsp; **MCP** · <img height="14" align="top" src="https://cdn.simpleicons.org/zedindustries/084CCF" />&nbsp; **ACP** | The MCP server (Claude Code / Cursor) + the Agent Client Protocol surface (editors). |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/modelcontextprotocol" />&nbsp; **MCP** · <img height="14" align="top" src="assets/integrations/agent-client-protocol.svg" />&nbsp; **Agent Client Protocol** | The MCP server (Claude Code / Cursor) + the [ACP](https://agentclientprotocol.com) editor surface (Zed et al.) — distinct from the *Agentic Commerce* payment rail above. |
 | <img height="14" align="top" src="https://cdn.simpleicons.org/vercel/000000" />&nbsp; **AI SDK & frameworks** | `createGatedPayTool` (Vercel AI SDK) + the framework-agnostic `gatedPay` for Mastra / LangChain / OpenAI Agents / CrewAI. |
 | <img height="14" align="top" src="https://cdn.simpleicons.org/openapiinitiative/6BA539" />&nbsp; **HTTP + OpenAPI** · **JSON-RPC** | The ingress (auth / idempotency / rate-limit) + the operator-side RPC method API. |
 | **XMTP** | A second ingress transport — XMTP messages run through the same gate (consent-aware, sender crypto-identified). |

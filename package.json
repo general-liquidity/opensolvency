@@ -8,6 +8,14 @@
   "description": "The operator-aligned governance plane for agentic spend. The 'secure enclave' of the money OS: a payment is structurally unable to execute outside an operator-granted mandate, and every decision is signed and replayable.",
   "license": "MIT",
   "author": "General Liquidity",
+  "homepage": "https://github.com/general-liquidity/opensolvency#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/general-liquidity/opensolvency.git"
+  },
+  "bugs": {
+    "url": "https://github.com/general-liquidity/opensolvency/issues"
+  },
   "keywords": [
     "agentic-payments",
     "governance",

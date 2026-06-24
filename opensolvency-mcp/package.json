@@ -5,6 +5,15 @@
   "description": "MCP server for OpenSolvency — agents call the governance-gated `pay` plus read-only mandate/audit tools over the Model Context Protocol.",
   "license": "MIT",
   "author": "General Liquidity",
+  "homepage": "https://github.com/general-liquidity/opensolvency#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/general-liquidity/opensolvency.git",
+    "directory": "opensolvency-mcp"
+  },
+  "bugs": {
+    "url": "https://github.com/general-liquidity/opensolvency/issues"
+  },
   "keywords": ["mcp", "model-context-protocol", "agentic-payments", "opensolvency"],
   "publishConfig": {
     "access": "public"
