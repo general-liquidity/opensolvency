@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { generateAgentKeyPair } from "../src/disclosure/attestation.ts";
+import { generateAgentKeyPair } from "../src/disclosure/index.ts";
 import {
   ADVERSARIAL_CORPUS,
   CANARY_CASES,

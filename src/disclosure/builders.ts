@@ -1,6 +1,6 @@
 // The OpenSolvency-specific half: populate a vendor-neutral AgentDisclosure from
 // the LIVE governance primitives. This is the part that does NOT lift into the
-// standalone `verifiable-agency` repo - it IS the reference implementation that
+// standalone `agent-disclosure` repo - it IS the reference implementation that
 // makes OpenSolvency a credible counterparty. Every field is derived from
 // something real (the enforced gate, the granted mandates, the signed audit
 // chain, a SpendTrust run), not asserted.
@@ -17,21 +17,19 @@ import {
   generateAgentKeyPair,
   exportAgentKey,
   agentKeyFromPrivateHex,
+  DISCLOSURE_SCHEMA_VERSION,
   type AgentKeyPair,
-} from "./attestation.ts";
-import type {
-  AgentDisclosure,
-  Constitution,
-  HardConstraint,
-  ToolInventory,
-  CapitalEnvelope,
-  DeploymentHistory,
-  RedTeamAttestation,
-  ModelIdentity,
-  FieldProvenance,
-  SignedDisclosure,
-} from "./schema.ts";
-import { DISCLOSURE_SCHEMA_VERSION } from "./schema.ts";
+  type AgentDisclosure,
+  type Constitution,
+  type HardConstraint,
+  type ToolInventory,
+  type CapitalEnvelope,
+  type DeploymentHistory,
+  type RedTeamAttestation,
+  type ModelIdentity,
+  type FieldProvenance,
+  type SignedDisclosure,
+} from "@general-liquidity/agent-disclosure";
 
 const GENESIS = "0".repeat(64);
 const DEFAULT_VALIDITY_MS = 60 * 60 * 1000; // 1 hour

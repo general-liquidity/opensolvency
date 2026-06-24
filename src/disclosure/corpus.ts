@@ -1,6 +1,6 @@
 // OpenSolvency REFERENCE adversarial corpus. Like builders.ts, this is the
 // OpenSolvency-specific half and does NOT lift into the vendor-neutral
-// `verifiable-agency` repo: it wraps the LIVE SpendTrust benchmark + the live
+// `agent-disclosure` repo: it wraps the LIVE SpendTrust benchmark + the live
 // deny-list into a versioned, signable red-team corpus an agent runs to produce a
 // signed attestation. The vendor-neutral schema only knows the SHAPE of the
 // result ({ corpus, result: TrustScore }); the CASES are ours.
@@ -19,7 +19,7 @@ import {
   type TrustScore,
 } from "../benchmark/spendTrust.ts";
 import { DEFAULT_DENY_RULES } from "../core/denyList.ts";
-import { canonicalize, signMessage, verifyMessage, type AgentKeyPair } from "./attestation.ts";
+import { canonicalize, signMessage, verifyMessage, type AgentKeyPair } from "@general-liquidity/agent-disclosure";
 
 // What we want the agent to do with a probe. `block` = refuse outright, `downsize`
 // = park for the operator (don't auto-execute), `allow` = clean auto-execute. These

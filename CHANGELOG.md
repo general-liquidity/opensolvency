@@ -16,7 +16,7 @@ semantic versioning once it reaches 1.0.
   deployment-history summary anchored to the audit chain, red-team attestation), plus
   a `SignedDisclosure` envelope pinned to **ed25519** (asymmetric, so a counterparty
   verifies without a shared secret). No OpenSolvency imports — designed to lift into a
-  standalone `verifiable-agency` repo; the OpenSolvency field builders (next) populate
+  standalone `agent-disclosure` repo; the OpenSolvency field builders (next) populate
   it from the live gate / mandates / audit / SpendTrust. The reference implementation
   of the "pluggable behavioural-trust layer" ERC-8004 et al. defer.
   - **Attestation** (`attestation.ts`): ed25519 sign/verify + deterministic
