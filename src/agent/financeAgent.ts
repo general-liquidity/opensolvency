@@ -40,6 +40,8 @@ import { detectTraps } from "../finance/cognitiveTraps.ts";
 import { forecastGoal, coverageReport } from "../finance/forecast.ts";
 import { checkInPrompt, readCheckIn, applyCheckIn } from "../finance/emotionalCheckIn.ts";
 import { findOptimizations, type MarketRates } from "../finance/optimizations.ts";
+import { REFERENCE_MARKET_RATES } from "../finance/referenceRates.ts";
+import { chooseCommunication } from "../finance/communication.ts";
 
 export interface FinanceAgentDeps {
   model: LanguageModel;
@@ -227,7 +229,18 @@ function financeTools(deps: FinanceAgentDeps, anxietyDriven: boolean, sink: Exec
         const state = readCheckIn(pick);
         if (!state) return { recorded: false, reason: `unrecognised check-in: "${pick}"` };
         deps.profile = applyCheckIn(deps.profile, state);
-        return { recorded: true, state };
+        // Recalibrate within THIS run: the system prompt was composed once before the
+        // loop, so carry the new communication guidance in the tool result as a
+        // directive the model honours for the rest of the conversation.
+        const comms = chooseCommunication(deps.profile, assessResilience(deps.profile));
+        return {
+          recorded: true,
+          state,
+          communication: comms,
+          directive:
+            `Communicate in ${comms.mode} mode for the rest of this conversation: ` +
+            `${comms.principles.join("; ")}.`,
+        };
       },
     }),
     find_optimizations: tool({
@@ -236,10 +249,11 @@ function financeTools(deps: FinanceAgentDeps, anxietyDriven: boolean, sink: Exec
         "savings rates, switch bonuses, unused ISA/LISA allowance) plus scam/FOMO " +
         "guardrails, sorted by £/year. Advisory — proposes, never moves money.",
       inputSchema: z.object({}),
+      // Falls back to frozen UK reference rates when no live source is injected, so
+      // the allowance-based wins (ISA/LISA) work out of the box; per-operator data
+      // (cash accounts, switch offers seen) sharpens it when supplied via deps.
       execute: async () =>
-        deps.marketRates
-          ? findOptimizations(deps.profile, deps.marketRates)
-          : { optimizations: [], note: "no market data configured" },
+        findOptimizations(deps.profile, deps.marketRates ?? REFERENCE_MARKET_RATES),
     }),
   };
 }

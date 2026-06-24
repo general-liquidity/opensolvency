@@ -214,14 +214,15 @@ test("find_optimizations uses the injected MarketRates seam in-loop", async () =
   assert.equal(r.executions.length, 0);
 });
 
-test("find_optimizations degrades cleanly when no MarketRates is configured", async () => {
+test("find_optimizations works out of the box via reference rates (no injected source)", async () => {
   const model = await seqModel([
     { toolName: "find_optimizations", input: "{}" },
-    "No market data is configured, so no optimizations to show.",
+    "Here are some allowance wins you're missing.",
   ]);
-  // No `marketRates` on deps → the tool must return a clean result, not throw.
+  // No `marketRates` on deps → the tool falls back to REFERENCE_MARKET_RATES and
+  // still runs (the allowance-based wins work without a live feed), moving no money.
   const r = await runFinanceAgent("any free money?", deps(model));
-  assert.match(r.text, /no market data/i);
+  assert.match(r.text, /allowance wins/i);
   assert.equal(r.executions.length, 0);
 });
 
