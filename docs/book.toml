@@ -1,0 +1,14 @@
+[book]
+title = "OpenSolvency"
+description = "The operator-aligned governance plane for agentic spend."
+authors = ["General Liquidity"]
+language = "en"
+src = "src"
+
+[output.html]
+default-theme = "navy"
+git-repository-url = "https://github.com/general-liquidity/opensolvency"
+edit-url-template = "https://github.com/general-liquidity/opensolvency/edit/main/docs/{path}"
+
+[output.html.fold]
+enable = true

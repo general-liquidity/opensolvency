@@ -268,6 +268,16 @@ A real model (via the Vercel AI SDK) is used automatically when a key is present
 - key — `OPENSOLVENCY_MODEL_API_KEY`, or the provider's standard env var.
 - `OPENSOLVENCY_MODEL` — model id (defaults per provider).
 
+## Documentation
+
+The full docs are an [mdBook](https://rust-lang.github.io/mdBook/) under [`docs/`](docs/)
+— the gate, the mandate model, the acceptance demo, every surface, deployment,
+security, and the SpendTrust benchmark:
+
+```bash
+mdbook serve docs        # then open http://localhost:3000
+```
+
 ## License
 
 [MIT](LICENSE) © General Liquidity. A General Liquidity product — liquidity and solvency are the two halves of financial health, and OpenSolvency is the half that keeps an autonomous agent inside its bounds.

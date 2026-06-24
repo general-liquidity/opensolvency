@@ -12,6 +12,10 @@ were built across the preceding milestones; this release adds the production
 hardening and integration surfaces.
 
 ### Added
+- **Documentation site** (`docs/`) — an mdBook covering the gate, mandates, the
+  acceptance demo, every surface, framework integration, deployment, security, and
+  the SpendTrust benchmark. Built in CI (`mdbook build docs`); `mdbook serve docs`
+  locally.
 - **Language clients** (`clients/`) — dependency-light REST clients over the HTTP
   ingress for non-TypeScript hosts: **Python** (stdlib only) and **Go** (stdlib only),
   each with `pay` / `status` / `ready`, bearer-token + idempotency-key support, and a
