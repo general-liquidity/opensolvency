@@ -79,3 +79,12 @@ export {
   loadOrCreateAgentKey,
   type BuildDisclosureDeps,
 } from "./builders.ts";
+
+// Verifier-side over-the-wire loop (vendor-neutral)
+export {
+  verifyCounterparty,
+  type FetchLike,
+  type HttpResponse,
+  type CounterpartyVerdict,
+  type VerifyCounterpartyOptions,
+} from "./client.ts";

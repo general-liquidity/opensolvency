@@ -66,6 +66,24 @@ export function buildOpenApiDocument(version: string): Record<string, unknown> {
           responses: { "200": { description: "ready, with kill-switch / breaker state" } },
         },
       },
+      "/.well-known/agent-disclosure": {
+        get: {
+          summary: "Verifiable Agency: this agent's signed disclosure (public, no auth)",
+          security: [],
+          responses: { "200": { description: "an ed25519-signed AgentDisclosure" }, "404": { description: "disclosure surface not enabled" } },
+        },
+      },
+      "/agent-disclosure/respond": {
+        post: {
+          summary: "Verifiable Agency: answer a live verification challenge (public)",
+          security: [],
+          requestBody: {
+            required: true,
+            content: { "application/json": { schema: { type: "object", properties: { nonce: { type: "string" }, issuedAt: { type: "string" }, verifierId: { type: "string" } }, required: ["nonce"] } } },
+          },
+          responses: { "200": { description: "a signed ChallengeResponse bound to the current audit head" }, "400": { description: "invalid challenge" } },
+        },
+      },
       "/status": {
         get: {
           summary: "Kill-switch / circuit-breaker state",

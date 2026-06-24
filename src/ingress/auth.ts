@@ -64,7 +64,15 @@ export function authorizeIngress(
   authHeader: string | undefined,
   configuredToken: string | undefined,
 ): AuthResult {
-  if (path === "/health" || path === "/ready") return { ok: true };
+  // Probes + the public Verifiable Agency disclosure surface need no secret.
+  if (
+    path === "/health" ||
+    path === "/ready" ||
+    path === "/.well-known/agent-disclosure" ||
+    path === "/agent-disclosure/respond"
+  ) {
+    return { ok: true };
+  }
   if (!configuredToken) return { ok: true }; // open dev mode (loopback only)
   const presented = bearerFrom(authHeader);
   if (!presented || !safeEqual(presented, configuredToken)) {

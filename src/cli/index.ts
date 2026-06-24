@@ -566,6 +566,16 @@ async function main(): Promise<void> {
       ingressToken: resolveToken,
       version: VERSION,
       rateLimiter: createRateLimiter(),
+      // Verifiable Agency: serve this agent's disclosure + answer live challenges.
+      disclosure: {
+        audit,
+        operator: {
+          id: f["operator-id"] ?? "operator",
+          deniabilityBoundary:
+            f.deniability ??
+            "The operator authorizes spend only within the disclosed mandates; not liable for counterparty conduct.",
+        },
+      },
     });
     server.listen(port, host, () => {
       console.log(

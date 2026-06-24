@@ -14,10 +14,28 @@ import { PaymentIntentDraftSchema } from "../agent/schema.ts";
 import { authorizeIngress } from "./auth.ts";
 import { buildOpenApiDocument } from "./openapi.ts";
 import { replayIfSeen, rememberKey } from "./idempotency.ts";
+import { buildAndSignDisclosure, loadOrCreateAgentKey, respondToChallenge } from "../disclosure/index.ts";
+import type { Challenge } from "../disclosure/index.ts";
 import type { RateLimiter } from "./rateLimit.ts";
 import type { Executor } from "../core/executor.ts";
 import type { Store } from "../core/store.ts";
+import type { AuditLog } from "../core/audit.ts";
 import type { PaymentIntent } from "../core/types.ts";
+
+const GENESIS = "0".repeat(64);
+
+/** Verifiable Agency: when set, the ingress serves the agent's signed disclosure and
+ *  answers live verification challenges, so a counterparty can vet this agent before
+ *  transacting. The disclosure is public by design (no auth). */
+export interface DisclosureIngressConfig {
+  audit: AuditLog;
+  operator: {
+    id: string;
+    deniabilityBoundary: string;
+    attestation?: { scheme: "AIP" | "VisaTAP" | "ERC8004" | "none"; level: "none" | "signed" | "registry_attested"; evidence?: string };
+  };
+  systemPrompt?: string;
+}
 
 /** Default cap on a request body — a payment intent is tiny; reject anything large. */
 const DEFAULT_MAX_BODY_BYTES = 64 * 1024;
@@ -37,6 +55,8 @@ export interface IngressDeps {
   rateLimiter?: RateLimiter;
   /** Max request body size in bytes (default 64 KiB). */
   maxBodyBytes?: number;
+  /** Verifiable Agency disclosure surface (requires `store` for the signing key). */
+  disclosure?: DisclosureIngressConfig;
 }
 
 export interface IngressResponse {
@@ -75,6 +95,38 @@ export async function handleIngress(
   }
   if (method === "GET" && path === "/openapi.json") {
     return { status: 200, body: buildOpenApiDocument(deps.version ?? "0.0.0") };
+  }
+
+  // ── Verifiable Agency: the disclosure surface (public — a counterparty fetches
+  // this to vet the agent before transacting). ───────────────────────────────
+  if (deps.disclosure && deps.store) {
+    if (method === "GET" && path === "/.well-known/agent-disclosure") {
+      const signed = buildAndSignDisclosure({
+        store: deps.store,
+        audit: deps.disclosure.audit,
+        agentKey: loadOrCreateAgentKey(deps.store),
+        systemPrompt: deps.disclosure.systemPrompt ?? "OpenSolvency spending agent.",
+        operator: deps.disclosure.operator,
+        now: deps.clock(),
+        nonce: deps.newId(),
+      });
+      return { status: 200, body: signed };
+    }
+    if (method === "POST" && path === "/agent-disclosure/respond") {
+      // A verifier's live challenge: sign the nonce bound to the current audit head,
+      // proving live key possession + history currency (defeats replay).
+      let challenge: Challenge;
+      try {
+        challenge = JSON.parse(rawBody) as Challenge;
+        if (typeof challenge?.nonce !== "string") throw new Error("missing nonce");
+      } catch {
+        return { status: 400, body: { error: "invalid challenge" } };
+      }
+      const entries = deps.disclosure.audit.entries();
+      const head = entries.length ? entries[entries.length - 1].hash : GENESIS;
+      const response = respondToChallenge(challenge, loadOrCreateAgentKey(deps.store), head, deps.clock());
+      return { status: 200, body: response };
+    }
   }
   if (method === "GET" && path === "/status") {
     return {
