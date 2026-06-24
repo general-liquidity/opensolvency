@@ -12,6 +12,10 @@ were built across the preceding milestones; this release adds the production
 hardening and integration surfaces.
 
 ### Added
+- **Biome lint quality gate** — `biome.json` tuned to the project's style; `npm run
+  lint` runs in CI as a blocking step (fixed the handful it flagged). `format` /
+  `format:check` scripts are available but formatting is not mass-applied (avoiding
+  churn); lint is the enforced gate.
 - **Reference example agents** (`examples/`) — a key-free `shopping-agent.ts`
   demonstrating all four gate verdicts (auto-execute / park / block / injection-
   resistance), and an `ai-sdk-agent.ts` wiring `createGatedPayTool` into a real

@@ -93,7 +93,7 @@ export async function handleIngress(
       const replay = replayIfSeen(deps.store, idempotencyKey);
       if (replay) return replay;
     }
-    let draft;
+    let draft: ReturnType<typeof PaymentIntentDraftSchema.parse>;
     try {
       draft = PaymentIntentDraftSchema.parse(JSON.parse(rawBody));
     } catch {

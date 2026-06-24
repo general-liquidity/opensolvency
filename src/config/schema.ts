@@ -54,7 +54,7 @@ export function migrateConfig(raw: unknown): unknown {
   const version = typeof obj.version === "number" ? obj.version : 0;
 
   // v0 (or absent) → v1: merge over defaults, deep-merging the nested groups.
-  let migrated: Record<string, unknown> = {
+  const migrated: Record<string, unknown> = {
     ...base,
     ...obj,
     version: CURRENT_CONFIG_VERSION,

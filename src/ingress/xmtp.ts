@@ -36,7 +36,7 @@ export function createXmtpIngress(deps: XmtpIngressDeps): { start(): Promise<voi
   deps.client.on("message", async (ctx) => {
     if (ctx.isAllowed === false) return; // honor XMTP consent (spam-gate)
 
-    let draft;
+    let draft: ReturnType<typeof PaymentIntentDraftSchema.parse>;
     try {
       const raw = typeof ctx.content === "string" ? JSON.parse(ctx.content) : ctx.content;
       draft = PaymentIntentDraftSchema.parse(raw);

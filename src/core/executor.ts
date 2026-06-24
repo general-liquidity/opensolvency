@@ -15,7 +15,7 @@
 //  - CHALLENGE-RESPONSE: approving a high-risk pending intent requires an explicit
 //    acknowledgement, not a bare rationale (anti-rubber-stamp; EU AI Act Art. 14).
 
-import { AuditLog, type AuditEventType } from "./audit.ts";
+import type { AuditLog, AuditEventType } from "./audit.ts";
 import { evaluateGate } from "./gate.ts";
 import { payeeTrust } from "./trust.ts";
 import { convertMinor, type FxRateSource } from "./fx.ts";

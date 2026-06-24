@@ -378,6 +378,6 @@ export async function runProactiveMoment(
     resilience,
     operatorEngaged: deps.operatorEngaged,
   });
-  if (!moment || !moment.surface) return { surfaced: false, result: null };
+  if (!moment?.surface) return { surfaced: false, result: null };
   return { surfaced: true, result: await runFinanceAgent(moment.suggestedAction, deps) };
 }
