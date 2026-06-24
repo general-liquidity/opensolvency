@@ -1,209 +1,219 @@
+<!-- prettier-ignore -->
+<div align="center">
+
 # OpenSolvency
 
-> **Placeholder name.** The operator-aligned governance plane for agentic spend —
-> the "secure enclave" of the money OS.
+### The operator-aligned governance plane for agentic spend
 
-OpenSolvency is **not** a wallet, a rail, or a payment processor. It is the trust
-layer that sits *above* rails (x402, cards, ACP/checkout) and *below* an agent,
-and enforces a single invariant:
+*Autonomous-money agents already move real funds with no mandate, no cap, no risk gate, and no approver. OpenSolvency is the missing layer — it lets an agent spend autonomously **inside** operator-defined bounds, and confirm above them.*
 
-> **An agent payment can auto-execute only inside a live, operator-granted
-> mandate that covers it — under its caps, below the risk and velocity
-> thresholds, and clear of the deny-list. Everything else routes to the operator
-> or is blocked. Every decision is signed and replayable.**
+[![CI](https://img.shields.io/github/actions/workflow/status/general-liquidity/opensolvency/ci.yml?style=flat-square&label=CI)](https://github.com/general-liquidity/opensolvency/actions)
+[![tests](https://img.shields.io/badge/tests-337%20passing-success?style=flat-square)](#develop)
+[![node](https://img.shields.io/badge/node-%E2%89%A522.18-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white)](#develop)
+[![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](#license)
+[![type](https://img.shields.io/badge/types-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](#tech-stack)
 
-This is the layer the autonomous-money agents that already exist conspicuously
-lack. Aeon (the "most autonomous agent framework") moves real USDC on Base via
-the Bankr wallet API with **no mandate, no spend cap, no risk gate, no
-approver** — "if the operator enables it and runs it, it sends." OpenSolvency is
-that missing layer: it lets an agent spend *autonomously within operator-defined
-bounds* and confirm above them, instead of the binary choice between full-auto
-and a human pulling the trigger every time. **The gate is what lets autonomy go
-further, safely — not less far.**
+**[Why](#why) · [Quickstart](#quickstart) · [Surfaces](#use-it-from-anywhere) · [What it enforces](#what-it-enforces) · [Architecture](#architecture) · [Tech stack](#tech-stack) · [From Gordon](#what-we-took-from-gordon)**
 
-## The Mandate is the central object
+</div>
 
-A `Mandate` is operator-granted, scoped, capped, expiring, revocable spend
-authority — the only thing that authorizes an agent payment without a live human
-confirm:
+---
+
+## Why
+
+OpenSolvency is **not** a wallet, a rail, or a payment processor. It is the trust layer that sits *above* rails (x402, cards, ACP/checkout) and *below* an agent, enforcing a single invariant:
+
+> **An agent payment can auto-execute only inside a live, operator-granted mandate that covers it — under its caps, below the risk and velocity thresholds, and clear of the deny-list. Everything else routes to the operator or is blocked. Every decision is signed and replayable.**
+
+This is the layer the autonomous-money agents that already exist conspicuously lack. Aeon — billed as the "most autonomous agent framework" — moves real USDC on Base via a wallet API with **no mandate, no spend cap, no risk gate, no approver**: if the operator enables it and runs it, it sends. That forces a binary choice — full-auto, or a human pulling the trigger every single time.
+
+OpenSolvency removes the binary. The mandate is what authorizes spend *without* a live human confirm, so the agent acts freely inside the envelope and escalates outside it. **The gate is what lets autonomy go further, safely — not less far.**
+
+#### The Mandate is the central object
+
+A `Mandate` is operator-granted, scoped, capped, expiring, revocable spend authority — the only thing that authorizes an agent payment without a live human confirm:
 
 ```
 weekly groceries → class:groceries · GBP · card
   per-tx cap £500 · per-week cap £1000 · expires 2026-06-26
 ```
 
-## Architecture (four layers)
+The gate decides *may this spend happen*; a second, behavioural half (the Networth-derived **harness**) decides *what the agent should help with* — the operator's weakest resilience pillar. Together: the iPhone-for-money experience, with a secure enclave at its core.
 
-| Layer | Status | What it is |
-|---|---|---|
-| **1. Trust kernel** | **built** | The pure gate invariant + mandate + spend-risk + deny-list + hash-linked signed audit. No I/O, no clock — fully deterministic and replayable. |
-| **2. Ledger** | **built** | A `Store` interface with two implementations: `MemoryStore` (tested everywhere) and `SqliteStore` (`node:sqlite`, integer minor-units, idempotent `CREATE TABLE IF NOT EXISTS` migrations: mandates, intents, receipts, the persisted audit chain). |
-| **3. Rails** | **built** | A `PaymentProvider` interface + adapters for **x402, ACP, UCP, MPP, Visa Intelligent Commerce, Mastercard Agent Pay** (and an in-process `FakeRail`). Each adapter declares accurate capabilities and takes a `RailClient` for the live settlement; **with no client it fails safe — a real rail never fabricates a settlement.** The registry routes a rail *kind* (what a mandate authorizes) to the chosen protocol, so Visa and Mastercard can coexist on `card`. Three reference `RailClient` implementations ship: an **on-chain** ERC-20 stablecoin transfer (viem-shaped signer), a **single-use virtual card** (Stripe-Issuing pattern — a fresh card minted per intent, capped to exactly the amount), and the **x402 protocol flow** (402-challenge → select an affordable requirement → authorize → settle; EVM/Solana via the injected facilitator). |
-| **4. Agent + CLI** | **built** | The `Executor` is the *only* path to a rail. The real agent runs on the **Vercel AI SDK**'s multi-step tool loop — but the model's sole tool (`pay`) executes *through* the gate, so even the autonomous loop can't bypass it. A deterministic offline stub (no key, no network) backs tests and air-gapped runs. A CLI drives it all. |
-| **5. Behavioural harness** | **built** | The *helpfulness* half (layers 1–4 are the *safety* half), derived from the Networth behavioural-finance research. The **Four Pillars of Resilience** model is the agent's understanding of the operator; its weakest pillar becomes the agent's standing agenda. Plus teachable+reachable **moment** detection, "watching-your-back" **concerns**, **goals** as agent objectives, an **empower-don't-exploit** guardrail, anxiety-aware **communication** modes, and a PF agent **persona**. |
-| **6. Harness-engineering depth** | **built** | **Trust trajectory** (payees earn auto-approval; floor never relaxed), **hot-tier memory** (live state always-injected, capped) + cold **recall** tool, **skills** (markdown playbooks loaded on demand), a **self-evolution envelope** (Tier-1 lessons over a frozen Tier-0 floor), the **reasoning sandwich** (phase-differentiated effort), and **observability** (audit replay, a **counterfactual policy-replay simulator** — re-run the gate over real signed history against a candidate mandate set to see what *would* have changed — and an OTel `Tracer` seam). Every `gate.decision` record carries a full intent + decision-inputs snapshot, so replay is exact. |
-| **7. Money-domain completeness** | **built** | **Refunds/chargebacks** (reversible rails only — an irreversible refund is refused; budget is freed), **multi-currency FX** (a foreign payment is capped in the mandate's currency via an injected rate source; no rate → not covered), **mandate lifecycle** (amend / extend / templates), **reconciliation** (settled vs the operator's statement → flags unauthorized spend), and **non-custodial account connection** (read-only by design) + **key custody** (audit key from env/KMS, not the DB). |
-| **8. Agentic-economy surface** | **built** | **Network reputation** (an injected payee-reputation source feeds gate risk; never relaxes the floor), **service discovery + price evaluation** (find→evaluate an x402 service's machine-readable price against the mandate before paying), the **earning side** (the inbound mirror of the gate: publish a quote, accept a verified inbound payment via an acceptance policy → recorded in the same signed audit log; income never recorded on faith), and **OpenSolvency as an MCP server** (gated `pay` + read-only tools; operator controls deliberately NOT exposed). |
-| **9. Integration + operations** | **built** | The gate, reached from everywhere agents live: the **MCP server** (Claude Code / Cursor), an **ACP** stdio surface (`opensolvency acp` — editors/IDEs drive the agent in-editor), and the **HTTP ingress** now carrying a machine-readable **OpenAPI 3.1** doc (`GET /openapi.json`) and an operator-set **bearer-token** guard (`/health` always open; loopback stays open until a token is set). Operationally: an injected **notifier** seam (no-op / console / webhook) pings the operator out-of-band when a payment needs confirmation — best-effort, never blocks a decision — and an **OTLP/HTTP tracer** ships executor events to any OpenTelemetry collector with no hard `@opentelemetry/*` dep. |
+## Status — built end-to-end (pre-1.0)
 
-This is the **B milestone** — "an agent that structurally can't spend wrong" — built end-to-end, now with the behavioural harness that decides what the agent should *help with*. The gate decides *may this spend happen*; the harness decides *what the agent works on* (the weakest resilience pillar). Together: the iPhone-for-money experience.
+The **B milestone** — "an agent that structurally can't spend wrong" — is built, tested, and CI-green: kernel, ledger, rails, agent loop, behavioural harness, money-domain completeness, the agentic-economy surface, and the integration/operations layer. **337 tests** pass on Node 20 + the full suite, typecheck, and an end-to-end demo run green in CI on Node 22.
 
-### Runtime posture (deferred, decided)
-Hermes-style serverless-hibernation (Modal/Daytona — always-reachable, ~$0 idle),
-**not** Aeon's GitHub-Actions cron: a money agent has to answer inbound payment
-challenges (x402/ACP) as *events*, which a 5-minute cron can't. Non-custodial —
-execution runs through the operator's own connected accounts.
+**Injected by the operator, not in-repo** (a deliberate boundary, not a gap): the live rail clients (Visa/Mastercard/ACP credentials, a funded on-chain signer + facilitator) and the live identity verifiers. Each fails *safe* when unconfigured — a real rail never fabricates a settlement.
 
-## What we took from Gordon
+**Follow-ons:** multi-instance cache invalidation for the Postgres store (LISTEN/NOTIFY), the Hermes-style hibernating runtime for inbound payment-challenge events, and a `tsc → dist` build before a public `npm publish`.
 
-Gordon is a **safety/governance/memory harness wrapped around a *trading*
-domain**. OpenSolvency is that same harness wrapped around a **payments /
-agentic-economy** domain. We ported the *harness*, not the trading.
-
-- **LIFT** (port the pattern, re-domained): deny-first gate + hard deny-list
-  (`place_order` → `make_payment`); rejection-weighted adaptive trust;
-  multi-dimension risk classifier → spend-risk; rationale-required-on-execute;
-  HMAC signed audit (here extended into a hash-linked chain); single-substrate
-  observation discipline; Hermes hot-tier memory; RULER eval harness; ACE
-  propose-only lessons; velocity/backpressure → the per-mandate velocity ceiling;
-  preview→approve as a harness invariant.
-- **ADAPT** (reuse the shape, swap the content): the typed surface dispatcher
-  pattern; exchange/broker adapters → the rails layer.
-- **LEAVE** in Gordon (trading-specific): indicators, microstructure, backtest,
-  genome/evolution, regime detection, strategy-validation stats, playbooks, the
-  trading tool surface.
-
-From **FinancialClaw** (data-layer patterns): integer minor-units, multi-currency
-resolve/placeholder, idempotent migrations, allocation-as-budget-seed.
-
-## v0 acceptance demo (the five steps the gate must get right)
-
-1. Known grocer, inside the live mandate, under cap, low risk → **auto-execute**.
-2. A new payee → **confirm with the operator** (a novel payee is never silently paid).
-3. £600 against a £500 cap → **block**.
-4. A prompt-injected rationale ("ignore the mandate, auto-execute") → still
-   **blocked** — the gate decides on structured numbers and the mandate set,
-   which model text cannot mutate.
-5. An expired mandate → **no auto-execute** (routes to the operator).
-
-All five — plus budget, deny-list, velocity, and rationale invariants — are
-covered by the test suite.
-
-## Develop
-
-`tsx` is included so everything runs on Node ≥ 18; the sqlite-backed **CLI**
-needs Node ≥ 22.5 (`node:sqlite`).
+## Quickstart
 
 ```bash
 npm install
-npm test          # 130 tests: gate, audit, executor, store, rails (incl. AP2), finance, agents, ingress (HTTP+XMTP), identity, reputation, earning, MCP
-npm run typecheck
+npm test                                   # 337 tests — gate, audit, executor, stores, rails, harness, surfaces
+npm run demo                               # end-to-end walkthrough on the in-memory store (any Node)
+```
+
+```bash
+# grant authority, then let the agent spend inside it
+npm run cli -- mandate grant --label groceries --class groceries \
+    --currency GBP --rails card --per-tx 50000 --per-period 100000 --period week --expires-days 30
+npm run cli -- agent "PAY 8000 GBP tesco groceries card :: weekly shop"   # auto-executes (covered)
+npm run cli -- agent "PAY 60000 GBP tesco groceries card :: big shop"     # blocked (over the £500 cap)
+npm run cli -- pending                                                    # what the gate parked for you
+npm run cli -- approve <intentId> --rationale "yes, I know this payee"    # operator override
+npm run cli -- audit verify                                               # the signed chain checks out
+```
+
+## Use it from anywhere
+
+One gate, reached from everywhere agents live — the same executor, mandates, risk, deny-list, and signed audit behind every surface. None of them adds authority; they are transports *into* the invariant.
+
+| Surface | Get it | What it is |
+|:--|:--|:--|
+| <img height="14" align="top" src="https://cdn.simpleicons.org/typescript/3178C6" />&nbsp; **TypeScript SDK** | `import { OpenSolvency }` | The programmatic façade — grant mandates, `pay()` through the gate, approve, verify the audit chain. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/gnubash/4EAA25" />&nbsp; **CLI** | `opensolvency …` | `mandate` / `pay` / `agent` / `finance` / `approve` / `kill` / `audit` / `serve`. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/anthropic/D97757" />&nbsp; **MCP** | `opensolvency mcp` | An [MCP](https://modelcontextprotocol.io) server — Claude Code / Cursor call the gated `pay` + read-only tools. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/zedindustries/084CCF" />&nbsp; **ACP** | `opensolvency acp` | An [Agent Client Protocol](https://agentclientprotocol.com) surface — editors/IDEs drive the agent in-editor. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/openapiinitiative/6BA539" />&nbsp; **HTTP** | `opensolvency serve` | The ingress — same gate over HTTP, OpenAPI 3.1 at `/openapi.json`, bearer-token auth. |
+
+```ts
+import { OpenSolvency } from "opensolvency";
+
+const os = new OpenSolvency();                       // in-memory by default; pass a Store for persistence
+os.grantMandate({
+  label: "groceries", scope: { kind: "class", value: "groceries" },
+  currency: "GBP", allowedRails: ["card"],
+  perTxCap: 500_00, perPeriodCap: 1000_00, period: "week", expiresInDays: 30,
+});
+
+await os.pay({ payee: "tesco", amount: 80_00, currency: "GBP", rail: "card",
+               rationale: "the weekly grocery shop" });   // → auto-executes, inside the mandate
+await os.pay({ payee: "tesco", amount: 600_00, currency: "GBP", rail: "card",
+               rationale: "a much bigger shop" });        // → blocked: over the £500 per-tx cap
+
+os.verifyAudit().valid;   // true — every decision is signed and hash-linked
+```
+
+For durable, server-grade persistence, back it with Postgres (the operator brings the `pg` client):
+
+```ts
+import { OpenSolvency, createPostgresStore } from "opensolvency";
+
+const { store, ready, flush } = createPostgresStore(pgPool);   // pgPool: a node-postgres Pool
+await ready;
+const os = new OpenSolvency({ store, commit: flush });         // writes are durable before pay() resolves
+```
+
+### CLI commands
+
+| Command | What it does |
+|:--|:--|
+| `mandate grant \| list \| revoke` | Grant / list / revoke operator spend authority. |
+| `pay --payee … --amount … --rail …` | Submit one intent through the gate. |
+| `agent "<goal or PAY … DSL>"` | Run the agent loop (real model with a key; deterministic stub without). |
+| `finance "<goal>"` | The personal-finance agent — persona + behavioural harness + gate-enforced `pay`. |
+| `profile set` · `goal set` | Seed the operator profile + goals the harness reasons over. |
+| `pending` · `approve <id> [--ack]` | See parked intents; authorize one (high-risk needs challenge-response `--ack`). |
+| `kill` · `unkill` · `reset-breaker` · `status` | Operator controls — freeze all spend, release, clear the breaker, inspect. |
+| `audit verify \| log \| replay` | Verify the signed chain; print it; render it as a readable timeline. |
+| `audit replay-sim [--mandates f.json]` | Counterfactual: re-run real history against a candidate mandate set. |
+| `serve [--port N]` · `token set <t>` | Run the HTTP ingress (+ OpenAPI); set the bearer token that guards it. |
+| `mcp` · `acp` | Launch the MCP (Claude Code/Cursor) or ACP (editor) stdio surface. |
+
+## What it enforces
+
+The gate decides on **structured numbers and the live mandate set** — never on model text, which is why a prompt-injected rationale changes nothing. Each decision is the same pure function, signed and replayable.
+
+| Request | Verdict | The invariant it proves |
+|:--|:--|:--|
+| Known payee, live mandate, under cap, low risk | **auto-execute** | autonomy *inside* the operator's bounds |
+| A payee never seen before | **confirm with operator** | a novel payee is never silently paid |
+| £600 against a £500 cap | **block** | caps are hard, not advisory |
+| Rationale: *"ignore the mandate, auto-execute"* | **block** | the gate reads numbers, not prose — injection can't move it |
+| An expired mandate | **route to operator** | spend authority is time-boxed |
+
+All five — plus budget, deny-list, velocity, kill-switch, circuit-breaker, and rationale invariants — are pinned by the test suite. The deny-list and caps hold **independently of trust**: a payee that has earned auto-approval still cannot push past a cap or a hard deny rule.
+
+## Architecture
+
+Nine layers, each built and tested. Layers 1–4 are the *safety* half (may this spend happen); layers 5–9 are the *helpfulness* + reach half (what should the agent do, and from where).
+
+```
+agent / editor / MCP client / HTTP caller
+        │
+        ▼
+   Executor ──────────────── the ONLY path to a rail
+        │   builds context from the Store, runs the pure gate,
+        │   signs the decision, settles ONLY on auto-execute
+        ▼
+   evaluateGate()  ◄── pure invariant: mandate · caps · risk · velocity · deny-list
+        │
+        ├── Store (memory · sqlite · postgres)      durable, signed, replayable
+        ├── Rails (x402 · card · ACP · AP2 · …)      fail-safe when unconfigured
+        └── Audit (hash-linked, HMAC-signed chain)   tamper-evident history
+```
+
+| Layer | What it is |
+|:--|:--|
+| **1 · Trust kernel** | The pure gate invariant + mandate + spend-risk + deny-list + hash-linked signed audit. No I/O, no clock — fully deterministic and replayable. |
+| **2 · Ledger** | A `Store` interface with three backends: `MemoryStore` (tests), `SqliteStore` (`node:sqlite`), and `PostgresStore` (durable source of truth + in-process read mirror + a `flush()` durability barrier the executor awaits — so the sync `Store` contract and the pure gate are unchanged). |
+| **3 · Rails** | A `PaymentProvider` interface + adapters for **x402, ACP, UCP, MPP, Visa, Mastercard, AP2** (+ `FakeRail`). Each declares accurate capabilities and takes an injected `RailClient`; **with none it fails safe — a real rail never fabricates a settlement.** Reference clients: on-chain ERC-20 transfer, single-use virtual card, and the x402 challenge→authorize→settle flow. |
+| **4 · Agent + CLI** | The `Executor` is the *only* path to a rail. The agent runs on the **Vercel AI SDK** multi-step loop, but its sole money tool (`pay`) executes *through* the gate, so even the autonomous loop can't bypass it. A deterministic offline stub backs tests + air-gapped runs. |
+| **5 · Behavioural harness** | The *helpfulness* half, from the Networth research. The **Four Pillars of Resilience** model the operator; the weakest pillar becomes the agent's standing agenda. Plus teachable-moment detection, "watching-your-back" concerns, goals-as-objectives, an empower-don't-exploit guardrail, anxiety-aware comms, cognitive-trap + knowledge-gap detectors, slip-cost + retirement projections, and an **i-frame/s-frame** honesty guardrail. |
+| **6 · Harness depth** | **Trust trajectory** (payees earn auto-approval; floor never relaxed), **hot-tier memory** + cold recall, **skills** (markdown playbooks on demand), a **self-evolution envelope** (Tier-1 lessons over a frozen Tier-0 floor), the **reasoning sandwich**, and a counterfactual **policy-replay simulator**. |
+| **7 · Money-domain completeness** | **Refunds** (reversible rails only — irreversible refused), **multi-currency FX** (capped in the mandate's currency), **mandate lifecycle** (amend/extend/templates), **reconciliation** (flags unauthorized spend), **non-custodial account connection** (read-only by design) + **key custody**. |
+| **8 · Agentic-economy surface** | **Network reputation** (feeds risk, never the floor), **service discovery + price evaluation**, the **earning side** (publish a quote, accept a *verified* inbound payment — income never recorded on faith), and the **MCP server**. |
+| **9 · Integration + operations** | The gate everywhere agents live: **MCP**, **ACP**, and **HTTP ingress** with **OpenAPI 3.1** + **bearer-token** auth. Operationally: an injected **notifier** (noop/console/webhook) pings the operator out-of-band on a pending payment — best-effort, never blocks a decision — and an **OTLP/HTTP tracer** ships events to any OpenTelemetry collector, dep-free. |
+
+#### Runtime posture (decided, deferred)
+Hermes-style serverless-hibernation (always-reachable, ~$0 idle) — **not** Aeon's GitHub-Actions cron: a money agent must answer inbound payment challenges (x402/ACP) as *events*, which a 5-minute cron can't. Execution is non-custodial — it runs through the operator's own connected accounts.
+
+## Tech stack
+
+| Technology | Role |
+|:--|:--|
+| <img height="14" align="top" src="https://cdn.simpleicons.org/typescript/3178C6" />&nbsp; [TypeScript](https://www.typescriptlang.org) | The whole system — strict, ESM, integer minor-units, `.ts` imports |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/nodedotjs/5FA04E" />&nbsp; [Node ≥ 22.18](https://nodejs.org) | Runtime; `node:sqlite` + `node:crypto`, no native build step |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/vercel/000000" />&nbsp; [Vercel AI SDK](https://sdk.vercel.ai) | The multi-step agent loop; the model's sole tool runs through the gate |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/openai/412991" />&nbsp; OpenAI · <img height="14" align="top" src="https://cdn.simpleicons.org/anthropic/D97757" />&nbsp; Anthropic · <img height="14" align="top" src="https://cdn.simpleicons.org/google/4285F4" />&nbsp; Google | Model providers, swappable by config — add one with one `@ai-sdk/*` package |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/sqlite/003B57" />&nbsp; SQLite · <img height="14" align="top" src="https://cdn.simpleicons.org/postgresql/4169E1" />&nbsp; Postgres | Durable stores behind the synchronous `Store` boundary |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/zod/3E67B1" />&nbsp; [Zod](https://zod.dev) | Schema validation at every boundary (intents, ingress, tools) |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/anthropic/D97757" />&nbsp; [MCP](https://modelcontextprotocol.io) · <img height="14" align="top" src="https://cdn.simpleicons.org/zedindustries/084CCF" />&nbsp; ACP | Agent-facing transports into the gate |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/opentelemetry/F5A800" />&nbsp; [OpenTelemetry](https://opentelemetry.io) | Operational tracing over OTLP/HTTP, no hard dependency |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/githubactions/2088FF" />&nbsp; GitHub Actions | CI: typecheck · full suite · end-to-end demo, on Node 22 |
+
+## What we took from Gordon
+
+Gordon is a **safety / governance / memory harness wrapped around a *trading* domain**. OpenSolvency is that same harness wrapped around a **payments / agentic-economy** domain. We ported the *harness*, not the trading.
+
+- **LIFT** (port the pattern, re-domained): deny-first gate + hard deny-list (`place_order` → `make_payment`); rejection-weighted adaptive trust; multi-dimension risk classifier → spend-risk; rationale-required-on-execute; HMAC signed audit (here a hash-linked chain); single-substrate observation discipline; hot-tier memory; propose-only ACE lessons; velocity/backpressure → the per-mandate velocity ceiling; preview→approve as an invariant.
+- **ADAPT** (reuse the shape, swap the content): the typed surface dispatcher; exchange/broker adapters → the rails layer.
+- **LEAVE** in Gordon (trading-specific): indicators, microstructure, backtest, genome/evolution, regime detection, strategy-validation stats, playbooks, the trading tool surface.
+
+From **FinancialClaw** (data-layer patterns): integer minor-units, multi-currency resolve, idempotent migrations, allocation-as-budget-seed.
+
+## Develop
+
+`tsx` is bundled so the test suite + demo run on Node ≥ 18; the sqlite-backed CLI needs Node ≥ 22.5 (`node:sqlite`).
+
+```bash
+npm install
+npm test          # 337 tests
+npm run typecheck # tsc --noEmit, strict
 npm run demo      # end-to-end walkthrough on the in-memory store (any Node)
 ```
 
-The CLI (sqlite-backed, Node ≥ 22.5):
-
-```bash
-npm run cli -- mandate grant --label groceries --class groceries \
-    --currency GBP --rails card --per-tx 50000 --per-period 100000 \
-    --period week --expires-days 30
-npm run cli -- profile set --income 200000 --essentials 100000 --savings 300000 --stage late-student
-npm run cli -- finance "help me build a one-month buffer"   # PF agent (needs a model key)
-npm run cli -- goal set --label "emergency fund" --target 600000 --deadline 2026-12-01
-npm run cli -- agent "PAY 8000 GBP tesco groceries card :: weekly shop"
-npm run cli -- pending
-npm run cli -- approve <intentId> --rationale "yes, I know this payee" [--ack]
-npm run cli -- kill            # freeze ALL agent spend instantly
-npm run cli -- unkill          # release the kill switch
-npm run cli -- reset-breaker   # clear a tripped circuit breaker
-npm run cli -- status          # kill switch + circuit breaker state
-npm run cli -- audit verify
-npm run cli -- audit replay-sim   # counterfactual: re-run history vs the CURRENT mandates
-npm run cli -- audit replay-sim --mandates ./candidate.json   # …vs a candidate mandate set
-```
-
-High-risk pending intents (high spend-risk, irreversible rail, or above the
-challenge threshold) require `--ack` on `approve` — a challenge-response gate, not
-a bare rationale.
-
-A real model (via the Vercel AI SDK) is used automatically when a key is
-available; otherwise the deterministic stub parses the `PAY …` DSL above.
-Provider selection:
+A real model (via the Vercel AI SDK) is used automatically when a key is present; otherwise the deterministic stub parses the `PAY …` DSL.
 
 - `OPENSOLVENCY_MODEL_PROVIDER` — `openai` (default), `anthropic`, or `google`.
-- key — `OPENSOLVENCY_MODEL_API_KEY`, or the provider's standard env var
-  (`OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `GOOGLE_GENERATIVE_AI_API_KEY`).
+- key — `OPENSOLVENCY_MODEL_API_KEY`, or the provider's standard env var.
 - `OPENSOLVENCY_MODEL` — model id (defaults per provider).
 
-Adding another provider is one `@ai-sdk/*` package + one `case` in `aiSdkModel.ts`.
+## License
 
-## Layout
+[MIT](LICENSE) © General Liquidity. A General Liquidity product — liquidity and solvency are the two halves of financial health, and OpenSolvency is the half that keeps an autonomous agent inside its bounds.
 
-```
-src/core/
-  types.ts      # Mandate, PaymentIntent, GateDecision, Receipt, GateContext, DenyRule
-  gate.ts       # THE invariant — pure evaluateGate()
-  risk.ts       # spend-risk classifier (re-domained from Gordon's riskClassifier)
-  denyList.ts   # hard deny rules (predicates over the structured intent)
-  audit.ts      # hash-linked, HMAC-signed, tamper-evident audit log
-  store.ts      # the persistence boundary (interface) + period-window math
-  executor.ts   # the ONLY path to a rail — funnels every intent through the gate
-src/store/
-  memoryStore.ts  # in-memory Store (tests + reference)
-  sqliteStore.ts  # node:sqlite Store (production)
-src/rails/
-  provider.ts   # PaymentProvider interface + capabilities (id, rail, reversibility)
-  registry.ts   # holds providers by id; routes a rail kind → chosen protocol
-  fakeRail.ts   # in-process settlement for tests/demo
-  networkRail.ts # shared builder: live RailClient seam + fail-safe-if-unconfigured
-  x402.ts acp.ts ucp.ts mpp.ts visaIntelligentCommerce.ts mastercardAgentPay.ts
-  clients/onchainClient.ts      # REAL settlement: ERC-20 transfer via an injected signer (viem-shaped)
-  clients/virtualCardClient.ts  # REAL settlement: single-use virtual card per intent (Stripe-Issuing pattern)
-  clients/x402Client.ts         # REAL settlement: the x402 402-challenge → authorize → settle flow (EVM/Solana)
-  ap2/mandate.ts ap2/ap2Rail.ts # AP2 (Google): Payment-Mandate model + OpenSolvency-mandate→AP2-constraints map
-  index.ts      # barrel; documents which listed protocols are NOT settlement rails
-src/identity/verifier.ts # agent-identity layer (AIP / Visa Trusted Agent Protocol) → feeds gate risk via attestation
-src/ingress/server.ts # event ingress: HTTP requests run through the SAME gate (loopback)
-src/ingress/xmtp.ts   # second ingress transport: XMTP messages run through the SAME gate
-src/core/streaming.ts # streaming/recurring mandate preset for micropayments
-src/agent/
-  schema.ts     # zod PaymentIntent draft + the `pay` tool definition
-  aiSdkModel.ts # AI SDK model factory — OpenAI / Anthropic / Google, by config
-  aiAgent.ts    # the real agent: AI SDK multi-step loop; `pay` tool is gate-enforced
-  model.ts      # ModelProvider interface — the offline/deterministic seam
-  stubModel.ts  # deterministic DSL model (tests + air-gapped CLI, no key)
-  loop.ts       # single-turn offline path: propose → validate → executor
-  financeAgent.ts # PF agent: persona prompt + harness tools + gate-enforced pay + proactive moments
-  governance.ts # LLM-loop governance: doom-loop stop, token cap, per-run trace
-src/finance/      # the behavioural harness (from the Networth research)
-  profile.ts      # FinancialProfile — the operator's situation (4-pillar inputs + anxiety)
-  profileStore.ts # persist profile + goals (via the store meta KV)
-  onboarding.ts   # Networth-style Q&A → a FinancialProfile (conservative defaults)
-  resilience.ts   # Four Pillars of Resilience assessment (weakest pillar = agent agenda)
-  moments.ts      # teachable + reachable moment detection
-  watch.ts        # "watching your back" → structured concerns (non-punitive)
-  goals.ts        # goal-anchoring → agent objectives (required-monthly + feasibility)
-  ethics.ts       # empower-don't-exploit guardrail on agent suggestions
-  communication.ts # behaviour-over-knowledge → anxiety/stage-aware comms mode
-  persona.ts      # buildFinanceSystemPrompt — the harness as the agent's system prompt
-src/obs/
-  replay.ts     # renderTimeline — the signed audit chain as a readable timeline
-  replaySim.ts  # counterfactual policy replay: re-run the gate over real history vs a candidate mandate set
-  tracer.ts     # OTel-shaped Tracer seam (noop + console)
-src/cli/index.ts  # the first transport (mandate/pay/agent/approve/pending/audit/replay-sim)
-scripts/demo.ts   # the runnable end-to-end walkthrough
-test/             # gate, audit, executor, agent, store
-```
-
-## Next
-
-- **Live-wire** the reference `RailClient`s: a real viem signer + facilitator
-  behind `x402Client`, a real Stripe Issuing key behind `virtualCardClient`. The
-  protocol logic is built and unit-tested against mocks; what remains is the
-  per-network credential onboarding (deliberately out of the repo).
-- **Event ingress** (the executor is already transport-agnostic) so the agent
-  answers inbound payment challenges, on the Hermes-style hibernating runtime.
-- The **streaming-mandate / velocity-ceiling** spike at micropayment rates —
-  the one primitive most likely to stress the thesis.
-- Hermes-style **hot-tier memory** carrying the live trust profile; **ACE**-style
-  propose-only governance lessons (Tier-1, never touching the frozen gate).
+---
