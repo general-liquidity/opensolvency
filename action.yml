@@ -1,0 +1,72 @@
+# OpenSolvency spend gate — a GitHub Action that routes an agent payment through
+# the gate inside a CI pipeline (e.g. an agent buying compute/credits in CI). The
+# job fails if the payment isn't authorized, so a pipeline can't spend outside the
+# operator's mandates.
+#
+#   - uses: general-liquidity/opensolvency@v0.1.0
+#     with:
+#       payee: vast-ai
+#       payee-class: compute
+#       amount: "5000"            # minor-units
+#       rationale: "GPU hours for the eval run"
+#     env:
+#       OPENSOLVENCY_DB: ${{ github.workspace }}/opensolvency.db   # store with your mandates
+#
+# Provide the store (with mandates) via OPENSOLVENCY_DB — restore it from a cache /
+# artifact / secret, or grant a mandate in a prior step. The gate still decides:
+# auto-execute inside a mandate, else the job fails (or reports, if fail-unless-settled=false).
+
+name: "OpenSolvency spend gate"
+description: "Gate an agent payment through OpenSolvency's mandates/caps/deny-list in CI."
+inputs:
+  payee:
+    description: "Payee id"
+    required: true
+  payee-class:
+    description: "Class the mandate scopes on (e.g. compute, saas)"
+    required: true
+  amount:
+    description: "Amount in integer minor-units"
+    required: true
+  currency:
+    description: "ISO currency"
+    required: false
+    default: "GBP"
+  rail:
+    description: "Rail kind (card | checkout | onchain)"
+    required: false
+    default: "card"
+  rationale:
+    description: "Why this payment is being made (>= 10 chars)"
+    required: true
+  fail-unless-settled:
+    description: "Fail the job unless the gate auto-executes the payment"
+    required: false
+    default: "true"
+outputs:
+  outcome:
+    description: "settled | pending | blocked | failed"
+    value: ${{ steps.gate.outputs.outcome }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+    - id: gate
+      shell: bash
+      run: |
+        out=$(npx -y @general-liquidity/opensolvency pay \
+          --payee "${{ inputs.payee }}" \
+          --class "${{ inputs.payee-class }}" \
+          --amount "${{ inputs.amount }}" \
+          --currency "${{ inputs.currency }}" \
+          --rail "${{ inputs.rail }}" \
+          --rationale "${{ inputs.rationale }}" 2>&1)
+        echo "$out"
+        status=$(printf '%s\n' "$out" | head -1 | cut -d: -f1 | tr -d '[:space:]')
+        echo "outcome=$status" >> "$GITHUB_OUTPUT"
+        if [ "${{ inputs.fail-unless-settled }}" = "true" ] && [ "$status" != "settled" ]; then
+          echo "::error::OpenSolvency did not authorize this payment (outcome: $status)"
+          exit 1
+        fi

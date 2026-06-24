@@ -139,6 +139,12 @@ export class OpenSolvency {
     });
   }
 
+  /** The underlying executor — the gate-enforced money path. Exposed so framework
+   * integrations (`createGatedPayTool`, etc.) can wire the same gate. */
+  get executor(): ReturnType<typeof createExecutor> {
+    return this.#executor;
+  }
+
   // --- Mandates (operator-granted spend authority) ---------------------------
 
   /** Grant a new mandate and record `mandate.granted` to the signed audit chain. */

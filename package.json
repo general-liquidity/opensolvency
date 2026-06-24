@@ -54,6 +54,7 @@
     "prepublishOnly": "npm run build",
     "eval-gate": "node --import tsx scripts/eval-gate.ts",
     "testnet-settle": "node --import tsx scripts/testnet-settle.ts",
+    "example:shopping": "node --import tsx examples/shopping-agent.ts",
     "test": "node --import tsx --test \"test/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
     "demo": "node --import tsx scripts/demo.ts",

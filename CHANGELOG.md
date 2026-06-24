@@ -12,6 +12,13 @@ were built across the preceding milestones; this release adds the production
 hardening and integration surfaces.
 
 ### Added
+- **Reference example agents** (`examples/`) — a key-free `shopping-agent.ts`
+  demonstrating all four gate verdicts (auto-execute / park / block / injection-
+  resistance), and an `ai-sdk-agent.ts` wiring `createGatedPayTool` into a real
+  Vercel AI SDK agent. `npm run example:shopping`; the shopping flow is test-pinned.
+- **CI spend-gating GitHub Action** (`action.yml`) — `uses: general-liquidity/
+  opensolvency` routes a pipeline payment through the gate and fails the job unless
+  it's authorized (e.g. an agent buying compute in CI can't spend outside mandates).
 - **SpendTrust benchmark** (`src/benchmark/`) — "can your agent be trusted to
   spend?", the OpenSolvency analog to SharpeBench. An agent submits its decision log;
   `scoreSpendTrust` / `rankSpendTrust` grade it (A–F) on gate-respect, honest
