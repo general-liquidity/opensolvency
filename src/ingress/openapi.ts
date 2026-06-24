@@ -59,6 +59,13 @@ export function buildOpenApiDocument(version: string): Record<string, unknown> {
           responses: { "200": { description: "ok" } },
         },
       },
+      "/ready": {
+        get: {
+          summary: "Readiness probe — the gate responds (never requires auth)",
+          security: [],
+          responses: { "200": { description: "ready, with kill-switch / breaker state" } },
+        },
+      },
       "/status": {
         get: {
           summary: "Kill-switch / circuit-breaker state",
@@ -84,6 +91,16 @@ export function buildOpenApiDocument(version: string): Record<string, unknown> {
       "/payment-intent": {
         post: {
           summary: "Submit a payment intent to the gate",
+          parameters: [
+            {
+              name: "Idempotency-Key",
+              in: "header",
+              required: false,
+              schema: { type: "string" },
+              description:
+                "Replays the first submission's result on retry; the gate runs once per key.",
+            },
+          ],
           requestBody: {
             required: true,
             content: {
@@ -104,6 +121,8 @@ export function buildOpenApiDocument(version: string): Record<string, unknown> {
             "400": { description: "invalid payment-intent" },
             "401": { description: "missing/invalid bearer token" },
             "403": { description: "blocked by the gate (deny-list / over-cap / halted)" },
+            "413": { description: "request body too large" },
+            "429": { description: "rate limit exceeded" },
             "502": { description: "rail settlement failed" },
           },
         },

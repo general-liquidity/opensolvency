@@ -51,14 +51,14 @@ export function bearerFrom(authHeader: string | undefined): string | undefined {
  * (loopback dev posture). When a token IS configured, the request must carry a
  * matching `Authorization: Bearer <token>`; otherwise 401. Pure + deterministic.
  *
- * `/health` is always allowed (liveness probes shouldn't need a secret).
+ * `/health` and `/ready` are always allowed (probes shouldn't need a secret).
  */
 export function authorizeIngress(
   path: string,
   authHeader: string | undefined,
   configuredToken: string | undefined,
 ): AuthResult {
-  if (path === "/health") return { ok: true };
+  if (path === "/health" || path === "/ready") return { ok: true };
   if (!configuredToken) return { ok: true }; // open dev mode (loopback only)
   const presented = bearerFrom(authHeader);
   if (!presented || !safeEqual(presented, configuredToken)) {

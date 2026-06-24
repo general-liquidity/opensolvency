@@ -13,8 +13,14 @@ import { createServer, type Server } from "node:http";
 import { PaymentIntentDraftSchema } from "../agent/schema.ts";
 import { authorizeIngress } from "./auth.ts";
 import { buildOpenApiDocument } from "./openapi.ts";
+import { replayIfSeen, rememberKey } from "./idempotency.ts";
+import type { RateLimiter } from "./rateLimit.ts";
 import type { Executor } from "../core/executor.ts";
+import type { Store } from "../core/store.ts";
 import type { PaymentIntent } from "../core/types.ts";
+
+/** Default cap on a request body — a payment intent is tiny; reject anything large. */
+const DEFAULT_MAX_BODY_BYTES = 64 * 1024;
 
 export interface IngressDeps {
   executor: Executor;
@@ -25,6 +31,12 @@ export interface IngressDeps {
   ingressToken?: () => string | undefined;
   /** Version stamped into the served OpenAPI document. */
   version?: string;
+  /** Store, used to dedupe by Idempotency-Key (a retried POST settles once). */
+  store?: Store;
+  /** Per-IP rate limiter for the node:http wrapper (transport abuse guard). */
+  rateLimiter?: RateLimiter;
+  /** Max request body size in bytes (default 64 KiB). */
+  maxBodyBytes?: number;
 }
 
 export interface IngressResponse {
@@ -38,6 +50,7 @@ export async function handleIngress(
   rawBody: string,
   deps: IngressDeps,
   authHeader?: string,
+  idempotencyKey?: string,
 ): Promise<IngressResponse> {
   // Transport auth runs before anything but liveness. The gate still decides every
   // payment; this only stops unauthenticated callers reaching the transport at all.
@@ -46,6 +59,19 @@ export async function handleIngress(
 
   if (method === "GET" && path === "/health") {
     return { status: 200, body: { ok: true } };
+  }
+  if (method === "GET" && path === "/ready") {
+    // Readiness: the in-process gate responds (distinct from /health = process up).
+    // Surfaces halt state so a load balancer can see it, but stays 200-ready —
+    // kill/breaker are policy states, not unreadiness.
+    return {
+      status: 200,
+      body: {
+        ready: true,
+        killSwitch: deps.executor.isKillSwitchEngaged(),
+        circuitBreaker: deps.executor.isCircuitBreakerOpen(),
+      },
+    };
   }
   if (method === "GET" && path === "/openapi.json") {
     return { status: 200, body: buildOpenApiDocument(deps.version ?? "0.0.0") };
@@ -61,6 +87,12 @@ export async function handleIngress(
     };
   }
   if (method === "POST" && path === "/payment-intent") {
+    // Idempotency: a retry carrying a key we've already settled replays the prior
+    // result without re-running the gate (the intent is created exactly once).
+    if (idempotencyKey && deps.store) {
+      const replay = replayIfSeen(deps.store, idempotencyKey);
+      if (replay) return replay;
+    }
     let draft;
     try {
       draft = PaymentIntentDraftSchema.parse(JSON.parse(rawBody));
@@ -73,6 +105,7 @@ export async function handleIngress(
       createdAt: deps.clock(),
     };
     const result = await deps.executor.execute(intent);
+    if (idempotencyKey && deps.store) rememberKey(deps.store, idempotencyKey, result.intentId);
     const status =
       result.status === "settled"
         ? 200
@@ -98,18 +131,44 @@ export async function handleIngress(
 export function createIngressServer(
   deps: IngressDeps,
 ): Server {
+  const maxBody = deps.maxBodyBytes ?? DEFAULT_MAX_BODY_BYTES;
+  const send = (res: import("node:http").ServerResponse, status: number, body: unknown) => {
+    res.writeHead(status, { "content-type": "application/json" });
+    res.end(JSON.stringify(body));
+  };
+
   return createServer((req, res) => {
+    // Per-IP rate limit (transport abuse guard) — the gate is still the authority.
+    if (deps.rateLimiter) {
+      const ip = req.socket.remoteAddress ?? "unknown";
+      const rl = deps.rateLimiter.check(ip);
+      if (!rl.ok) {
+        res.setHeader("retry-after", Math.ceil((rl.retryAfterMs ?? 1000) / 1000));
+        send(res, 429, { error: "rate limit exceeded" });
+        return;
+      }
+    }
+
     let body = "";
+    let tooLarge = false;
     req.on("data", (chunk) => {
+      if (tooLarge) return;
       body += chunk;
+      if (Buffer.byteLength(body) > maxBody) {
+        tooLarge = true;
+        send(res, 413, { error: "payload too large" });
+        req.destroy();
+      }
     });
     req.on("end", () => {
+      if (tooLarge) return;
       const path = new URL(req.url ?? "/", "http://localhost").pathname;
       const authHeader = req.headers.authorization;
-      void handleIngress(req.method ?? "GET", path, body, deps, authHeader).then((out) => {
-        res.writeHead(out.status, { "content-type": "application/json" });
-        res.end(JSON.stringify(out.body));
-      });
+      const idemKey = req.headers["idempotency-key"];
+      const idempotencyKey = Array.isArray(idemKey) ? idemKey[0] : idemKey;
+      void handleIngress(req.method ?? "GET", path, body, deps, authHeader, idempotencyKey).then(
+        (out) => send(res, out.status, out.body),
+      );
     });
   });
 }

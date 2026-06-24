@@ -12,6 +12,11 @@ were built across the preceding milestones; this release adds the production
 hardening and integration surfaces.
 
 ### Added
+- **Payments / HTTP hardening** — **idempotency keys** (`Idempotency-Key` header:
+  a retried `POST /payment-intent` replays the first result and the gate runs once,
+  so a network retry can't settle twice), a per-IP **rate limiter** (fixed-window,
+  `429` + `Retry-After`), a **request body-size cap** (`413`), and a **`/ready`**
+  readiness probe (distinct from `/health`). All documented in the OpenAPI doc.
 - **Editor integration (ACP)** — an Agent Client Protocol stdio surface
   (`src/acp/`) so editors/IDEs can drive the gate-enforced finance agent in-editor,
   alongside the existing MCP server (Claude Code / Cursor) and HTTP ingress.

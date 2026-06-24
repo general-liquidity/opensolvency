@@ -35,6 +35,7 @@ import {
 import { runFinanceAgent } from "../agent/financeAgent.ts";
 import { createIngressServer } from "../ingress/server.ts";
 import { getIngressToken, setIngressToken } from "../ingress/auth.ts";
+import { createRateLimiter } from "../ingress/rateLimit.ts";
 import { runAcpStdio } from "../acp/entry.ts";
 import { createOpenSolvencyMcpServer, startMcpStdio } from "../mcp/server.ts";
 import { VERSION } from "../version.ts";
@@ -402,8 +403,10 @@ async function main(): Promise<void> {
       executor,
       clock,
       newId,
+      store,
       ingressToken: () => getIngressToken(store.getMeta.bind(store)),
       version: VERSION,
+      rateLimiter: createRateLimiter(),
     });
     const tokenSet = getIngressToken(store.getMeta.bind(store)) !== undefined;
     server.listen(port, "127.0.0.1", () => {
