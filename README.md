@@ -123,6 +123,39 @@ const os = new OpenSolvency({ store, commit: flush });         // writes are dur
 | `serve [--port N]` · `token set <t>` | Run the HTTP ingress (+ OpenAPI); set the bearer token that guards it. |
 | `mcp` · `acp` | Launch the MCP (Claude Code/Cursor) or ACP (editor) stdio surface. |
 
+## Gate any framework's spend
+
+Drop the gate into any agent framework in one line. The native **Vercel AI SDK**
+binding:
+
+```ts
+import { generateText } from "ai";
+import { createGatedPayTool } from "@general-liquidity/opensolvency/integrations";
+
+await generateText({
+  model, prompt,
+  tools: { pay: createGatedPayTool({ executor }) },   // the model's spend is now gated
+});
+```
+
+Every other framework wraps the same framework-agnostic `gatedPay(deps, draft)`
+handler with the shared schema — e.g. a **Mastra** / **LangChain** / **OpenAI
+Agents** / **CrewAI** tool:
+
+```ts
+import { gatedPay, gatedPayInputSchema, GATED_PAY_DESCRIPTION } from "@general-liquidity/opensolvency/integrations";
+
+// Mastra
+createTool({ id: "pay", description: GATED_PAY_DESCRIPTION, inputSchema: gatedPayInputSchema,
+  execute: ({ context }) => gatedPay({ executor }, context) });
+
+// LangChain / OpenAI Agents / CrewAI: register a tool whose handler is `(draft) => gatedPay({ executor }, draft)`
+```
+
+The handler routes through `executor.execute`, so the gate governs every call no
+matter which framework calls it — auto-execute inside a mandate, park for approval,
+or block. No prompt can override it.
+
 ## What it enforces
 
 The gate decides on **structured numbers and the live mandate set** — never on model text, which is why a prompt-injected rationale changes nothing. Each decision is the same pure function, signed and replayable.

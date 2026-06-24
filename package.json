@@ -33,6 +33,10 @@
     "./mcp": {
       "types": "./dist/mcp/run.d.ts",
       "import": "./dist/mcp/run.js"
+    },
+    "./integrations": {
+      "types": "./dist/integrations/index.d.ts",
+      "import": "./dist/integrations/index.js"
     }
   },
   "files": [
