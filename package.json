@@ -38,6 +38,7 @@
     "build": "tsc -p tsconfig.build.json",
     "prepublishOnly": "npm run build",
     "eval-gate": "node --import tsx scripts/eval-gate.ts",
+    "testnet-settle": "node --import tsx scripts/testnet-settle.ts",
     "test": "node --import tsx --test \"test/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
     "demo": "node --import tsx scripts/demo.ts",
@@ -49,7 +50,8 @@
   "devDependencies": {
     "@types/node": "^22.13.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "viem": "^2.53.1"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.81",

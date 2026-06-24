@@ -172,6 +172,28 @@ agent / editor / MCP client / HTTP caller
 #### Runtime posture (decided, deferred)
 Hermes-style serverless-hibernation (always-reachable, ~$0 idle) — **not** Aeon's GitHub-Actions cron: a money agent must answer inbound payment challenges (x402/ACP) as *events*, which a 5-minute cron can't. Execution is non-custodial — it runs through the operator's own connected accounts.
 
+## Real settlement (testnet)
+
+Every rail fails safe by default — it never moves money without an injected client.
+To run a **genuine** settlement through the gate, `scripts/testnet-settle.ts` wires a
+live [viem](https://viem.sh) wallet into the `OnchainSigner` seam and does a real
+ERC-20 stablecoin transfer on a testnet. You bring a funded testnet key; the gate
+runs for real (a vetted payee auto-executes; an unvetted one is blocked before any
+transfer):
+
+```bash
+OPENSOLVENCY_RPC_URL=https://sepolia.base.org \
+OPENSOLVENCY_PRIVATE_KEY=0x...        # a funded testnet key (yours)
+OPENSOLVENCY_TOKEN_ADDRESS=0x...      # testnet USDC (6 decimals)
+OPENSOLVENCY_PAYEE_ADDRESS=0x...      # where to send
+OPENSOLVENCY_AMOUNT=10000             # base units (0.01 USDC)
+npm run testnet-settle
+```
+
+The published package ships the seam, not the wallet — `viem` is a dev-only
+dependency, so a consumer brings their own signer (or uses this script as the
+template).
+
 ## Tech stack
 
 | Technology | Role |

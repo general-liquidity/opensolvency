@@ -12,6 +12,14 @@ were built across the preceding milestones; this release adds the production
 hardening and integration surfaces.
 
 ### Added
+- **Real on-chain settlement path (testnet)** — `scripts/testnet-settle.ts` takes
+  the system past the fail-safe stubs: a genuine ERC-20 stablecoin transfer (e.g.
+  testnet USDC) executed by the same executor + gate, via a live `viem` wallet
+  adapted to the repo's `OnchainSigner` seam (`viem` is a dev-only dep; the shipped
+  package keeps the seam, not the wallet). Needs an operator-supplied funded testnet
+  key. The gate runs for real — a unit test proves a *vetted* payee auto-executes
+  (tx hash flows back as the receipt) while an *unvetted* one is blocked by the
+  deny-list with the signer never called (money never moves).
 - **Deployable runtime** — a multi-stage `Dockerfile` (non-root, `node:sqlite`,
   `/ready` healthcheck), `docker-compose.yml`, and `DEPLOY.md`. The `serve` command
   gained `--host` and now **fails closed**: binding a non-loopback interface without
