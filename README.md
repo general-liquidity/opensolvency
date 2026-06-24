@@ -181,7 +181,7 @@ never fabricates a settlement.
 
 | Integration | What it is |
 |:--|:--|
-| **AIP** (Agent Identity Protocol) | Ed25519 agent attestation tokens + registry JWKS - feeds the gate's risk via an `attestation` level. |
+| <img height="14" align="top" src="assets/integrations/aip.jpg" />&nbsp; **AIP** (Agent Identity Protocol) | Ed25519 agent attestation tokens + registry JWKS - feeds the gate's risk via an `attestation` level. |
 | <img height="14" align="top" src="https://cdn.simpleicons.org/visa/1A1F71" />&nbsp; **Visa Trusted Agent Protocol** | RFC-9421 HTTP message signatures - the same `attestation` shape. |
 | **Network reputation** | An injected payee-reputation source feeds risk (never relaxes the floor). |
 | **Sanctions / OFAC + AML** | Screening wired into the deny-list + risk classifier as a pluggable provider. |
