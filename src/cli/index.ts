@@ -40,6 +40,7 @@ import { runAcpStdio } from "../acp/entry.ts";
 import { startOpenSolvencyMcp } from "../mcp/run.ts";
 import { VERSION } from "../version.ts";
 import { runEvalSuite } from "../evals/index.ts";
+import { exportAuditChain, verifyAuditExport } from "../audit/export.ts";
 import { renderTimeline } from "../obs/replay.ts";
 import { replayAudit } from "../obs/replaySim.ts";
 import { buildProfile } from "../finance/onboarding.ts";
@@ -287,6 +288,32 @@ async function main(): Promise<void> {
     for (const e of audit.entries()) {
       console.log(`#${e.seq} ${e.ts} ${e.type} ${JSON.stringify(e.payload)}`);
     }
+    return;
+  }
+
+  if (command === "audit" && sub === "export") {
+    // Dump the signed chain to a portable file (jsonl default) for archival /
+    // independent verification. `--format json` for a single array.
+    const f = parseFlags(rest);
+    process.stdout.write(exportAuditChain(audit.entries(), f.format === "json" ? "json" : "jsonl"));
+    process.stdout.write("\n");
+    return;
+  }
+
+  if (command === "audit" && sub === "verify-export") {
+    // Verify a previously-exported chain standalone, with this operator's key.
+    const path = rest[0];
+    if (!path) {
+      console.log("usage: opensolvency audit verify-export <file>");
+      return;
+    }
+    const r = verifyAuditExport(readFileSync(path, "utf8"), store.operatorKey());
+    console.log(
+      r.valid
+        ? "exported chain OK — verified standalone"
+        : `exported chain INVALID at seq ${r.brokenAt}: ${r.reason}`,
+    );
+    if (!r.valid) process.exitCode = 1;
     return;
   }
 

@@ -304,6 +304,12 @@ export type { AuditEntry, AuditEventType, VerifyResult } from "../core/audit.ts"
 export type { ExecuteResult, RefundResult } from "../core/executor.ts";
 export type { Store, StoredIntent, IntentStatus } from "../core/store.ts";
 export { createMemoryStore } from "../store/memoryStore.ts";
+export {
+  exportAuditChain,
+  parseAuditExport,
+  verifyAuditExport,
+  type AuditExportFormat,
+} from "../audit/export.ts";
 export { createPostgresStore } from "../store/postgresStore.ts";
 export type {
   PgClient,

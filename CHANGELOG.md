@@ -12,6 +12,15 @@ were built across the preceding milestones; this release adds the production
 hardening and integration surfaces.
 
 ### Added
+- **Audit-log export + standalone verifier** — `exportAuditChain` dumps the signed
+  hash-linked chain to a portable file (jsonl/json); `verifyAuditExport(dump, key)`
+  re-verifies it standalone (no store/executor), reusing the exact `AuditLog.verify`
+  logic. CLI: `audit export` / `audit verify-export <file>`. (HMAC-symmetric — proves
+  integrity to a key holder; asymmetric public verifiability is a noted future step.)
+- **Versioned config schema + migration** — `src/config/schema.ts`: a zod-validated
+  operator config carrying an explicit `version`, with `migrateConfig` forward-
+  migrating older shapes (a missing version = pre-versioning v0, filled with
+  defaults) before validation. Mirrors the mandate-lifecycle versioning discipline.
 - **Framework integration adapters** (`@general-liquidity/opensolvency/integrations`)
   — a framework-agnostic `gatedPay` handler (+ shared name/description/zod schema)
   and a native Vercel AI SDK `createGatedPayTool`, so any agent framework (AI SDK,
