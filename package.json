@@ -49,6 +49,10 @@
     "./gate": {
       "types": "./dist/portable.d.ts",
       "import": "./dist/portable.js"
+    },
+    "./disclosure": {
+      "types": "./dist/disclosure/index.d.ts",
+      "import": "./dist/disclosure/index.js"
     }
   },
   "files": [

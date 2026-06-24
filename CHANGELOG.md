@@ -4,6 +4,22 @@ All notable changes to OpenSolvency are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to adhere to
 semantic versioning once it reaches 1.0.
 
+## [Unreleased]
+
+### Added
+- **Verifiable Agency — agent disclosure schema** (`src/disclosure/`, exported at
+  `@general-liquidity/opensolvency/disclosure`). The vendor-neutral core of a
+  disclosure protocol for agent-to-agent commerce: a versioned, zod-validated
+  `AgentDisclosure` covering all seven field groups (system-prompt fingerprint,
+  operating constitution + hard constraints with an `enforced` flag, tool inventory
+  + permission boundaries, capital/risk envelope, operator identity + deniability,
+  deployment-history summary anchored to the audit chain, red-team attestation), plus
+  a `SignedDisclosure` envelope pinned to **ed25519** (asymmetric, so a counterparty
+  verifies without a shared secret). No OpenSolvency imports — designed to lift into a
+  standalone `verifiable-agency` repo; the OpenSolvency field builders (next) populate
+  it from the live gate / mandates / audit / SpendTrust. The reference implementation
+  of the "pluggable behavioural-trust layer" ERC-8004 et al. defer.
+
 ## [0.1.1] — 2026-06-24
 
 The full P1/P2 ecosystem build-out that landed after the `0.1.0` publish, plus a
