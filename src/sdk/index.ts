@@ -318,6 +318,15 @@ export {
   type JsonRpcRequest,
   type JsonRpcResponse,
 } from "../rpc/jsonRpc.ts";
+export {
+  scoreSpendTrust,
+  rankSpendTrust,
+  REFERENCE_SUBMISSIONS,
+  type SpendTrustSubmission,
+  type SpendDecision,
+  type TrustScore,
+  type TrustGrade,
+} from "../benchmark/spendTrust.ts";
 export type {
   PgClient,
   PostgresStoreHandle,

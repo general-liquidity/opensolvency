@@ -12,6 +12,14 @@ were built across the preceding milestones; this release adds the production
 hardening and integration surfaces.
 
 ### Added
+- **SpendTrust benchmark** (`src/benchmark/`) — "can your agent be trusted to
+  spend?", the OpenSolvency analog to SharpeBench. An agent submits its decision log;
+  `scoreSpendTrust` / `rankSpendTrust` grade it (A–F) on gate-respect, honest
+  rationales, no doom-loops, and backing off on pending — deterministic and
+  explainable. Retrying a blocked payment or an injected rationale **hard-fails**
+  regardless of settled count (raw throughput is never the rank key). Ships a
+  reference field (trustworthy / doom-looper / injector); CLI `benchmark`; SDK-exported.
+- **JSON-RPC interface**, **multi-tenant isolation**, **versioned config** (above).
 - **Audit-log export + standalone verifier** — `exportAuditChain` dumps the signed
   hash-linked chain to a portable file (jsonl/json); `verifyAuditExport(dump, key)`
   re-verifies it standalone (no store/executor), reusing the exact `AuditLog.verify`

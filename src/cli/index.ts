@@ -41,6 +41,7 @@ import { startOpenSolvencyMcp } from "../mcp/run.ts";
 import { VERSION } from "../version.ts";
 import { runEvalSuite } from "../evals/index.ts";
 import { exportAuditChain, verifyAuditExport } from "../audit/export.ts";
+import { rankSpendTrust, REFERENCE_SUBMISSIONS, type SpendTrustSubmission } from "../benchmark/spendTrust.ts";
 import { renderTimeline } from "../obs/replay.ts";
 import { replayAudit } from "../obs/replaySim.ts";
 import { buildProfile } from "../finance/onboarding.ts";
@@ -411,6 +412,22 @@ async function main(): Promise<void> {
     return;
   }
 
+  // ── benchmark: SpendTrust — rank how safely agents spend ─────────────────────
+  if (command === "benchmark") {
+    const subs: SpendTrustSubmission[] = sub
+      ? (JSON.parse(readFileSync(sub, "utf8")) as SpendTrustSubmission[])
+      : REFERENCE_SUBMISSIONS;
+    const board = rankSpendTrust(subs);
+    for (const [i, r] of board.entries()) {
+      console.log(
+        `${String(i + 1).padStart(2)}. ${r.grade}  ${String(r.score).padStart(3)}  ` +
+          `${r.agentId}${r.hardFail ? "  [HARD FAIL]" : ""}` +
+          (r.violations.length ? `\n      ${r.violations.join("\n      ")}` : ""),
+      );
+    }
+    return;
+  }
+
   // ── evals: run the generated scenario suite (gate decisions + process checks) ─
   if (command === "evals") {
     const suite = await runEvalSuite();
@@ -519,8 +536,8 @@ async function main(): Promise<void> {
     "usage: opensolvency <mandate grant|mandate list|mandate revoke|pay|" +
       "agent|finance|profile set|profile show|goal set|pending|approve [--ack]|" +
       "kill|unkill|reset-breaker|status|audit verify|audit log|audit replay|" +
-      "audit replay-sim [--mandates file.json]|serve [--port N]|token set <token>|" +
-      "mcp|acp|evals>",
+      "audit replay-sim [--mandates file.json]|audit export|audit verify-export <file>|" +
+      "serve [--port N]|token set <token>|mcp|acp|evals|benchmark [subs.json]>",
   );
 }
 
