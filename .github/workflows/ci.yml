@@ -1,8 +1,9 @@
 name: CI
 
-# OpenSolvency governance plane — additive CI.
-# Two independent jobs, both on Node 22 (the engines floor is >=22.18, and the
-# full suite touches node:sqlite, which lands in Node 22).
+# OpenSolvency governance plane — CI. The TypeScript core runs on Node 22 (the
+# engines floor is >=22.18, and the full suite touches node:sqlite). Each language
+# client is additionally compile/test-gated on its own toolchain (Go / Rust / C /
+# Python), so every published client is proven to build on every push.
 on:
   push:
     branches: [main]
@@ -93,3 +94,59 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Build docs
         run: mdbook build docs
+
+  # ── language clients — each compile/test-gated on its own toolchain ──────────
+  client-go:
+    name: client (Go)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+      - name: Build · vet · fmt
+        working-directory: clients/go
+        run: |
+          go build ./...
+          go vet ./...
+          test -z "$(gofmt -l .)" || { echo "gofmt needs to run"; gofmt -l .; exit 1; }
+
+  client-rust:
+    name: client (Rust)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build · test · fmt · clippy
+        working-directory: clients/rust
+        run: |
+          cargo build --quiet
+          cargo test --quiet
+          cargo fmt --check
+          cargo clippy --quiet -- -D warnings
+
+  client-c:
+    name: client (C/C++)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install libcurl
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
+      - name: Syntax-check + compile + link
+        working-directory: clients/c
+        run: |
+          make check
+          make
+
+  client-python:
+    name: client (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile + import (stdlib only)
+        working-directory: clients/python
+        run: |
+          python -m py_compile opensolvency.py
+          python -c "import opensolvency; print('import ok:', opensolvency.OpenSolvencyClient)"

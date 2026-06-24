@@ -16,6 +16,10 @@
 //! println!("{:?}", res.outcome); // settled | pending | blocked | failed
 //! ```
 
+// `ureq::Error` is a large enum; boxing it in this thin client isn't worth the
+// ergonomic cost, so we accept the lint rather than wrap every Result.
+#![allow(clippy::result_large_err)]
+
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 

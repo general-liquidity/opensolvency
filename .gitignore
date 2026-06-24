@@ -7,3 +7,7 @@ opensolvency.db
 opensolvency.db-*
 clients/rust/target/
 clients/rust/Cargo.lock
+clients/c/example
+clients/c/example.exe
+__pycache__/
+*.pyc
