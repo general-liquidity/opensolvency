@@ -39,6 +39,12 @@ function safeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+/** Is this a loopback bind host? Used to fail closed: binding a NON-loopback
+ *  interface without an ingress token would expose the endpoint unauthenticated. */
+export function isLoopbackHost(host: string): boolean {
+  return host === "127.0.0.1" || host === "localhost" || host === "::1";
+}
+
 /** Extract a bearer token from an Authorization header value. */
 export function bearerFrom(authHeader: string | undefined): string | undefined {
   if (!authHeader) return undefined;

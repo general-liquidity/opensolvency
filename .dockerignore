@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.github
+test
+scripts
+*.db
+*.db-*
+*.tgz
+.DS_Store

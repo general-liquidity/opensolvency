@@ -1,0 +1,24 @@
+# Local / single-node deployment of the OpenSolvency ingress.
+#   OPENSOLVENCY_INGRESS_TOKEN=$(openssl rand -hex 24) docker compose up --build
+# The sqlite store persists on the `osdata` volume. For multi-instance / Postgres,
+# compose your own deployment using the SDK's createPostgresStore (the CLI is
+# single-node sqlite by design).
+
+services:
+  opensolvency:
+    build: .
+    ports:
+      - "8787:8787"
+    environment:
+      # REQUIRED to bind a public interface — the service fails closed without it.
+      OPENSOLVENCY_INGRESS_TOKEN: ${OPENSOLVENCY_INGRESS_TOKEN:?set a bearer token}
+      OPENSOLVENCY_DB: /data/opensolvency.db
+      # Optional: a model key enables the real agent (otherwise the deterministic stub).
+      OPENSOLVENCY_MODEL_API_KEY: ${OPENSOLVENCY_MODEL_API_KEY:-}
+      OPENSOLVENCY_MODEL_PROVIDER: ${OPENSOLVENCY_MODEL_PROVIDER:-openai}
+    volumes:
+      - osdata:/data
+    restart: unless-stopped
+
+volumes:
+  osdata:

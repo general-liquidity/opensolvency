@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { createRateLimiter } from "../src/ingress/rateLimit.ts";
+import { isLoopbackHost } from "../src/ingress/auth.ts";
 import { replayIfSeen, rememberKey, idempotencyMetaKey } from "../src/ingress/idempotency.ts";
 import { handleIngress, type IngressDeps } from "../src/ingress/server.ts";
 import { AuditLog } from "../src/core/audit.ts";
@@ -85,6 +86,12 @@ test("different Idempotency-Keys create distinct intents", async () => {
   const b = await handleIngress("POST", "/payment-intent", intentBody, d, undefined, "k-b");
   assert.notEqual((a.body as any).intentId, (b.body as any).intentId);
   assert.equal(d.store!.listPendingIntents().length, 2);
+});
+
+// ── fail-closed bind guard ───────────────────────────────────────────────────
+test("loopback hosts are recognized (the public-bind-without-token guard)", () => {
+  for (const h of ["127.0.0.1", "localhost", "::1"]) assert.equal(isLoopbackHost(h), true);
+  for (const h of ["0.0.0.0", "10.0.0.5", "example.com"]) assert.equal(isLoopbackHost(h), false);
 });
 
 // ── /ready ───────────────────────────────────────────────────────────────────

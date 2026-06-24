@@ -12,6 +12,14 @@ were built across the preceding milestones; this release adds the production
 hardening and integration surfaces.
 
 ### Added
+- **Deployable runtime** — a multi-stage `Dockerfile` (non-root, `node:sqlite`,
+  `/ready` healthcheck), `docker-compose.yml`, and `DEPLOY.md`. The `serve` command
+  gained `--host` and now **fails closed**: binding a non-loopback interface without
+  an ingress token is refused (the gate still governs spend, but the transport is
+  never exposed unauthenticated). The token can be set via `OPENSOLVENCY_INGRESS_TOKEN`
+  (ergonomic for containers) as well as `token set`.
+- **Publishable on npm** — the `opensolvency` name is available; the build ships a
+  clean ~168 kB tarball (dist + `.d.ts` + LICENSE/CHANGELOG/README, no dead maps).
 - **Eval harness** (`src/evals/`) — the payments-domain analogue of Gordon's RULER
   harness. **Generated scenarios** (from the gate-acceptance spec + the deny-list,
   each `derivedFrom`-stamped) run **live** through a deterministic executor +

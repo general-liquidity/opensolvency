@@ -34,7 +34,7 @@ import {
 } from "../agent/aiSdkModel.ts";
 import { runFinanceAgent } from "../agent/financeAgent.ts";
 import { createIngressServer } from "../ingress/server.ts";
-import { getIngressToken, setIngressToken } from "../ingress/auth.ts";
+import { getIngressToken, setIngressToken, isLoopbackHost } from "../ingress/auth.ts";
 import { createRateLimiter } from "../ingress/rateLimit.ts";
 import { runAcpStdio } from "../acp/entry.ts";
 import { createOpenSolvencyMcpServer, startMcpStdio } from "../mcp/server.ts";
@@ -413,21 +413,37 @@ async function main(): Promise<void> {
   if (command === "serve") {
     const f = parseFlags([sub, ...rest].filter(Boolean));
     const port = Number(f.port ?? "8787");
+    const host = f.host ?? "127.0.0.1";
     const newId = () => `pi_${randomUUID().slice(0, 8)}`;
+    // Token resolution: an env var (ergonomic for containers) overrides the stored
+    // one, so a deployment configures auth without a writable DB step.
+    const resolveToken = () =>
+      process.env.OPENSOLVENCY_INGRESS_TOKEN ?? getIngressToken(store.getMeta.bind(store));
+    const isLoopback = isLoopbackHost(host);
+    // FAIL CLOSED: binding to a public interface without a token would expose the
+    // ingress unauthenticated. The gate still governs spend, but the transport must
+    // not be open to the internet — refuse to start.
+    if (!isLoopback && !resolveToken()) {
+      console.error(
+        `refusing to bind ${host} without an ingress token — set OPENSOLVENCY_INGRESS_TOKEN ` +
+          "or run `token set <token>` first (binding a public interface unauthenticated is unsafe).",
+      );
+      process.exitCode = 1;
+      return;
+    }
     const server = createIngressServer({
       executor,
       clock,
       newId,
       store,
-      ingressToken: () => getIngressToken(store.getMeta.bind(store)),
+      ingressToken: resolveToken,
       version: VERSION,
       rateLimiter: createRateLimiter(),
     });
-    const tokenSet = getIngressToken(store.getMeta.bind(store)) !== undefined;
-    server.listen(port, "127.0.0.1", () => {
+    server.listen(port, host, () => {
       console.log(
-        `ingress on http://127.0.0.1:${port} (OpenAPI at /openapi.json) — ` +
-          `auth ${tokenSet ? "ON (bearer token required)" : "OFF (loopback dev; set one with `token set`)"}`,
+        `ingress on http://${host}:${port} (OpenAPI at /openapi.json) — ` +
+          `auth ${resolveToken() ? "ON (bearer token required)" : "OFF (loopback dev; set one with `token set`)"}`,
       );
     });
     return;
