@@ -8,7 +8,7 @@
 *Autonomous-money agents already move real funds with no mandate, no cap, no risk gate, and no approver. OpenSolvency is the missing layer - it lets an agent spend autonomously **inside** operator-defined bounds, and confirm above them.*
 
 [![CI](https://img.shields.io/github/actions/workflow/status/general-liquidity/opensolvency/ci.yml?style=flat-square&label=CI)](https://github.com/general-liquidity/opensolvency/actions)
-[![tests](https://img.shields.io/badge/tests-561%20passing-success?style=flat-square)](#develop)
+[![tests](https://img.shields.io/badge/tests-610%20passing-success?style=flat-square)](#develop)
 [![node](https://img.shields.io/badge/node-%E2%89%A522.18-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white)](#develop)
 [![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](#license)
 [![type](https://img.shields.io/badge/types-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](#tech-stack)
@@ -42,7 +42,7 @@ The gate decides *may this spend happen*; a second, behavioural half (the Networ
 
 ## Status - built end-to-end (pre-1.0)
 
-The **B milestone** - "an agent that structurally can't spend wrong" - is built, tested, and CI-green: kernel, ledger, rails, agent loop, behavioural harness, money-domain completeness, the agentic-economy surface, and the integration/operations layer. **561 tests** pass, plus typecheck, a `tsc → dist` build, and an end-to-end demo run green in CI on Node 24.
+The **B milestone** - "an agent that structurally can't spend wrong" - is built, tested, and CI-green: kernel, ledger, rails, agent loop, behavioural harness, money-domain completeness, the agentic-economy surface, and the integration/operations layer. **610 tests** pass, plus typecheck, a `tsc → dist` build, and an end-to-end demo run green in CI on Node 24.
 
 **Injected by the operator, not in-repo** (a deliberate boundary, not a gap): the live rail clients (Visa/Mastercard credentials, a Stripe Issuing key, a funded on-chain signer + facilitator) and the live identity verifiers. Each fails *safe* when unconfigured - a real rail never fabricates a settlement.
 
@@ -52,7 +52,7 @@ The **B milestone** - "an agent that structurally can't spend wrong" - is built,
 
 ```bash
 npm install
-npm test                                   # 561 tests - gate, audit, executor, stores, rails, harness, surfaces
+npm test                                   # 610 tests - gate, audit, executor, stores, rails, harness, surfaces
 npm run demo                               # end-to-end walkthrough on the in-memory store (any Node)
 ```
 
@@ -313,7 +313,7 @@ From **FinancialClaw** (data-layer patterns): integer minor-units, multi-currenc
 
 ```bash
 npm install
-npm test          # 561 tests
+npm test          # 610 tests
 npm run typecheck # tsc --noEmit, strict
 npm run demo      # end-to-end walkthrough on the in-memory store (any Node)
 ```

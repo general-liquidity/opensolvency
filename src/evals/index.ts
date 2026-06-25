@@ -29,4 +29,14 @@ export {
   type RegressionReport,
   type Regression,
 } from "./harness.ts";
-export { stubJudge, RUBRICS, type JudgeModel, type JudgeInput, type JudgeVerdict } from "./judge.ts";
+export {
+  stubJudge,
+  RUBRICS,
+  llmJudge,
+  buildJudgePrompt,
+  parseJudgeVerdict,
+  type JudgeModel,
+  type JudgeInput,
+  type JudgeVerdict,
+  type TextCompleter,
+} from "./judge.ts";

@@ -13,6 +13,8 @@
 - [On-chain identity — ERC-8128 & SIWA](./erc8128-siwa.md)
 - [Proof-of-personhood — World ID & Human Passport](./personhood.md)
 - [World Agent — human-backed agent](./world-agent.md)
+- [Governed-wallet adapter](./governed-wallet.md)
+- [Compliance — EU AI Act Art. 26](./compliance.md)
 - [Deployment](./deployment.md)
 - [Security & compliance](./security.md)
 - [The SpendTrust benchmark](./spendtrust.md)

@@ -1,6 +1,6 @@
 {
   "name": "@general-liquidity/opensolvency",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "type": "module",
   "publishConfig": {
     "access": "public"
@@ -69,6 +69,10 @@
     "./identity": {
       "types": "./dist/identity/index.d.ts",
       "import": "./dist/identity/index.js"
+    },
+    "./compliance": {
+      "types": "./dist/compliance/index.d.ts",
+      "import": "./dist/compliance/index.js"
     }
   },
   "files": [

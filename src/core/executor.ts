@@ -17,6 +17,7 @@
 
 import type { AuditLog, AuditEventType } from "./audit.ts";
 import { evaluateGate } from "./gate.ts";
+import { computePolicyHash, effectivePolicy } from "./enforcement.ts";
 import { payeeTrust } from "./trust.ts";
 import { convertMinor, type FxRateSource } from "./fx.ts";
 import type { ReputationSource } from "./reputation.ts";
@@ -131,7 +132,21 @@ export function createExecutor(deps: ExecutorDeps) {
   }
 
   function record(type: AuditEventType, payload: unknown, ts: string): void {
-    deps.store.appendAudit(deps.audit.append(type, payload, ts));
+    // Every gate decision is stamped with the policyHash it was evaluated under, so the
+    // signed audit chain itself proves *which policy each decision ran under* — the
+    // emitter half of Proof-of-Enforcement (a counterparty can replay a sampled decision
+    // and confirm the gate enforces the disclosed policy).
+    const entry =
+      type === "gate.decision"
+        ? deps.audit.appendGateDecision(
+            payload as Record<string, unknown>,
+            computePolicyHash(
+              effectivePolicy({ store: deps.store, config: deps.config, denyRules: deps.denyRules }),
+            ),
+            ts,
+          )
+        : deps.audit.append(type, payload, ts);
+    deps.store.appendAudit(entry);
     const attrs =
       payload && typeof payload === "object"
         ? (payload as Record<string, unknown>)

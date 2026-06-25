@@ -4,6 +4,27 @@ All notable changes to OpenSolvency are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to adhere to
 semantic versioning once it reaches 1.0.
 
+## [0.1.7] - 2026-06-26
+
+### Added
+- **Proof-of-Enforcement** (`core/enforcement.ts`): every signed `gate.decision` audit entry is now
+  stamped with the `policyHash` it was evaluated under, and `replayDecision` re-runs the pure gate to
+  prove a decision matches its signed verdict. `effectivePolicy`/`computePolicyHash` + the disclosure
+  builder bind `{ policyHash, auditAnchor }` into the disclosure — so a counterparty can verify the gate
+  *enforces what it discloses* (ADP's `verifyEnforcement` consumes this; cross-repo hash byte-identical).
+- **Governed-wallet adapter** (`rails/governedWallet.ts`): gate a Coinbase CDP / AgentKit (or any) wallet
+  spend through the gate before it executes — dep-light, injected execute seam, OS above the custody layer.
+- **Compliance subpath** (`@general-liquidity/opensolvency/compliance`): `deployerOversightReport` mapped
+  to EU AI Act Article 26 (human oversight / monitoring / record-keeping) + a signed, independently
+  verifiable `exportCompliancePackage`/`verifyCompliancePackage`.
+- **ERC-7710 live delegation-gating** (`gateDelegationRedemption`) + the EIP-712 hash now via `viem`.
+- **SpendTrust public surface** (`publishLeaderboard`, submission schema, frozen methodology).
+
+### Changed (build-vs-buy)
+- Cross-decimal FX fix (JPY/0-decimal caps) via optional `dinero.js`; OpenAPI derived from Zod
+  (`@asteasolutions/zod-to-openapi`); optional `http-message-signatures` RFC-9421 path; pluggable LLM judge.
+  The deterministic gate/audit kernel stays dependency-light (new crypto/format deps are optional/dynamic).
+
 ## [0.1.6] - 2026-06-25
 
 ### Added

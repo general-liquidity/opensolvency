@@ -339,3 +339,28 @@ export type {
   PgNotificationListener,
   PostgresStoreOptions,
 } from "../store/postgresStore.ts";
+// Proof-of-Enforcement — the falsifiable enforced-governance binding (ADP verifies it).
+export {
+  effectivePolicy,
+  computePolicyHash,
+  replayDecision,
+  type EffectivePolicy,
+  type DecisionRecord,
+  type PoEAttestation,
+} from "../core/enforcement.ts";
+export { decodeEnforcementBinding, type EnforcementBinding } from "../disclosure/builders.ts";
+// Governed-wallet adapter — gate a CDP/AgentKit spend above the custody layer.
+export {
+  governedWallet,
+  cdpSpendToIntent,
+  type WalletSpendRequest,
+  type GovernedWalletResult,
+} from "../rails/governedWallet.ts";
+// SpendTrust public benchmark surface + cross-decimal FX.
+export {
+  publishLeaderboard,
+  SpendTrustSubmissionSchema,
+  SPENDTRUST_METHODOLOGY,
+  SPENDTRUST_METHODOLOGY_VERSION,
+} from "../benchmark/spendTrust.ts";
+export { minorUnitExponent, convertMinorCrossDecimal } from "../core/fx.ts";

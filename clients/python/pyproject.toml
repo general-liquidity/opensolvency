@@ -1,6 +1,6 @@
 [project]
 name = "opensolvency"
-version = "0.1.6"
+version = "0.1.7"
 description = "Python client for the OpenSolvency governance gate (REST over the HTTP ingress)"
 readme = "README.md"
 requires-python = ">=3.8"
