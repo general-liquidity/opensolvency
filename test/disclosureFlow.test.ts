@@ -85,10 +85,12 @@ test("tampering with the signed disclosure breaks the signature", () => {
 
 test("a forged agentId (signed by a different key) is rejected", () => {
   const signed = buildAndSignDisclosure(deps());
-  signed.disclosure.agentId = "f".repeat(64); // claim a different identity
+  signed.disclosure.agentId = "f".repeat(64); // claim a different identity (not re-signed)
   const r = verifyDisclosureSignature(signed);
   assert.equal(r.ok, false);
-  assert.match(r.reason ?? "", /agentId/);
+  // ADP v2 verifies the signature before the agentId↔key binding; since agentId is part
+  // of the signed document, tampering it is caught as a signature mismatch either way.
+  assert.match(r.reason ?? "", /signature mismatch|agentId/);
 });
 
 test("policy refuses when the red-team grade is too low", () => {
