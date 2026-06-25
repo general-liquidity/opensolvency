@@ -7,10 +7,20 @@
 // A mandate is OS's OFF-CHAIN authority object. ERC-7710 is the *enforcement*
 // of permission bounds on-chain via caveat enforcers; this module is the bridge.
 // Pure mapping/encoding functions use NO crypto. The hash/sign/verify functions
-// dynamically import @noble/* (optionalDependencies) so the core gate never
-// pulls a crypto dependency.
+// dynamically import @noble/* and viem (optionalDependencies) so the core gate
+// never pulls a crypto dependency. The EIP-712 typed-data hash is computed by
+// viem's hashTypedData (ADOPT — replaces a hand-rolled keccak/ABI-encode path).
 
-import type { Mandate, Period } from "../core/types.ts";
+import { evaluateGate } from "../core/gate.ts";
+import type {
+  CurrencyCode,
+  GateContext,
+  GateDecision,
+  Mandate,
+  PaymentIntent,
+  Period,
+  RailKind,
+} from "../core/types.ts";
 
 /** A 0x-prefixed hex string. */
 export type Hex = `0x${string}`;
@@ -370,10 +380,16 @@ async function loadCrypto(): Promise<{
   return { keccak: keccakMod.keccak_256, secp: curvesMod.secp256k1 };
 }
 
-/** keccak256 of bytes, async (uses the optional @noble/hashes dep). */
-async function keccak256(bytes: Uint8Array): Promise<Uint8Array> {
-  const { keccak } = await loadCrypto();
-  return keccak(bytes);
+/** Dynamically load viem's `hashTypedData` (optional dep — same pattern as @noble). */
+async function loadViem(): Promise<{ hashTypedData: typeof import("viem").hashTypedData }> {
+  try {
+    const viem = await import("viem");
+    return { hashTypedData: viem.hashTypedData };
+  } catch {
+    throw new Error(
+      "ERC-7710 EIP-712 hashing requires the optional dependency viem. Install it: npm i viem",
+    );
+  }
 }
 
 function keccakSync(keccak: (b: Uint8Array) => Uint8Array, bytes: Uint8Array): Uint8Array {
@@ -432,14 +448,48 @@ export async function delegationStructHash(d: Delegation): Promise<Hex> {
   return bytesToHex(structHash);
 }
 
-/** The full EIP-712 typed-data hash: keccak256(0x1901 ‖ domainSeparator ‖ structHash). */
+/**
+ * The full EIP-712 typed-data hash: keccak256(0x1901 ‖ domainSeparator ‖ structHash).
+ *
+ * Computed via viem's `hashTypedData` (build-vs-buy ADOPT) rather than a hand-rolled
+ * keccak/ABI-encode, behind the same optional/dynamic-import pattern as the @noble
+ * crypto deps. The `Caveat` typed-data omits `args` (it is excluded from the signed
+ * hash), matching DELEGATION_TYPE_STRING / CAVEAT_TYPE_STRING.
+ */
 export async function delegationHash(d: Delegation, domain: Eip712Domain): Promise<Hex> {
-  const sep = await domainSeparator(domain);
-  const structHash = await delegationStructHash(d);
-  const digest = await keccak256(
-    concatBytes(new Uint8Array([0x19, 0x01]), hexToBytes(sep), hexToBytes(structHash)),
-  );
-  return bytesToHex(digest);
+  const { hashTypedData } = await loadViem();
+  return hashTypedData({
+    domain: {
+      name: domain.name ?? "DelegationManager",
+      version: domain.version ?? "1",
+      chainId: Number(domain.chainId),
+      verifyingContract: normalizeAddress(domain.verifyingContract),
+    },
+    types: {
+      Delegation: [
+        { name: "delegate", type: "address" },
+        { name: "delegator", type: "address" },
+        { name: "authority", type: "bytes32" },
+        { name: "caveats", type: "Caveat[]" },
+        { name: "salt", type: "uint256" },
+      ],
+      Caveat: [
+        { name: "enforcer", type: "address" },
+        { name: "terms", type: "bytes" },
+      ],
+    },
+    primaryType: "Delegation",
+    message: {
+      delegate: normalizeAddress(d.delegate),
+      delegator: normalizeAddress(d.delegator),
+      authority: d.authority,
+      caveats: d.caveats.map((c) => ({
+        enforcer: normalizeAddress(c.enforcer),
+        terms: c.terms,
+      })),
+      salt: d.salt,
+    },
+  }) as Hex;
 }
 
 /** Derive an EOA address from an uncompressed (65-byte, 0x04-prefixed) public key. */
@@ -511,4 +561,236 @@ function bytesToBigint(bytes: Uint8Array): bigint {
   let v = 0n;
   for (const b of bytes) v = (v << 8n) | BigInt(b);
   return v;
+}
+
+// ---------------------------------------------------------------------------
+// Live delegation-gating: ERC-7710 delegation + proposed redemption → OS gate
+// ---------------------------------------------------------------------------
+//
+// A signed ERC-7710 delegation grants the delegate an on-chain spend bound by its
+// caveats. Before the delegate redeems it, OpenSolvency governs the spend: we
+// decode the caveats into the OS authority shape (a Mandate), map the proposed
+// redemption into a PaymentIntent, and run BOTH through the same `evaluateGate`
+// that governs every other OS payment. So a MetaMask-style delegation spends only
+// inside the operator's mandate caps, deny-list, velocity, and risk thresholds —
+// the on-chain enforcers are the floor, the OS gate is the operator's policy.
+
+/** Terms-decoders mirroring the encoders above (pure, no crypto). */
+
+/** Decode TimestampEnforcer terms → { afterUnix, beforeUnix }. */
+export function decodeTimestampTerms(terms: Hex): { afterUnix: number; beforeUnix: number } {
+  const b = hexToBytes(terms);
+  if (b.length !== 32) throw new Error(`decodeTimestampTerms: expected 32 bytes, got ${b.length}`);
+  return {
+    afterUnix: Number(bytesToBigint(b.slice(0, 16))),
+    beforeUnix: Number(bytesToBigint(b.slice(16, 32))),
+  };
+}
+
+/** Decode NativeTokenTransferAmountEnforcer terms → allowance. */
+export function decodeNativeAmountTerms(terms: Hex): bigint {
+  const b = hexToBytes(terms);
+  if (b.length !== 32)
+    throw new Error(`decodeNativeAmountTerms: expected 32 bytes, got ${b.length}`);
+  return bytesToBigint(b);
+}
+
+/** Decode ERC20TransferAmountEnforcer terms → { token, allowance }. */
+export function decodeErc20AmountTerms(terms: Hex): { token: Hex; allowance: bigint } {
+  const b = hexToBytes(terms);
+  if (b.length !== 64)
+    throw new Error(`decodeErc20AmountTerms: expected 64 bytes, got ${b.length}`);
+  return { token: bytesToHex(b.slice(12, 32)), allowance: bytesToBigint(b.slice(32, 64)) };
+}
+
+/** Decode ERC20PeriodTransferEnforcer terms → packed fields. */
+export function decodePeriodTerms(terms: Hex): {
+  token: Hex;
+  periodAmount: bigint;
+  periodDuration: number;
+  startDate: number;
+} {
+  const b = hexToBytes(terms);
+  if (b.length !== 116) throw new Error(`decodePeriodTerms: expected 116 bytes, got ${b.length}`);
+  return {
+    token: bytesToHex(b.slice(0, 20)),
+    periodAmount: bytesToBigint(b.slice(20, 52)),
+    periodDuration: Number(bytesToBigint(b.slice(52, 84))),
+    startDate: Number(bytesToBigint(b.slice(84, 116))),
+  };
+}
+
+/** Decode NativeTokenPeriodTransferEnforcer terms → packed fields. */
+export function decodeNativePeriodTerms(terms: Hex): {
+  periodAmount: bigint;
+  periodDuration: number;
+  startDate: number;
+} {
+  const b = hexToBytes(terms);
+  if (b.length !== 96)
+    throw new Error(`decodeNativePeriodTerms: expected 96 bytes, got ${b.length}`);
+  return {
+    periodAmount: bytesToBigint(b.slice(0, 32)),
+    periodDuration: Number(bytesToBigint(b.slice(32, 64))),
+    startDate: Number(bytesToBigint(b.slice(64, 96))),
+  };
+}
+
+/** Decode AllowedTargetsEnforcer terms → packed 20-byte addresses. */
+export function decodeAllowedTargetsTerms(terms: Hex): Hex[] {
+  const b = hexToBytes(terms);
+  if (b.length === 0 || b.length % 20 !== 0)
+    throw new Error(`decodeAllowedTargetsTerms: length must be a non-zero multiple of 20`);
+  const out: Hex[] = [];
+  for (let i = 0; i < b.length; i += 20) out.push(bytesToHex(b.slice(i, i + 20)));
+  return out;
+}
+
+/** Map an enforcer period-duration (seconds) back to an OS Period. Closest match. */
+function periodFromSeconds(seconds: number): Period {
+  let best: Period = "day";
+  let bestDiff = Number.POSITIVE_INFINITY;
+  for (const [p, s] of Object.entries(PERIOD_SECONDS) as [Period, number][]) {
+    const diff = Math.abs(s - seconds);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      best = p;
+    }
+  }
+  return best;
+}
+
+/**
+ * The proposed on-chain redemption the delegate wants to make with the delegation,
+ * plus the metadata the OS gate needs (currency/rail/rationale) that the raw
+ * delegation doesn't carry. `enforcers` maps caveat enforcer addresses back to
+ * their kind so the caveats can be decoded into OS caps.
+ */
+export interface DelegationRedemptionOpts {
+  /** The proposed transfer target — the on-chain recipient; becomes the OS payee. */
+  target: Hex;
+  /** Proposed transfer amount in minor-units (must match the on-chain value scale). */
+  amount: number;
+  /** Settlement currency for the OS gate (e.g. "USDC", "ETH"). */
+  currency: CurrencyCode;
+  /** Settlement rail. ERC-7710 redemptions settle on-chain by construction. */
+  rail?: RailKind;
+  /** Required rationale (logged to the audit; the gate enforces minRationaleChars). */
+  rationale: string;
+  /** The payee class for the synthesized OS intent/mandate scope. */
+  payeeClass?: string;
+  /** Stable intent id; defaults to a deterministic value from the delegation salt + target. */
+  intentId?: string;
+  /** Enforcer addresses used to build this delegation, for caveat→cap decoding. */
+  enforcers: EnforcerAddresses;
+  /** Mandate id for the synthesized OS mandate; defaults to the delegation salt hex. */
+  mandateId?: string;
+  /** Mandate label; defaults to a generic delegation label. */
+  mandateLabel?: string;
+}
+
+/**
+ * Govern an ERC-7710 delegation redemption through the OpenSolvency gate.
+ *
+ * Decodes the delegation's caveats into an OS `Mandate` (caps/expiry/scope), maps
+ * the proposed redemption into a `PaymentIntent`, then runs the intent through
+ * `evaluateGate` with the synthesized mandate injected into the context. So the
+ * delegation's on-chain bounds AND the operator's OS policy both apply: an in-cap
+ * covered redemption → `auto_execute`; an over-cap one → `block`; an uncovered or
+ * elevated-risk one → `confirm_operator`.
+ *
+ * The caller supplies the rest of the `GateContext` (now, prior spend, deny-rules,
+ * trust, …). Any caller-supplied mandates are preserved; the decoded mandate is
+ * appended so an existing operator mandate can still authorize.
+ */
+export function gateDelegationRedemption(
+  delegation: Delegation,
+  opts: DelegationRedemptionOpts,
+  ctx: Omit<GateContext, "mandates"> & { mandates?: Mandate[] },
+): { intent: PaymentIntent; decision: GateDecision } {
+  const target = normalizeAddress(opts.target);
+  const rail: RailKind = opts.rail ?? "onchain";
+  const payeeClass = opts.payeeClass ?? "delegated-spend";
+
+  // Decode caveats into OS cap fields. Enforcer kind is identified by address.
+  const e = opts.enforcers;
+  const norm = (a?: Hex) => (a ? normalizeAddress(a).toLowerCase() : undefined);
+  const byAddr = new Map<string, Caveat>();
+  for (const c of delegation.caveats) byAddr.set(normalizeAddress(c.enforcer).toLowerCase(), c);
+
+  let expiresUnix: number | undefined;
+  let perTxCap: number | undefined;
+  let perPeriodCap: number | undefined;
+  let period: Period = "month";
+  let grantedUnix: number | undefined;
+  let allowlist: Hex[] | undefined;
+
+  const tsC = byAddr.get(norm(e.timestamp) ?? "");
+  if (tsC) expiresUnix = decodeTimestampTerms(tsC.terms).beforeUnix;
+
+  const erc20AmtC = byAddr.get(norm(e.erc20TransferAmount) ?? "");
+  const nativeAmtC = byAddr.get(norm(e.nativeTokenTransferAmount) ?? "");
+  if (erc20AmtC) perTxCap = Number(decodeErc20AmountTerms(erc20AmtC.terms).allowance);
+  else if (nativeAmtC) perTxCap = Number(decodeNativeAmountTerms(nativeAmtC.terms));
+
+  const erc20PerC = byAddr.get(norm(e.erc20PeriodTransfer) ?? "");
+  const nativePerC = byAddr.get(norm(e.nativeTokenPeriodTransfer) ?? "");
+  if (erc20PerC) {
+    const p = decodePeriodTerms(erc20PerC.terms);
+    perPeriodCap = Number(p.periodAmount);
+    period = periodFromSeconds(p.periodDuration);
+    grantedUnix = p.startDate;
+  } else if (nativePerC) {
+    const p = decodeNativePeriodTerms(nativePerC.terms);
+    perPeriodCap = Number(p.periodAmount);
+    period = periodFromSeconds(p.periodDuration);
+    grantedUnix = p.startDate;
+  }
+
+  const targetsC = byAddr.get(norm(e.allowedTargets) ?? "");
+  if (targetsC) allowlist = decodeAllowedTargetsTerms(targetsC.terms).map((a) => a.toLowerCase() as Hex);
+
+  // A delegation without an amount cap can't be gated as a covered spend — fail
+  // closed by giving the synthesized mandate a zero cap (the gate then blocks).
+  const txCap = perTxCap ?? 0;
+  const periodCap = perPeriodCap ?? txCap;
+
+  const mandateId = opts.mandateId ?? `0x${delegation.salt.toString(16)}`;
+  const grantedAt = new Date((grantedUnix ?? 0) * 1000).toISOString();
+  // No timestamp caveat ⇒ no on-chain expiry; treat as far-future so the gate's
+  // liveness check (expiresAt > now) doesn't reject a legitimately-unbounded grant.
+  const expiresAt = new Date((expiresUnix ?? 32_503_680_000) * 1000).toISOString();
+
+  const decodedMandate: Mandate = {
+    id: mandateId,
+    label: opts.mandateLabel ?? "ERC-7710 delegation",
+    scope: allowlist
+      ? { kind: "allowlist", values: allowlist }
+      : { kind: "class", value: payeeClass },
+    currency: opts.currency,
+    allowedRails: [rail],
+    perTxCap: txCap,
+    perPeriodCap: periodCap,
+    period,
+    grantedAt,
+    expiresAt,
+    status: "active",
+  };
+
+  const intent: PaymentIntent = {
+    id: opts.intentId ?? `${mandateId}:${target}`,
+    payee: allowlist ? target.toLowerCase() : target,
+    payeeClass,
+    amount: opts.amount,
+    currency: opts.currency,
+    rail,
+    rationale: opts.rationale,
+    createdAt: ctx.now,
+  };
+
+  const decision = evaluateGate(intent, {
+    ...ctx,
+    mandates: [...(ctx.mandates ?? []), decodedMandate],
+  });
+  return { intent, decision };
 }

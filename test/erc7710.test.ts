@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import type { Mandate } from "../src/core/types.ts";
+import { DEFAULT_GATE_CONFIG } from "../src/core/types.ts";
+import type { GateContext, Mandate } from "../src/core/types.ts";
 import {
   ANY_DELEGATE,
   type Eip712Domain,
@@ -9,6 +10,12 @@ import {
   ROOT_AUTHORITY,
   abiWord,
   bytesToHex,
+  decodeAllowedTargetsTerms,
+  decodeErc20AmountTerms,
+  decodeNativeAmountTerms,
+  decodeNativePeriodTerms,
+  decodePeriodTerms,
+  decodeTimestampTerms,
   delegationHash,
   delegationStructHash,
   deterministicSalt,
@@ -19,6 +26,7 @@ import {
   encodeNativePeriodTerms,
   encodePeriodTerms,
   encodeTimestampTerms,
+  gateDelegationRedemption,
   hexToBytes,
   mandateToDelegation,
   signDelegation,
@@ -415,4 +423,115 @@ test("verifyDelegation reports mismatch when delegator is not the signer", async
 test("constants have the expected shapes", () => {
   assert.equal(ROOT_AUTHORITY, `0x${"ff".repeat(32)}`);
   assert.equal(ANY_DELEGATE, "0x0000000000000000000000000000000000000a11");
+});
+
+// --- terms decoders (round-trip) --------------------------------------------
+
+test("decoders round-trip the encoders", () => {
+  assert.deepEqual(decodeTimestampTerms(bytesToHex(encodeTimestampTerms(2000, 1000))), {
+    afterUnix: 1000,
+    beforeUnix: 2000,
+  });
+  assert.equal(decodeNativeAmountTerms(bytesToHex(encodeNativeAmountTerms(255n))), 255n);
+  assert.deepEqual(decodeErc20AmountTerms(bytesToHex(encodeErc20AmountTerms(TOKEN, 1234n))), {
+    token: TOKEN,
+    allowance: 1234n,
+  });
+  assert.deepEqual(decodePeriodTerms(bytesToHex(encodePeriodTerms(TOKEN, 999n, 604800, 1_700_000_000))), {
+    token: TOKEN,
+    periodAmount: 999n,
+    periodDuration: 604800,
+    startDate: 1_700_000_000,
+  });
+  assert.deepEqual(decodeNativePeriodTerms(bytesToHex(encodeNativePeriodTerms(7n, 86400, 100))), {
+    periodAmount: 7n,
+    periodDuration: 86400,
+    startDate: 100,
+  });
+  assert.deepEqual(decodeAllowedTargetsTerms(bytesToHex(encodeAllowedTargetsTerms([DELEGATE, DELEGATOR]))), [
+    DELEGATE,
+    DELEGATOR,
+  ]);
+});
+
+// --- gateDelegationRedemption -----------------------------------------------
+
+function baseGateCtx(overrides: Partial<GateContext> = {}): Omit<GateContext, "mandates"> {
+  return {
+    now: "2026-01-08T00:00:00.000Z", // within the week mandate, before expiry
+    periodSpendByMandate: () => [],
+    knownPayees: new Set<string>([DELEGATE.toLowerCase()]),
+    denyRules: [],
+    config: DEFAULT_GATE_CONFIG,
+    ...overrides,
+  };
+}
+
+test("gateDelegationRedemption maps a covered in-cap redemption → auto_execute", () => {
+  // allowlist mandate: per-tx 50_000, per-period 200_000, token (ERC-20).
+  const del = mandateToDelegation(
+    baseMandate({ scope: { kind: "allowlist", values: [DELEGATE] } }),
+    { delegate: DELEGATE, delegator: DELEGATOR, enforcers: ENFORCERS, token: TOKEN },
+  );
+
+  const { intent, decision } = gateDelegationRedemption(
+    del,
+    {
+      target: DELEGATE, // a known, allowlisted payee
+      amount: 40_000,
+      currency: "USDC",
+      rationale: "weekly grocery run via delegation",
+      enforcers: ENFORCERS,
+    },
+    baseGateCtx(),
+  );
+
+  assert.equal(intent.amount, 40_000);
+  assert.equal(intent.payee, DELEGATE.toLowerCase());
+  assert.equal(decision.outcome, "auto_execute");
+  assert.equal(decision.remainingPeriodBudget, 200_000 - 40_000);
+});
+
+test("gateDelegationRedemption blocks an over-cap redemption (perTxCap exceeded)", () => {
+  const del = mandateToDelegation(
+    baseMandate({ scope: { kind: "allowlist", values: [DELEGATE] } }),
+    { delegate: DELEGATE, delegator: DELEGATOR, enforcers: ENFORCERS, token: TOKEN },
+  );
+
+  const { decision } = gateDelegationRedemption(
+    del,
+    {
+      target: DELEGATE,
+      amount: 60_000, // > perTxCap 50_000
+      currency: "USDC",
+      rationale: "oversized delegated spend attempt",
+      enforcers: ENFORCERS,
+    },
+    baseGateCtx(),
+  );
+
+  assert.equal(decision.outcome, "block");
+  assert.match(decision.reasons.join(" "), /per-transaction cap/);
+});
+
+test("gateDelegationRedemption routes a redemption to an off-allowlist target to confirm_operator", () => {
+  const del = mandateToDelegation(
+    baseMandate({ scope: { kind: "allowlist", values: [DELEGATE] } }),
+    { delegate: DELEGATE, delegator: DELEGATOR, enforcers: ENFORCERS, token: TOKEN },
+  );
+
+  const { decision } = gateDelegationRedemption(
+    del,
+    {
+      target: TOKEN, // not in the allowlist [DELEGATE]
+      amount: 10_000,
+      currency: "USDC",
+      rationale: "spend to an out-of-scope target",
+      enforcers: ENFORCERS,
+    },
+    baseGateCtx(),
+  );
+
+  // No decoded mandate covers an off-allowlist target → operator authorization.
+  assert.equal(decision.outcome, "confirm_operator");
 });
