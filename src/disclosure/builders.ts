@@ -7,6 +7,7 @@
 
 import { DEFAULT_DENY_RULES } from "../core/denyList.ts";
 import { DEFAULT_GATE_CONFIG } from "../core/types.ts";
+import { computePolicyHash, effectivePolicy } from "../core/enforcement.ts";
 import type { Store } from "../core/store.ts";
 import type { AuditLog } from "../core/audit.ts";
 import type { TrustScore } from "../benchmark/spendTrust.ts";
@@ -75,7 +76,47 @@ export interface BuildDisclosureDeps {
   model?: { name: string; identifier: string };
 }
 
-function buildConstitution(): Constitution {
+/** The Proof-of-Enforcement binding carried in the constitution: which policy
+ *  the gate runs (`policyHash`) and the signed audit head it's anchored to
+ *  (`auditAnchor`). `enforced: true` now MEANS this policyHash equals the one
+ *  the recent signed audit entries ran under — a falsifiable claim, not a promise. */
+export interface EnforcementBinding {
+  policyHash: string;
+  auditAnchor: string;
+}
+
+const PoE_EVIDENCE_PREFIX =
+  "opensolvency-gate (evaluateGate over structured intent); poe=";
+
+/** Encode the PoE binding into the schema-stable `enforcementEvidence` string.
+ *  A nested constitution field cannot carry it on the wire yet: the published
+ *  disclosure schema STRIPS unknown keys on parse, so a verifier that re-parses
+ *  would canonicalize a different object and the signature would mismatch.
+ *  `enforcementEvidence` is a declared field that survives parse, so the binding
+ *  stays inside the SIGNED payload and round-trips for any verifier. */
+function encodeEnforcementEvidence(binding: EnforcementBinding): string {
+  return PoE_EVIDENCE_PREFIX + JSON.stringify(binding);
+}
+
+/** Recover the PoE binding from a constitution's `enforcementEvidence` — the
+ *  field ADP's PoE verifier reads for `policyHash` + `auditAnchor`. */
+export function decodeEnforcementBinding(
+  constitution: Constitution,
+): EnforcementBinding | null {
+  const ev = constitution.enforcementEvidence;
+  if (!ev?.startsWith(PoE_EVIDENCE_PREFIX)) return null;
+  try {
+    const parsed = JSON.parse(ev.slice(PoE_EVIDENCE_PREFIX.length)) as EnforcementBinding;
+    if (typeof parsed.policyHash === "string" && typeof parsed.auditAnchor === "string") {
+      return parsed;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function buildConstitution(deps: BuildDisclosureDeps, auditAnchor: string): Constitution {
   const hardConstraints: HardConstraint[] = DEFAULT_DENY_RULES.map((r) => ({
     id: r.id,
     description: r.reason,
@@ -87,6 +128,13 @@ function buildConstitution(): Constitution {
     velocityMaxCount: DEFAULT_GATE_CONFIG.velocityMaxCount,
     anomalyMultiple: DEFAULT_GATE_CONFIG.anomalyMultiple,
   };
+  const policyHash = computePolicyHash(
+    effectivePolicy({
+      store: deps.store,
+      config: DEFAULT_GATE_CONFIG,
+      denyRules: DEFAULT_DENY_RULES,
+    }),
+  );
   return {
     hardConstraints,
     parameters,
@@ -94,7 +142,9 @@ function buildConstitution(): Constitution {
     // OpenSolvency ENFORCES these: the gate is a pure function the agent cannot
     // override. This is the field that separates a disclosure from a promise.
     enforced: true,
-    enforcementEvidence: "opensolvency-gate (evaluateGate over structured intent)",
+    // Proof-of-Enforcement binding (policyHash + auditAnchor) — encoded into the
+    // signed evidence so `enforced` is falsifiable by replay, not just asserted.
+    enforcementEvidence: encodeEnforcementEvidence({ policyHash, auditAnchor }),
   };
 }
 
@@ -192,7 +242,7 @@ export function buildAgentDisclosure(deps: BuildDisclosureDeps): AgentDisclosure
     nonce: deps.nonce,
     auditAnchor: history.chainAnchor,
     systemPrompt: { algorithm: "sha256", digest: sha256Hex(deps.systemPrompt) },
-    constitution: buildConstitution(),
+    constitution: buildConstitution(deps, history.chainAnchor),
     tools: deps.toolInventory ?? DEFAULT_TOOL_INVENTORY,
     capital: buildCapital(deps.store),
     operator: {

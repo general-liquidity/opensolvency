@@ -97,6 +97,21 @@ export class AuditLog {
     return entry;
   }
 
+  /**
+   * Append a `gate.decision` entry that BINDS the decision to the policy it ran
+   * under: `policyHash` is folded into the signed payload, so the existing entry
+   * hash + signature + chain link already cover it. The chain therefore proves
+   * not just WHAT each decision was, but WHICH policy it was evaluated against
+   * (Proof-of-Enforcement). The merge never overwrites a payload's own keys.
+   */
+  appendGateDecision(
+    payload: Record<string, unknown>,
+    policyHash: string,
+    ts: string,
+  ): AuditEntry {
+    return this.append("gate.decision", { ...payload, policyHash }, ts);
+  }
+
   entries(): readonly AuditEntry[] {
     return this.#entries;
   }
