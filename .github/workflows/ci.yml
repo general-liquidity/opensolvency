@@ -16,10 +16,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Node 22
+      - name: Install Node 24
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       # Clean, lockfile-exact install — fails if package-lock.json is stale.
@@ -48,10 +48,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Node 22
+      - name: Install Node 24
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
@@ -68,10 +68,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Node 22
+      - name: Install Node 24
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
