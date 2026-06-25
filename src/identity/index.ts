@@ -9,9 +9,12 @@
 //                 plus `mapSelfToAttestation` (a verified Self proof as a gate risk input).
 //  - worldId.ts:  World ID — Worldcoin proof-of-personhood (injected verifier) → the gate's
 //                 `attestation`; the `nullifier_hash` is the per-(human, action) sybil key.
+//  - worldAgent.ts: World Agent (worldcoin/agentkit) — an agent backed by a World ID-verified
+//                 human; EIP-191 signer recovery + an injected AgentBook (`lookupHuman`) resolver.
 //  - passport.ts: Human Passport — a humanity score → the gate's `ReputationLevel` (injected scorer).
 export * from "./verifier.ts";
 export * from "./erc8128.ts";
 export * from "./siwa.ts";
 export * from "./worldId.ts";
+export * from "./worldAgent.ts";
 export * from "./passport.ts";
