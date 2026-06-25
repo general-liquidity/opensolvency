@@ -87,6 +87,8 @@ export function staticIdentityVerifier(
 /** A Visa-TAP signed request, in the structured shape this verifier covers. The
  * operator parses the inbound HTTP request into this; the signer must have built
  * the signature over exactly these covered components. */
+// Exported for reuse by sibling verifiers (e.g. ERC-8128) whose signature base is
+// byte-identical to RFC 9421 — they reconstruct the base with these helpers.
 export interface SignedRequest {
   method: string;
   authority: string; // the :authority / Host (e.g. "api.example.com")
@@ -118,7 +120,7 @@ export interface VisaTapOptions {
   identityOf?: (keyid: string) => AgentIdentity | undefined;
 }
 
-interface ParsedSignatureParams {
+export interface ParsedSignatureParams {
   components: string[]; // ordered covered-component identifiers, e.g. `"@method"`
   created?: number;
   expires?: number;
@@ -131,7 +133,7 @@ interface ParsedSignatureParams {
  *   label=("@method" "@authority" "content-digest");created=...;keyid="...";alg="..."
  * Returns the chosen entry's covered components + parameters, verbatim where it
  * matters for the signature base. */
-function parseSignatureInput(
+export function parseSignatureInput(
   value: string,
   label?: string,
 ): { label: string; params: ParsedSignatureParams } | undefined {
@@ -171,7 +173,7 @@ function parseSignatureInput(
 /** Split on a separator at the top level only (ignore separators inside quotes
  * or parentheses). Sufficient for the Structured-Field subset RFC 9421 uses for
  * Signature-Input / Signature. */
-function splitTopLevel(input: string, sep: string): string[] {
+export function splitTopLevel(input: string, sep: string): string[] {
   const out: string[] = [];
   let depth = 0;
   let inQuotes = false;
@@ -192,7 +194,7 @@ function splitTopLevel(input: string, sep: string): string[] {
 }
 
 /** Parse the `Signature` dictionary and return the byte-string for a label. */
-function parseSignatureBytes(value: string, label: string): Buffer | undefined {
+export function parseSignatureBytes(value: string, label: string): Buffer | undefined {
   for (const entry of splitTopLevel(value, ",")) {
     const eq = entry.indexOf("=");
     if (eq < 0) continue;
@@ -207,7 +209,7 @@ function parseSignatureBytes(value: string, label: string): Buffer | undefined {
 }
 
 /** Resolve one covered component's value from the request (RFC 9421 §2). */
-function componentValue(id: string, req: SignedRequest): string | undefined {
+export function componentValue(id: string, req: SignedRequest): string | undefined {
   const name = id.replace(/^"|"$/g, "");
   switch (name) {
     case "@method":
@@ -226,7 +228,7 @@ function componentValue(id: string, req: SignedRequest): string | undefined {
  * verbatim `@signature-params` value. Returns undefined if any covered component
  * cannot be resolved (a signature over a component we can't reproduce can't be
  * trusted). */
-function buildSignatureBase(
+export function buildSignatureBase(
   req: SignedRequest,
   params: ParsedSignatureParams,
 ): string | undefined {
