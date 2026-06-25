@@ -4,9 +4,19 @@ All notable changes to OpenSolvency are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to adhere to
 semantic versioning once it reaches 1.0.
 
-## [Unreleased]
+## [0.1.3] - 2026-06-25
 
 ### Added
+- **AP2 (Agent Payments Protocol) interop** (`@general-liquidity/opensolvency/ap2`): map the OS
+  `Mandate` ⇄ AP2 `IntentMandate`, turn a merchant-signed AP2 `CartMandate` into an OS
+  `PaymentIntent` and run it through the gate (`gateAp2Cart`) — OS becomes the policy engine
+  behind AP2 authorization. Best-effort merchant-JWT cart verification (EdDSA/ES256/RS256,
+  RFC 8785 JCS `cart_hash`), structural `PaymentMandate` binding, A2A DataPart pack/unpack, and
+  an AP2 AgentCard extension. No new dependency.
+- **AG-UI approval surface** (`@general-liquidity/opensolvency/agui`): emit wire-compatible
+  [AG-UI](https://ag-ui.com) events for the human-in-the-loop confirm-spend flow — a `confirm_spend`
+  frontend tool-call on `confirm_operator`, `CUSTOM` events for auto-execute/block, a
+  `STATE_SNAPSHOT` operator panel, and an SSE encoder. No new dependency.
 - **Verifiable Agency — agent disclosure schema** (`src/disclosure/`, exported at
   `@general-liquidity/opensolvency/disclosure`). The vendor-neutral core of a
   disclosure protocol for agent-to-agent commerce: a versioned, zod-validated
