@@ -4,6 +4,15 @@ All notable changes to OpenSolvency are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to adhere to
 semantic versioning once it reaches 1.0.
 
+## [0.1.6] - 2026-06-25
+
+### Added
+- **World Agent identity verifier** (`@general-liquidity/opensolvency/identity`): verify a
+  [worldcoin/agentkit](https://github.com/worldcoin/agentkit) "agent backed by a World ID-verified human"
+  attestation — EIP-191 signer recovery + an injected AgentBook (`lookupHuman(address)→uint256`, World Chain)
+  resolver → the gate's `attestation` (human-backed → `registry_attested`, valid-unbacked → `signed`).
+  `worldAgentIdentityVerifier` / `verifyWorldAgent`; the on-chain lookup stays behind the injected seam (no new dependency).
+
 ## [0.1.5] - 2026-06-25
 
 ### Added

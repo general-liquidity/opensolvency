@@ -8,7 +8,7 @@
 *Autonomous-money agents already move real funds with no mandate, no cap, no risk gate, and no approver. OpenSolvency is the missing layer - it lets an agent spend autonomously **inside** operator-defined bounds, and confirm above them.*
 
 [![CI](https://img.shields.io/github/actions/workflow/status/general-liquidity/opensolvency/ci.yml?style=flat-square&label=CI)](https://github.com/general-liquidity/opensolvency/actions)
-[![tests](https://img.shields.io/badge/tests-546%20passing-success?style=flat-square)](#develop)
+[![tests](https://img.shields.io/badge/tests-561%20passing-success?style=flat-square)](#develop)
 [![node](https://img.shields.io/badge/node-%E2%89%A522.18-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white)](#develop)
 [![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](#license)
 [![type](https://img.shields.io/badge/types-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](#tech-stack)
@@ -42,7 +42,7 @@ The gate decides *may this spend happen*; a second, behavioural half (the Networ
 
 ## Status - built end-to-end (pre-1.0)
 
-The **B milestone** - "an agent that structurally can't spend wrong" - is built, tested, and CI-green: kernel, ledger, rails, agent loop, behavioural harness, money-domain completeness, the agentic-economy surface, and the integration/operations layer. **546 tests** pass, plus typecheck, a `tsc → dist` build, and an end-to-end demo run green in CI on Node 24.
+The **B milestone** - "an agent that structurally can't spend wrong" - is built, tested, and CI-green: kernel, ledger, rails, agent loop, behavioural harness, money-domain completeness, the agentic-economy surface, and the integration/operations layer. **561 tests** pass, plus typecheck, a `tsc → dist` build, and an end-to-end demo run green in CI on Node 24.
 
 **Injected by the operator, not in-repo** (a deliberate boundary, not a gap): the live rail clients (Visa/Mastercard credentials, a Stripe Issuing key, a funded on-chain signer + facilitator) and the live identity verifiers. Each fails *safe* when unconfigured - a real rail never fabricates a settlement.
 
@@ -52,7 +52,7 @@ The **B milestone** - "an agent that structurally can't spend wrong" - is built,
 
 ```bash
 npm install
-npm test                                   # 546 tests - gate, audit, executor, stores, rails, harness, surfaces
+npm test                                   # 561 tests - gate, audit, executor, stores, rails, harness, surfaces
 npm run demo                               # end-to-end walkthrough on the in-memory store (any Node)
 ```
 
@@ -84,6 +84,7 @@ One gate, reached from everywhere agents live - the same executor, mandates, ris
 | <img height="14" align="top" src="https://cdn.simpleicons.org/ethereum/3C3C3D" />&nbsp; **ERC-7710** | `@general-liquidity/opensolvency/erc7710` | Express a `Mandate` as an on-chain [ERC-7710](https://eips.ethereum.org/EIPS/eip-7710) delegation + caveat enforcers (caps/period/expiry/allowlist); EIP-712 sign/verify (EOA), viem-checked. Optional `@noble` crypto. |
 | <img height="14" align="top" src="https://cdn.simpleicons.org/ethereum/3C3C3D" />&nbsp; **ERC-8128 · SIWA** | `@general-liquidity/opensolvency/identity` | On-chain agent identity: `erc8128Verifier` (wallet-signed HTTP requests, RFC 9421 + EIP-191) and `siwaIdentityVerifier` (Sign-In-With-Agent + ERC-8004 `ownerOf`) — feed the gate's attestation/risk, never the floor. |
 | <img height="14" align="top" src="assets/integrations/worldcoin.png" />&nbsp;<img height="14" align="top" src="assets/integrations/gitcoin.png" />&nbsp; **World ID · Passport** | `@general-liquidity/opensolvency/identity` | Proof-of-personhood gate inputs: a verified [World ID](https://world.org) proof → `attestation` (orb→registry-attested), a [Human Passport](https://passport.human.tech) humanity score → `ReputationLevel` (injected verifier/scorer, no new deps). |
+| <img height="14" align="top" src="assets/integrations/worldcoin.png" />&nbsp; **World Agent** | `@general-liquidity/opensolvency/identity` | [worldcoin/agentkit](https://github.com/worldcoin/agentkit) - verify an agent is backed by a World ID-verified human: EIP-191 signer recovery + an injected AgentBook (`lookupHuman`) resolver → gate `attestation` (human-backed → registry-attested). |
 | <img height="14" align="top" src="https://cdn.simpleicons.org/python/3776AB" />&nbsp; **Python** · <img height="14" align="top" src="https://cdn.simpleicons.org/go/00ADD8" />&nbsp; **Go** · <img height="14" align="top" src="https://cdn.simpleicons.org/rust/DEA584" />&nbsp; **Rust** · <img height="14" align="top" src="https://cdn.simpleicons.org/c/A8B9CC" />&nbsp; **C/C++** | [`clients/`](clients/) | Dependency-light REST clients over the ingress, for non-TS hosts. |
 
 ```ts
@@ -312,7 +313,7 @@ From **FinancialClaw** (data-layer patterns): integer minor-units, multi-currenc
 
 ```bash
 npm install
-npm test          # 546 tests
+npm test          # 561 tests
 npm run typecheck # tsc --noEmit, strict
 npm run demo      # end-to-end walkthrough on the in-memory store (any Node)
 ```

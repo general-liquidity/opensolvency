@@ -12,6 +12,7 @@
 - [ERC-7710 delegated permissions](./erc7710.md)
 - [On-chain identity — ERC-8128 & SIWA](./erc8128-siwa.md)
 - [Proof-of-personhood — World ID & Human Passport](./personhood.md)
+- [World Agent — human-backed agent](./world-agent.md)
 - [Deployment](./deployment.md)
 - [Security & compliance](./security.md)
 - [The SpendTrust benchmark](./spendtrust.md)
