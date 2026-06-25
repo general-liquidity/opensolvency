@@ -1,6 +1,6 @@
 {
   "name": "@general-liquidity/opensolvency",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "type": "module",
   "publishConfig": {
     "access": "public"
@@ -61,6 +61,14 @@
     "./agui": {
       "types": "./dist/agui/index.d.ts",
       "import": "./dist/agui/index.js"
+    },
+    "./erc7710": {
+      "types": "./dist/erc7710/index.d.ts",
+      "import": "./dist/erc7710/index.js"
+    },
+    "./identity": {
+      "types": "./dist/identity/index.d.ts",
+      "import": "./dist/identity/index.js"
     }
   },
   "files": [

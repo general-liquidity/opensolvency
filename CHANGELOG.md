@@ -4,6 +4,20 @@ All notable changes to OpenSolvency are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to adhere to
 semantic versioning once it reaches 1.0.
 
+## [0.1.4] - 2026-06-25
+
+### Added
+- **ERC-7710 delegated-permissions interop** (`@general-liquidity/opensolvency/erc7710`): express a
+  `Mandate` as a MetaMask-delegation-framework `Delegation` + caveat enforcers (TimestampEnforcer↔expiry,
+  Native/ERC20TransferAmount↔perTxCap, PeriodTransfer↔perPeriodCap, AllowedTargets↔scope), compute the
+  EIP-712 delegation hash, and sign/verify (ECDSA secp256k1, EOA). The EIP-712 digest is cross-checked
+  against viem. Crypto via optional `@noble/*` (dynamic import); pure mapping needs none.
+- **On-chain agent-identity verifiers** (`@general-liquidity/opensolvency/identity`): `erc8128Verifier`
+  (ERC-8128 — Ethereum-wallet-signed HTTP requests over RFC 9421 + EIP-191) and `siwaIdentityVerifier`
+  (SIWA — Sign-In-With-Agent, EIP-191 login + an injected ERC-8004 `ownerOf` resolver for
+  `registry_attested`), plus `mapSelfToAttestation` (a verified Self proof-of-personhood as a gate risk
+  input). Reuses the existing RFC 9421 machinery; secp256k1/keccak via optional `@noble/*`.
+
 ## [0.1.3] - 2026-06-25
 
 ### Added
