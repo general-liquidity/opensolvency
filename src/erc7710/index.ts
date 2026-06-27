@@ -4,7 +4,7 @@
 // `Delegation` + `Caveat[]`, computes the EIP-712 delegation hash, and signs /
 // verifies it (ECDSA secp256k1, EOA only).
 //
-// A mandate is OS's OFF-CHAIN authority object. ERC-7710 is the *enforcement*
+// A mandate is AgentWorth's OFF-CHAIN authority object. ERC-7710 is the *enforcement*
 // of permission bounds on-chain via caveat enforcers; this module is the bridge.
 // Pure mapping/encoding functions use NO crypto. The hash/sign/verify functions
 // dynamically import @noble/* and viem (optionalDependencies) so the core gate
@@ -564,16 +564,16 @@ function bytesToBigint(bytes: Uint8Array): bigint {
 }
 
 // ---------------------------------------------------------------------------
-// Live delegation-gating: ERC-7710 delegation + proposed redemption → OS gate
+// Live delegation-gating: ERC-7710 delegation + proposed redemption → AgentWorth gate
 // ---------------------------------------------------------------------------
 //
 // A signed ERC-7710 delegation grants the delegate an on-chain spend bound by its
 // caveats. Before the delegate redeems it, AgentWorth governs the spend: we
-// decode the caveats into the OS authority shape (a Mandate), map the proposed
+// decode the caveats into the AgentWorth authority shape (a Mandate), map the proposed
 // redemption into a PaymentIntent, and run BOTH through the same `evaluateGate`
-// that governs every other OS payment. So a MetaMask-style delegation spends only
+// that governs every other AgentWorth payment. So a MetaMask-style delegation spends only
 // inside the operator's mandate caps, deny-list, velocity, and risk thresholds —
-// the on-chain enforcers are the floor, the OS gate is the operator's policy.
+// the on-chain enforcers are the floor, the AgentWorth gate is the operator's policy.
 
 /** Terms-decoders mirroring the encoders above (pure, no crypto). */
 
@@ -646,7 +646,7 @@ export function decodeAllowedTargetsTerms(terms: Hex): Hex[] {
   return out;
 }
 
-/** Map an enforcer period-duration (seconds) back to an OS Period. Closest match. */
+/** Map an enforcer period-duration (seconds) back to an AgentWorth Period. Closest match. */
 function periodFromSeconds(seconds: number): Period {
   let best: Period = "day";
   let bestDiff = Number.POSITIVE_INFINITY;
@@ -662,28 +662,28 @@ function periodFromSeconds(seconds: number): Period {
 
 /**
  * The proposed on-chain redemption the delegate wants to make with the delegation,
- * plus the metadata the OS gate needs (currency/rail/rationale) that the raw
+ * plus the metadata the AgentWorth gate needs (currency/rail/rationale) that the raw
  * delegation doesn't carry. `enforcers` maps caveat enforcer addresses back to
- * their kind so the caveats can be decoded into OS caps.
+ * their kind so the caveats can be decoded into AgentWorth caps.
  */
 export interface DelegationRedemptionOpts {
-  /** The proposed transfer target — the on-chain recipient; becomes the OS payee. */
+  /** The proposed transfer target — the on-chain recipient; becomes the AgentWorth payee. */
   target: Hex;
   /** Proposed transfer amount in minor-units (must match the on-chain value scale). */
   amount: number;
-  /** Settlement currency for the OS gate (e.g. "USDC", "ETH"). */
+  /** Settlement currency for the AgentWorth gate (e.g. "USDC", "ETH"). */
   currency: CurrencyCode;
   /** Settlement rail. ERC-7710 redemptions settle on-chain by construction. */
   rail?: RailKind;
   /** Required rationale (logged to the audit; the gate enforces minRationaleChars). */
   rationale: string;
-  /** The payee class for the synthesized OS intent/mandate scope. */
+  /** The payee class for the synthesized AgentWorth intent/mandate scope. */
   payeeClass?: string;
   /** Stable intent id; defaults to a deterministic value from the delegation salt + target. */
   intentId?: string;
   /** Enforcer addresses used to build this delegation, for caveat→cap decoding. */
   enforcers: EnforcerAddresses;
-  /** Mandate id for the synthesized OS mandate; defaults to the delegation salt hex. */
+  /** Mandate id for the synthesized AgentWorth mandate; defaults to the delegation salt hex. */
   mandateId?: string;
   /** Mandate label; defaults to a generic delegation label. */
   mandateLabel?: string;
@@ -692,10 +692,10 @@ export interface DelegationRedemptionOpts {
 /**
  * Govern an ERC-7710 delegation redemption through the AgentWorth gate.
  *
- * Decodes the delegation's caveats into an OS `Mandate` (caps/expiry/scope), maps
+ * Decodes the delegation's caveats into an AgentWorth `Mandate` (caps/expiry/scope), maps
  * the proposed redemption into a `PaymentIntent`, then runs the intent through
  * `evaluateGate` with the synthesized mandate injected into the context. So the
- * delegation's on-chain bounds AND the operator's OS policy both apply: an in-cap
+ * delegation's on-chain bounds AND the operator's AgentWorth policy both apply: an in-cap
  * covered redemption → `auto_execute`; an over-cap one → `block`; an uncovered or
  * elevated-risk one → `confirm_operator`.
  *
@@ -712,7 +712,7 @@ export function gateDelegationRedemption(
   const rail: RailKind = opts.rail ?? "onchain";
   const payeeClass = opts.payeeClass ?? "delegated-spend";
 
-  // Decode caveats into OS cap fields. Enforcer kind is identified by address.
+  // Decode caveats into AgentWorth cap fields. Enforcer kind is identified by address.
   const e = opts.enforcers;
   const norm = (a?: Hex) => (a ? normalizeAddress(a).toLowerCase() : undefined);
   const byAddr = new Map<string, Caveat>();

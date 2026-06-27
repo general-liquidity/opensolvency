@@ -6,7 +6,7 @@
 //
 //   1. `effectivePolicy(deps)` snapshots the governing policy at decision time.
 //   2. `computePolicyHash(policy)` hashes it via ADP's exported `canonicalize`
-//      (RFC 8785 JCS) + node:crypto sha256 — so OS and ADP hash IDENTICALLY.
+//      (RFC 8785 JCS) + node:crypto sha256 — so AgentWorth and ADP hash IDENTICALLY.
 //   3. `replayDecision(record, policy)` re-runs the PURE `evaluateGate` over a
 //      recorded decision's captured inputs under the disclosed policy and
 //      compares to the signed verdict. A gate that does not enforce what it
@@ -124,7 +124,7 @@ export function effectivePolicy(deps: {
 /**
  * Deterministic policy hash: sha256_hex(canonicalize(normalizedPolicy)).
  *
- * `canonicalize` is ADP's exported RFC-8785 JCS serializer, so OS and ADP hash
+ * `canonicalize` is ADP's exported RFC-8785 JCS serializer, so AgentWorth and ADP hash
  * the SAME EffectivePolicy to the SAME bytes. Arrays are normalized first
  * (mandates by id, denyRuleIds sorted) so reordering does not change the hash;
  * mandate objects are projected to a stable field set so unrelated additions

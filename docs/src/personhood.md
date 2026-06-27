@@ -17,13 +17,13 @@ verifier opens a socket from the kernel: the cryptographic / network step is an
 
 A World ID proof is a Groth16 zero-knowledge proof over the on-chain Orb identity
 set. AgentWorth **cannot verify it locally** (no trusted setup, no Merkle
-membership in the kernel), so — like the Self path — OS consumes the verdict of an
+membership in the kernel), so — like the Self path — AgentWorth consumes the verdict of an
 **injected `WorldIdVerifier`**. The consumer wires either the Worldcoin cloud
 `/verify` endpoint or the on-chain Router `verifyProof`. Without a verifier the
 result is **structural-only** (`verified: false`, attestation `none`) — never thrown.
 
 The `nullifier_hash` is the **per-(human, action) sybil key**: one human can produce
-at most one distinct nullifier for a given `(app_id, action)`, so OS uses it as the
+at most one distinct nullifier for a given `(app_id, action)`, so AgentWorth uses it as the
 stable, privacy-preserving `agentId`.
 
 ### Attestation mapping
@@ -68,11 +68,11 @@ for callers that want the structural check or the verdict without the
 
 ## Human Passport — a humanity score as `reputationOf`
 
-A Human Passport aggregates verified **stamps** into an aggregate humanity score. OS
+A Human Passport aggregates verified **stamps** into an aggregate humanity score. AgentWorth
 maps that score to a `ReputationLevel`. The score is fetched by an **injected
 `PassportScorer`** (the Passport Stamps / Models API client). The Models API returns
 the score as a **numeric string** — the consumer's scorer parses it to a number at the
-boundary; OS only consumes the numeric verdict. Without a scorer, the attestation's
+boundary; AgentWorth only consumes the numeric verdict. Without a scorer, the attestation's
 embedded `score` is used.
 
 ### Score → `ReputationLevel`

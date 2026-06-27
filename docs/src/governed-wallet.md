@@ -1,10 +1,10 @@
-# Governed Wallet — the OS gate ABOVE the custody layer
+# Governed Wallet — the AgentWorth gate ABOVE the custody layer
 
 A custody layer with native spend controls — **Coinbase CDP Spend Permissions**,
 **AgentKit** actions, an ERC-4337 smart wallet — answers *can this key move this
 money?* It does **not** answer *should this agent move this money, right now, under
 the operator's standing authority?* If the wallet owns that decision, the wallet
-**absorbs the governance gate** and the operator loses the single chokepoint OS
+**absorbs the governance gate** and the operator loses the single chokepoint AgentWorth
 exists to defend.
 
 The governed-wallet adapter inverts that: it puts `evaluateGate` **above** the
@@ -18,7 +18,7 @@ wallet itself will settle.
 
 ## The injected-execute seam
 
-OS **cannot and must not** bundle a wallet SDK (no `@coinbase/cdp-sdk`, no AgentKit,
+AgentWorth **cannot and must not** bundle a wallet SDK (no `@coinbase/cdp-sdk`, no AgentKit,
 no viem). Like the World ID / AgentBook / SIWA verifiers, the live spend is an
 **injected seam** the consumer wires:
 
@@ -28,7 +28,7 @@ import { governedWallet } from "@general-liquidity/agentworth/...";
 const wallet = governedWallet({
   // The gate context (or a per-spend builder so spend history advances between calls).
   gate: buildGateContext,
-  // The LIVE wallet call — fired ONLY on auto_execute. OS bundles none of this.
+  // The LIVE wallet call — fired ONLY on auto_execute. AgentWorth bundles none of this.
   execute: async (req, intent) => {
     const { transactionHash } = await cdpAccount.sendTransaction({
       to: req.to,
@@ -55,7 +55,7 @@ if (decision.outcome === "confirm_operator") {
 ```
 
 Without a covering mandate / under caps / clear of the deny-list, `executed` is
-`false` and `receipt` is `null`: **OS never asserts a settlement it didn't authorize.**
+`false` and `receipt` is `null`: **AgentWorth never asserts a settlement it didn't authorize.**
 
 ## The structural request shape
 
@@ -71,7 +71,7 @@ rationale?, payeeClass?, payee? }`. `cdpSpendToIntent` maps it onto a `PaymentIn
 | `rationale`            | `rationale`         | a default explanatory string     |
 
 `now` is injected (no clock read in the kernel), so the mapping is deterministic and
-replayable — the same discipline as the rest of OS.
+replayable — the same discipline as the rest of AgentWorth.
 
 ## Why this is the #1 defense
 

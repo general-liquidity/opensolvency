@@ -1,8 +1,8 @@
 // AG-UI (Agent-User Interaction Protocol) approval surface for AgentWorth.
 //
 // AG-UI is the open protocol for streaming an agent's run to a frontend as a
-// sequence of typed events. OS uses it for ONE thing: the human-in-the-loop
-// "confirm with operator" flow. When the gate returns `confirm_operator`, OS
+// sequence of typed events. AgentWorth uses it for ONE thing: the human-in-the-loop
+// "confirm with operator" flow. When the gate returns `confirm_operator`, AgentWorth
 // emits the AG-UI frontend-tool-call sequence for a `confirm_spend` tool, so any
 // AG-UI client renders "the agent wants to spend $X — approve / deny", pauses,
 // and ships the human's answer back as a `tool` message in the next run.
@@ -18,7 +18,7 @@ import type { GateDecision, Mandate, PaymentIntent } from "../core/types.ts";
 // --- The AG-UI event subset (wire-exact) -----------------------------------
 //
 // EventType values are SCREAMING_SNAKE strings carried in each event's `type`
-// field. We model only the subset OS needs for the approval surface.
+// field. We model only the subset AgentWorth needs for the approval surface.
 
 export type AguiEventType =
   | "RUN_STARTED"
@@ -250,7 +250,7 @@ export function spendApprovalEvents(args: SpendApprovalArgs): AguiEvent[] {
 export interface StateSnapshotArgs {
   mandates: Mandate[];
   decision?: GateDecision;
-  /** Optional caller-supplied disclosure (e.g. an ADP / OS disclosure object) to
+  /** Optional caller-supplied disclosure (e.g. an ADP / AgentWorth disclosure object) to
    * surface in the same operator panel. */
   disclosure?: unknown;
   now?: number;
@@ -338,7 +338,7 @@ export function encodeStream(events: AguiEvent[]): string {
   return events.map(encodeSSE).join("");
 }
 
-/** Pipe a sequence into any sink (e.g. a Node `ServerResponse.write`) without OS
+/** Pipe a sequence into any sink (e.g. a Node `ServerResponse.write`) without AgentWorth
  * importing `node:http`. */
 export function writeEventsToSse(
   write: (chunk: string) => void,

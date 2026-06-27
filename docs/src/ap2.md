@@ -13,18 +13,18 @@ mandates passed in A2A Message DataParts:
 AgentWorth is the **policy engine behind AP2 authorization**. AP2 says *what* the
 agent wants to buy and *who* signed the cart; AgentWorth's gate decides *whether
 the agent may pay autonomously* — under the operator's mandates, caps, deny-list,
-and risk. The `src/ap2` module is the seam: it maps AP2 shapes to OS shapes and
+and risk. The `src/ap2` module is the seam: it maps AP2 shapes to AgentWorth shapes and
 calls the existing `evaluateGate`. It re-implements no policy.
 
 ```
-AP2 CartMandate ──cartMandateToIntent──▶ OS PaymentIntent ──evaluateGate──▶ GateDecision
+AP2 CartMandate ──cartMandateToIntent──▶ AgentWorth PaymentIntent ──evaluateGate──▶ GateDecision
                                                               (auto_execute / confirm_operator / block)
 ```
 
-## The IntentMandate is coarser than an OS Mandate
+## The IntentMandate is coarser than an AgentWorth Mandate
 
 An AP2 `IntentMandate` carries **no amount caps** — it has `merchants`, `skus`,
-`requires_refundability`, and an `intent_expiry`, but nothing like OS's `perTxCap`
+`requires_refundability`, and an `intent_expiry`, but nothing like AgentWorth's `perTxCap`
 / `perPeriodCap`. So the two maps are asymmetric:
 
 - `mandateToIntentMandate(m)` — drops the caps (there's no field for them). The
@@ -38,7 +38,7 @@ This is by design: AP2 expresses intent, AgentWorth expresses bounded authority.
 
 ## Money: major units → minor units
 
-OS money is **integer minor-units** (cents, satoshis). W3C
+AgentWorth money is **integer minor-units** (cents, satoshis). W3C
 `PaymentCurrencyAmount.value` (used in AP2's `PaymentRequest`) is a **major-unit
 number** (e.g. `12.50` dollars). `cartTotal` / `cartMandateToIntent` convert with
 an injectable `minorUnitsPerMajor` (default `100`, rounding to the nearest minor
@@ -59,14 +59,14 @@ merchant-signature check over the cart's `merchant_authorization` JWT:
 The result reports `ok`, `cartHashOk` (independent of signature validity, so a
 tampered cart is visible even before the key resolves), the `reason`, and the
 decoded `claims`. An **unsigned cart** (`merchant_authorization: null`) is
-`{ ok: false, cartHashOk: false }` — AP2 leaves the field optional; OS treats
+`{ ok: false, cartHashOk: false }` — AP2 leaves the field optional; AgentWorth treats
 unsigned as unverified, never authorized.
 
 ### Canonicalization assumption (cart_hash)
 
 **AP2 does not specify the canonical-JSON algorithm for `cart_hash`.** AgentWorth
 chooses **RFC 8785 JCS** (reusing the `canonicalize` from
-`@general-liquidity/agent-disclosure`, so OS and ADP agree on the canonical form),
+`@general-liquidity/agent-disclosure`, so AgentWorth and ADP agree on the canonical form),
 hashed with **SHA-256** (hex). If you interoperate with a merchant that hashes
 differently, inject your own `canonicalize` via the option. The accepted signature
 algorithms (`EdDSA`/`ES256`/`RS256`) are likewise a documented choice — AP2 does
@@ -84,7 +84,7 @@ the `CartMandate` it settles. It is **structural, not cryptographic**:
   `hash(CartMandate)` and `hash(payment_mandate_contents)`.
 
 **Out of scope (delegated):** the VP's issuer/holder SD-JWT-VC signatures. Verifying
-that the holder actually presented a valid credential is a VC-verifier concern; OS
+that the holder actually presented a valid credential is a VC-verifier concern; AgentWorth
 verifies only the cart→payment binding + id linkage. Use a dedicated SD-JWT-VC
 verifier for the cryptographic VP check.
 
@@ -128,5 +128,5 @@ if (decision.outcome === "auto_execute") {
 }
 ```
 
-The same gate, deny-list, caps, and signed audit chain that govern a native OS
+The same gate, deny-list, caps, and signed audit chain that govern a native AgentWorth
 `PaymentIntent` govern an AP2-originated one — AP2 is just another front door.

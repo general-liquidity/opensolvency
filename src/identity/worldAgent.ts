@@ -11,7 +11,7 @@
 //  - CORE (here, no network): structural CAIP-122 validation + EIP-191 signer recovery,
 //    reusing the secp256k1 recover already in `erc8128.ts`. The signed string is the
 //    canonical SIWE/CAIP-122 message the agent personal_signed (`a.message`). agentkit
-//    rebuilds this from the structured fields via viem's `createSiweMessage`; OS cannot
+//    rebuilds this from the structured fields via viem's `createSiweMessage`; AgentWorth cannot
 //    pull viem into the kernel, so the consumer supplies the message that was signed.
 //  - INJECTED SEAM: the AgentBook `eth_call` is an `AgentBookResolver` callback the
 //    consumer wires with viem/ethers — the core never opens an RPC socket. Without a
@@ -39,7 +39,7 @@ export type WorldAgentSignatureType = "eip191" | "eip1271" | "ed25519";
  * `@worldcoin/agentkit` (`core/src/types.ts`): a structured SIWE object, NOT a free
  * `message`. The `message` here is the SIWE string agentkit reconstructs from these
  * fields (via viem's `createSiweMessage`) and the agent personal_signed — supplied by
- * the consumer so the OS core can recover the signer without pulling viem.
+ * the consumer so the AgentWorth core can recover the signer without pulling viem.
  */
 export interface WorldAgentAttestation {
   scheme: "WorldAgent";
@@ -69,7 +69,7 @@ export interface WorldAgentAttestation {
  * Injected AgentBook resolver — wraps the on-chain `lookupHuman(address) -> uint256`
  * read (`core/src/agent-book.ts`; World Chain deployment
  * `0xA23aB2712eA7BBa896930544C7d6636a96b944dA`). The consumer wires viem/ethers
- * `eth_call`; the OS core stays RPC-free. Returns the registering human's nullifier
+ * `eth_call`; the AgentWorth core stays RPC-free. Returns the registering human's nullifier
  * (`humanNullifier`, the hex uint256), `registered: false` when `lookupHuman` returns
  * 0, or `null` when the lookup itself could not be performed.
  */
@@ -100,7 +100,7 @@ export function validateWorldAgentStructural(a: WorldAgentAttestation): boolean 
   return true;
 }
 
-/** Map a World Agent verification to the OS `Attestation` risk input. A registered,
+/** Map a World Agent verification to the AgentWorth `Attestation` risk input. A registered,
  * human-backed agent is an issuer-attested human bound to the agent → `registry_attested`.
  * A valid signature without an AgentBook backing is `signed`. Anything invalid is `none`. */
 export function mapWorldAgentToAttestation(humanBacked: boolean, valid: boolean): Attestation {
@@ -164,7 +164,7 @@ export async function verifyWorldAgent(
       reason = `EIP-191 recovery failed: ${(err as Error).message}`;
     }
   } else {
-    // eip1271 (contract) / ed25519 (Solana) — not recovered in the OS core. The
+    // eip1271 (contract) / ed25519 (Solana) — not recovered in the AgentWorth core. The
     // AgentBook registration (below) can still establish human-backing.
     reason = `signature type "${a.type}" is not recovered locally (eip191 only)`;
   }

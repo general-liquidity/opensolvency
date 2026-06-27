@@ -3,7 +3,7 @@
 [AG-UI](https://docs.ag-ui.com) (the Agent-User Interaction Protocol) is the open
 protocol for streaming an agent's run to a frontend as a sequence of typed events.
 AgentWorth uses it for one thing: the human-in-the-loop **"confirm with operator"**
-flow. When the gate routes a payment to the operator, OS emits the AG-UI
+flow. When the gate routes a payment to the operator, AgentWorth emits the AG-UI
 frontend-tool-call sequence for a `confirm_spend` tool, so any AG-UI client renders
 *"the agent wants to spend £X — approve / deny"*, pauses, and ships the human's
 answer back in the next run.
@@ -60,7 +60,7 @@ block can never be approved away.
 `stateSnapshot({ mandates, decision?, disclosure? })` emits a `STATE_SNAPSHOT`
 carrying the operator panel: each mandate's caps, the budget remaining after the
 last decision, the last `GateDecision`, and an optional `disclosure` (e.g. an
-ADP / OS disclosure object) surfaced in the same panel.
+ADP / AgentWorth disclosure object) surfaced in the same panel.
 
 ## SSE encoding
 
@@ -73,11 +73,11 @@ writeEventsToSse((chunk) => res.write(chunk), events);
 
 `encodeSSE(event)` produces a single `data: <json>\n\n` frame; `encodeStream(events)`
 concatenates a sequence; `writeEventsToSse(write, events)` pipes into any sink
-without OS importing `node:http`.
+without AgentWorth importing `node:http`.
 
 ## A deliberate no-dependency choice
 
-OS does **not** depend on `@ag-ui/core`. AG-UI is pre-1.0 and its client drags in
+AgentWorth does **not** depend on `@ag-ui/core`. AG-UI is pre-1.0 and its client drags in
 rxjs; the kernel stays dependency-light. We define the minimal wire-exact AG-UI
 event subset locally (`RUN_STARTED`, `TOOL_CALL_*`, `STATE_SNAPSHOT`, `CUSTOM`,
 `RUN_FINISHED`, …) and emit canonical JSON over SSE — **wire-compatible with any

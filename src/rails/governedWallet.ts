@@ -1,16 +1,16 @@
-// GOVERNED WALLET — put the OS gate ABOVE an agent's wallet.
+// GOVERNED WALLET — put the AgentWorth gate ABOVE an agent's wallet.
 //
 // The audit's #1 defense against a custody layer (Coinbase CDP Spend Permissions /
-// AgentKit, or any agent-controlled wallet) ABSORBING the governance gate: OS does
+// AgentKit, or any agent-controlled wallet) ABSORBING the governance gate: AgentWorth does
 // not become a wallet, and the wallet does not become the policy. Instead the wallet
 // spend is routed THROUGH `evaluateGate` first, and the live wallet call only fires
 // when the gate returns `auto_execute`. On `confirm_operator` / `block` the money
 // does NOT move — the caller gets the decision and routes to the operator.
 //
-// DEP-LIGHT INJECTED-SEAM PATTERN (mirrors the World ID / AgentBook verifiers): OS
+// DEP-LIGHT INJECTED-SEAM PATTERN (mirrors the World ID / AgentBook verifiers): AgentWorth
 // CANNOT and MUST NOT bundle a wallet SDK. The consumer wires the live spend as an
 // injected `execute` seam — a CDP `account.sendTransaction` / Spend-Permission spend,
-// an AgentKit action, an ERC-4337 userOp, anything. OS owns only the gate above it.
+// an AgentKit action, an ERC-4337 userOp, anything. AgentWorth owns only the gate above it.
 //
 // The wallet-spend request is defined STRUCTURALLY (`{ wallet, to, amount,
 // token/currency, network }`), mapped to a `PaymentIntent`, and gated. This is a
@@ -66,7 +66,7 @@ const FALLBACK_RATIONALE =
 
 /**
  * Map a structural wallet-spend request (CDP Spend Permission / AgentKit action /
- * any wallet) onto an OS `PaymentIntent`. Pure: no clock read, no I/O — `now` is
+ * any wallet) onto an AgentWorth `PaymentIntent`. Pure: no clock read, no I/O — `now` is
  * injected so the mapping is deterministic and replayable, like the rest of the
  * kernel. Defaults: rail `onchain` (a wallet send is irreversible), payee = `to`,
  * payee class = `network`.
@@ -92,7 +92,7 @@ export function cdpSpendToIntent(
   };
 }
 
-/** Proof the injected wallet seam actually moved the money. Opaque to OS. */
+/** Proof the injected wallet seam actually moved the money. Opaque to AgentWorth. */
 export interface WalletSpendReceipt {
   /** The wallet's own reference: a tx hash, userOp hash, spend-permission id, … */
   ref: string;
@@ -100,7 +100,7 @@ export interface WalletSpendReceipt {
 }
 
 /**
- * The live wallet call. INJECTED by the consumer — OS bundles no wallet SDK. Invoked
+ * The live wallet call. INJECTED by the consumer — AgentWorth bundles no wallet SDK. Invoked
  * ONLY after the gate returns `auto_execute`. Receives both the raw structural request
  * and the mapped intent so the seam can build its native call however it needs.
  */
@@ -123,7 +123,7 @@ export interface GovernedWalletResult {
 /**
  * Build the gate context for a spend. Either an explicit `GateContext` (or a thunk
  * that builds one per-spend, so spend history can advance between calls), or — when
- * the consumer holds the OS executor — they can pass their own gate closure. Kept
+ * the consumer holds the AgentWorth executor — they can pass their own gate closure. Kept
  * dep-light: the wrapper only needs `evaluateGate`, not the full executor/store.
  */
 export type GateContextSource =
