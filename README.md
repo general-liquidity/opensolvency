@@ -3,9 +3,9 @@
 
 # AgentWorth
 
-### The operator-aligned governance plane for agentic spend
+### The operator-aligned governance and guidance layer for agentic spend
 
-*Autonomous-money agents already move real funds with no mandate, no cap, no risk gate, and no approver. AgentWorth is the missing layer - it lets an agent spend autonomously **inside** operator-defined bounds, and confirm above them.*
+*A money-moving AI agent needs two things to be trusted with real money: it must never spend outside what its operator allowed, and it must act in that operator's interest. AgentWorth is the layer that enforces the first and delivers the second.*
 
 [![CI](https://img.shields.io/github/actions/workflow/status/general-liquidity/agentworth/ci.yml?style=flat-square&label=CI)](https://github.com/general-liquidity/agentworth/actions)
 [![tests](https://img.shields.io/badge/tests-610%20passing-success?style=flat-square)](#develop)
@@ -21,24 +21,30 @@
 
 ## Why
 
-AgentWorth is **not** a wallet, a rail, or a payment processor. It is the trust layer that sits *above* rails (x402, cards, ACP/checkout) and *below* an agent, enforcing a single invariant:
+AgentWorth is both halves at once: a deny-first **gate** (the safety) and a behavioural **harness** (the helpfulness) of an agent that moves money. It is **not** a wallet, a rail, or a payment processor; it is the layer that sits *above* the rails (x402, cards, ACP, AP2) and *below* the agent.
+
+#### The gate - autonomy inside bounds
+
+The gate enforces one invariant:
 
 > **An agent payment can auto-execute only inside a live, operator-granted mandate that covers it - under its caps, below the risk and velocity thresholds, and clear of the deny-list. Everything else routes to the operator or is blocked. Every decision is signed and replayable.**
 
-This is the layer the autonomous-money agents that already exist conspicuously lack. Aeon - billed as the "most autonomous agent framework" - moves real USDC on Base via a wallet API with **no mandate, no spend cap, no risk gate, no approver**: if the operator enables it and runs it, it sends. That forces a binary choice - full-auto, or a human pulling the trigger every single time.
+This is the layer today's autonomous-money agents conspicuously lack. Aeon - billed as the "most autonomous agent framework" - moves real USDC on Base from a wallet API with **no mandate, no spend cap, no risk gate, no approver**: enable it and it sends. That forces a binary - full-auto, or a human pulling the trigger every single time. AgentWorth removes the binary: the mandate authorizes spend *without* a live human confirm, so the agent acts freely inside the envelope and escalates outside it. **The gate is what lets autonomy go further, safely - not less far.**
 
-AgentWorth removes the binary. The mandate is what authorizes spend *without* a live human confirm, so the agent acts freely inside the envelope and escalates outside it. **The gate is what lets autonomy go further, safely - not less far.**
-
-#### The Mandate is the central object
-
-A `Mandate` is operator-granted, scoped, capped, expiring, revocable spend authority - the only thing that authorizes an agent payment without a live human confirm:
+A `Mandate` is operator-granted, scoped, capped, expiring, revocable spend authority - the central object of the whole system:
 
 ```
 weekly groceries → class:groceries · GBP · card
   per-tx cap £500 · per-week cap £1000 · expires 2026-06-26
 ```
 
-The gate decides *may this spend happen*; a second, behavioural half (the **harness**) decides *what the agent should help with* - the operator's weakest resilience pillar. Together: the iPhone-for-money experience, with a secure enclave at its core.
+#### The harness - aligned, not just safe
+
+A gate only ever says *no*. The other half says *what to do*: the behavioural harness models the operator's financial resilience across **Four Pillars**, makes the weakest pillar the agent's standing agenda, and surfaces help only at moments that are both teachable and reachable. So the agent isn't merely prevented from spending wrong - it works to leave the operator better off. Gate plus harness is the **iPhone-for-money** experience: an agent safe enough to trust with a card, and aligned enough to be worth it.
+
+#### Trust infrastructure for the agentic economy
+
+AgentWorth is one layer of a larger stack. It emits a falsifiable **Proof-of-Enforcement** - the checkable half of [ADP](https://github.com/general-liquidity/agent-disclosure-protocol)'s disclosure, so a counterparty can verify the gate *enforces what it discloses* before transacting. It sits above the payment rails and beside the identity protocols agents authenticate with. Operator-class today; the substrate for a consumer money experience next.
 
 ## Status - built end-to-end (pre-1.0)
 
@@ -79,14 +85,14 @@ One gate, reached from everywhere agents live - the same executor, mandates, ris
 | <img height="14" align="top" src="https://cdn.simpleicons.org/zedindustries/084CCF" />&nbsp; **ACP** | `agentworth acp` | An [Agent Client Protocol](https://agentclientprotocol.com) surface - editors/IDEs drive the agent in-editor. |
 | <img height="14" align="top" src="https://cdn.simpleicons.org/openapiinitiative/6BA539" />&nbsp; **HTTP** | `agentworth serve` | The ingress - same gate over HTTP, OpenAPI 3.1 at `/openapi.json`, bearer-token auth, idempotency keys, rate limiting. |
 | **JSON-RPC** | `handleJsonRpcCall` | The operator-side method API for low-latency embedding (`pay`, `mandate.*`, `approve`, `audit.verify`). |
-| <img height="14" align="top" src="assets/integrations/ap2.svg" />&nbsp; **AP2** | `@general-liquidity/agentworth/ap2` | [AP2](https://github.com/google-agentic-commerce/ap2) interop - OS is the policy engine behind AP2: `Mandate ⇄ IntentMandate`, a signed `CartMandate` → a gated `PaymentIntent` (`gateAp2Cart`), merchant-JWT verification, A2A DataParts. |
+| <img height="14" align="top" src="assets/integrations/ap2.svg" />&nbsp; **AP2** | `@general-liquidity/agentworth/ap2` | [AP2](https://github.com/google-agentic-commerce/ap2) interop - AgentWorth is the policy engine behind AP2: `Mandate ⇄ IntentMandate`, a signed `CartMandate` → a gated `PaymentIntent` (`gateAp2Cart`), merchant-JWT verification, A2A DataParts. |
 | <img height="14" align="top" src="assets/integrations/ag-ui.png" />&nbsp; **AG-UI** | `@general-liquidity/agentworth/agui` | An [AG-UI](https://ag-ui.com) surface - streams the gate's `confirm_operator` decision as a `confirm_spend` frontend tool-call to any AG-UI client (zero new deps). |
 | <img height="14" align="top" src="https://cdn.simpleicons.org/ethereum/3C3C3D" />&nbsp; **ERC-7710** | `@general-liquidity/agentworth/erc7710` | Express a `Mandate` as an on-chain [ERC-7710](https://eips.ethereum.org/EIPS/eip-7710) delegation + caveat enforcers (caps/period/expiry/allowlist); EIP-712 sign/verify (EOA), viem-checked. Optional `@noble` crypto. |
-| <img height="14" align="top" src="https://cdn.simpleicons.org/ethereum/3C3C3D" />&nbsp; **ERC-8128 · SIWA** | `@general-liquidity/agentworth/identity` | On-chain agent identity: `erc8128Verifier` (wallet-signed HTTP requests, RFC 9421 + EIP-191) and `siwaIdentityVerifier` (Sign-In-With-Agent + ERC-8004 `ownerOf`) — feed the gate's attestation/risk, never the floor. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/ethereum/3C3C3D" />&nbsp; **ERC-8128 · SIWA** | `@general-liquidity/agentworth/identity` | On-chain agent identity: `erc8128Verifier` (wallet-signed HTTP requests, RFC 9421 + EIP-191) and `siwaIdentityVerifier` (Sign-In-With-Agent + ERC-8004 `ownerOf`) - feed the gate's attestation/risk, never the floor. |
 | <img height="14" align="top" src="assets/integrations/worldcoin.png" />&nbsp;<img height="14" align="top" src="assets/integrations/gitcoin.png" />&nbsp; **World ID · Passport** | `@general-liquidity/agentworth/identity` | Proof-of-personhood gate inputs: a verified [World ID](https://world.org) proof → `attestation` (orb→registry-attested), a [Human Passport](https://passport.human.tech) humanity score → `ReputationLevel` (injected verifier/scorer, no new deps). |
 | <img height="14" align="top" src="assets/integrations/worldcoin.png" />&nbsp; **World Agent** | `@general-liquidity/agentworth/identity` | [worldcoin/agentkit](https://github.com/worldcoin/agentkit) - verify an agent is backed by a World ID-verified human: EIP-191 signer recovery + an injected AgentBook (`lookupHuman`) resolver → gate `attestation` (human-backed → registry-attested). |
 | 🛡️ **Proof-of-Enforcement** | `@general-liquidity/agentworth` | Every signed `gate.decision` carries the `policyHash` it ran under; `computePolicyHash` + `replayDecision` let a counterparty replay a sampled decision and prove the gate **enforces what it discloses** - the falsifiable half of [ADP](https://github.com/general-liquidity/agent-disclosure-protocol)'s `enforced` claim. |
-| <img height="14" align="top" src="https://cdn.simpleicons.org/coinbase/0052FF" />&nbsp; **Governed wallet** | `@general-liquidity/agentworth` | `governedWallet` - gate a Coinbase CDP / AgentKit wallet spend through the gate *before* it executes (injected execute seam, no wallet SDK bundled). OS above the custody layer. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/coinbase/0052FF" />&nbsp; **Governed wallet** | `@general-liquidity/agentworth` | `governedWallet` - gate a Coinbase CDP / AgentKit wallet spend through the gate *before* it executes (injected execute seam, no wallet SDK bundled). AgentWorth sits above the custody layer. |
 | ⚖️ **Compliance** | `@general-liquidity/agentworth/compliance` | `deployerOversightReport` (EU AI Act Article 26 - human oversight / monitoring / record-keeping) + a signed, independently-verifiable `exportCompliancePackage`. |
 | <img height="14" align="top" src="https://cdn.simpleicons.org/python/3776AB" />&nbsp; **Python** · <img height="14" align="top" src="https://cdn.simpleicons.org/go/00ADD8" />&nbsp; **Go** · <img height="14" align="top" src="https://cdn.simpleicons.org/rust/DEA584" />&nbsp; **Rust** · <img height="14" align="top" src="https://cdn.simpleicons.org/c/A8B9CC" />&nbsp; **C/C++** | [`clients/`](clients/) | Dependency-light REST clients over the ingress, for non-TS hosts. |
 
@@ -184,7 +190,7 @@ never fabricates a settlement.
 | <img height="14" align="top" src="assets/integrations/ucp.svg" />&nbsp; **UCP** · <img height="14" align="top" src="assets/integrations/mpp.svg" />&nbsp; **MPP** | [Universal Commerce Protocol](https://ucp.dev) (delegated checkout) · [Machine Payments Protocol](https://mpp.dev) (rail-agnostic, instant). |
 | <img height="14" align="top" src="https://cdn.simpleicons.org/visa/1A1F71" />&nbsp; **Visa Intelligent Commerce** · <img height="14" align="top" src="https://cdn.simpleicons.org/mastercard/EB001B" />&nbsp; **Mastercard Agent Pay** | Card-network agentic-payment rails (coexist on the `card` kind). |
 | <img height="14" align="top" src="https://cdn.simpleicons.org/ethereum/3C3C3D" />&nbsp; **On-chain (ERC-20 / USDC)** | Real stablecoin transfer via an injected viem-shaped signer (EVM / <img height="12" align="top" src="https://cdn.simpleicons.org/solana/9945FF" /> Solana). |
-| <img height="14" align="top" src="https://cdn.simpleicons.org/stripe/635BFF" />&nbsp; **Stripe Issuing** _(seam only)_ | Single-use virtual-card pattern: mint a fresh card per intent, capped to exactly the amount. Ships the `CardIssuer` seam + logic; **no built-in Stripe adapter yet** — the operator injects the live Issuing client. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/stripe/635BFF" />&nbsp; **Stripe Issuing** _(seam only)_ | Single-use virtual-card pattern: mint a fresh card per intent, capped to exactly the amount. Ships the `CardIssuer` seam + logic; **no built-in Stripe adapter yet** - the operator injects the live Issuing client. |
 
 #### Identity & trust
 
@@ -231,7 +237,7 @@ All five - plus budget, deny-list, velocity, kill-switch, circuit-breaker, and r
 
 ## Architecture
 
-Nine layers, each built and tested. Layers 1–4 are the *safety* half (may this spend happen); layers 5–9 are the *helpfulness* + reach half (what should the agent do, and from where).
+Ten layers, each built and tested. Layers 1–4 are the *safety* half (may this spend happen); layers 5–9 are the *helpfulness* + reach half (what should the agent do, and from where); layer 10 proves it - the eval harness that gates every change on the gate's safety invariants.
 
 ```
 agent / editor / MCP client / HTTP caller
