@@ -4,13 +4,21 @@
 
 export {
   generateScenarios,
+  executionScenarios,
+  advisoryScenarios,
   scenariosByProvenance,
   runScenario,
   EVAL_NOW,
+  SCENARIO_SOURCES,
+  DENY_EXEMPLARS,
   type EvalScenario,
+  type ExecutionScenario,
+  type AdvisoryScenario,
   type EvalCategory,
+  type ScenarioSource,
   type ScenarioRun,
   type ScenarioIntent,
+  type SeededSpend,
 } from "./scenarios.ts";
 export {
   checkTrajectory,
@@ -25,6 +33,8 @@ export {
   detectRegressions,
   type EvalSuiteResult,
   type ScenarioResult,
+  type AdvisoryResult,
+  type AdvisorySuiteResult,
   type RunEvalOptions,
   type RegressionReport,
   type Regression,

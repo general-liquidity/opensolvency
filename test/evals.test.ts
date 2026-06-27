@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   generateScenarios,
+  executionScenarios,
   scenariosByProvenance,
   runScenario,
   runEvalSuite,
@@ -21,12 +22,16 @@ test("scenarios are generated with provenance from authoritative specs", () => {
   assert.ok(all.length >= 6);
   assert.ok(all.every((s) => s.derivedFrom.includes(":")));
   assert.equal(scenariosByProvenance("acceptance:").length, 5);
-  assert.equal(scenariosByProvenance("denylist:").length, 1);
+  // one denylist scenario per LIVE hard deny rule (currently 2)
+  assert.equal(scenariosByProvenance("denylist:").length, 2);
+  assert.ok(scenariosByProvenance("risk:").length >= 5);
+  assert.ok(scenariosByProvenance("mandate:").length >= 5);
+  assert.ok(scenariosByProvenance("behaviour:").length >= 5);
 });
 
 // ── each scenario reaches its expected gate outcome (live) ───────────────────
 test("every generated scenario reaches its expected gate outcome", async () => {
-  for (const s of generateScenarios()) {
+  for (const s of executionScenarios()) {
     const run = await runScenario(s);
     assert.equal(run.result.status, s.expect.status, `${s.id} expected ${s.expect.status}, got ${run.result.status}`);
   }
@@ -53,7 +58,7 @@ function entry(type: AuditEntry["type"], payload: unknown, seq: number): AuditEn
 }
 
 test("a clean live trajectory has no block violations", async () => {
-  const run = await runScenario(generateScenarios()[0]); // auto_execute
+  const run = await runScenario(executionScenarios()[0]); // auto_execute
   const check = checkTrajectory(run.trajectory);
   assert.equal(check.ok, true);
   assert.equal(check.blockViolations.length, 0);
