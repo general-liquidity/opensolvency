@@ -73,6 +73,26 @@
     "./compliance": {
       "types": "./dist/compliance/index.d.ts",
       "import": "./dist/compliance/index.js"
+    },
+    "./rails": {
+      "types": "./dist/rails/index.d.ts",
+      "import": "./dist/rails/index.js"
+    },
+    "./finance": {
+      "types": "./dist/finance/index.d.ts",
+      "import": "./dist/finance/index.js"
+    },
+    "./evals": {
+      "types": "./dist/evals/index.d.ts",
+      "import": "./dist/evals/index.js"
+    },
+    "./earn": {
+      "types": "./dist/earn/index.d.ts",
+      "import": "./dist/earn/index.js"
+    },
+    "./proxy": {
+      "types": "./dist/proxy/index.d.ts",
+      "import": "./dist/proxy/index.js"
     }
   },
   "files": [

@@ -51,6 +51,8 @@ import {
 } from "../disclosure/index.ts";
 import { renderTimeline } from "../obs/replay.ts";
 import { replayAudit } from "../obs/replaySim.ts";
+import { webhookNotifier } from "../notify/notifier.ts";
+import { otlpTracer } from "../obs/otlpTracer.ts";
 import { buildProfile } from "../finance/onboarding.ts";
 import { getProfile, setProfile, saveGoal, listGoals } from "../finance/profileStore.ts";
 import type {
@@ -94,12 +96,17 @@ async function main(): Promise<void> {
 
   const store = createSqliteStore(dbPath);
   const audit = new AuditLog(store.operatorKey(), store.loadAudit());
-  const rails = createRailRegistry([
-    createFakeRail("card"),
-    createFakeRail("checkout"),
-    createFakeRail("onchain"),
-  ]);
+  const rails =
+    process.env.AGENTWORTH_SIMULATION === "1"
+      ? createRailRegistry([
+          createFakeRail("card"),
+          createFakeRail("checkout"),
+          createFakeRail("onchain"),
+        ])
+      : createRailRegistry([]);
   const clock = () => new Date().toISOString();
+  const notifierUrl = process.env.AGENTWORTH_NOTIFY_WEBHOOK_URL;
+  const otlpEndpoint = process.env.AGENTWORTH_OTLP_ENDPOINT;
   const executor = createExecutor({
     store,
     rails,
@@ -107,6 +114,19 @@ async function main(): Promise<void> {
     config: DEFAULT_GATE_CONFIG,
     denyRules: DEFAULT_DENY_RULES,
     clock,
+    notifier: notifierUrl
+      ? webhookNotifier({
+          url: notifierUrl,
+          token: process.env.AGENTWORTH_NOTIFY_WEBHOOK_TOKEN,
+          fetch: (url, init) => fetch(url, init),
+        })
+      : undefined,
+    tracer: otlpEndpoint
+      ? otlpTracer({
+          endpoint: otlpEndpoint,
+          fetch: (url, init) => fetch(url, init),
+        })
+      : undefined,
   });
 
   // ── init: guided first-run setup ─────────────────────────────────────────────

@@ -18,7 +18,7 @@ async function main(): Promise<void> {
   }
   const cfg = { provider, modelId: process.env.AGENTWORTH_MODEL ?? DEFAULT_MODEL_ID[provider], apiKey };
 
-  const os = new AgentWorth();
+  const os = new AgentWorth({ simulation: true });
   os.grantMandate({
     label: "groceries", scope: { kind: "class", value: "groceries" }, currency: "GBP",
     allowedRails: ["card"], perTxCap: 500_00, perPeriodCap: 1000_00, period: "week", expiresInDays: 30,

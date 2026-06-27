@@ -15,7 +15,7 @@ import { VERSION } from "../version.ts";
 import type { Executor } from "../core/executor.ts";
 import type { Store } from "../core/store.ts";
 import type { AuditLog } from "../core/audit.ts";
-import type { PaymentIntent } from "../core/types.ts";
+import type { Attestation, PaymentIntent } from "../core/types.ts";
 
 export interface McpDeps {
   executor: Executor;
@@ -23,6 +23,9 @@ export interface McpDeps {
   audit: AuditLog;
   clock: () => string;
   newId: () => string;
+  /** Trusted transport/session identity mapping. Never take this from a pay-tool
+   * argument: an MCP caller must not self-assert its attestation. */
+  resolveAttestation?: () => Promise<Attestation> | Attestation;
 }
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] });
@@ -49,7 +52,8 @@ export function createAgentWorthMcpServer(deps: McpDeps): McpServer {
     },
     async (args) => {
       const intent: PaymentIntent = { ...args, id: deps.newId(), createdAt: deps.clock() };
-      const r = await deps.executor.execute(intent, { attestation: "none" });
+      const attestation = await deps.resolveAttestation?.() ?? "none";
+      const r = await deps.executor.execute(intent, { attestation });
       return text(
         `${r.status}: ${r.decision.reasons.join("; ")}` +
           (r.receipt ? ` (receipt ${r.receipt.id})` : ""),

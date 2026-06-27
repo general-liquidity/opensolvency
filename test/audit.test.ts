@@ -21,6 +21,26 @@ test("a well-formed chain verifies", () => {
   assert.equal(r.brokenAt, null);
 });
 
+test("a chain with undefined decision inputs verifies after a JSON round-trip", () => {
+  const log = new AuditLog(KEY);
+  log.append(
+    "gate.decision",
+    {
+      intentId: "pi_1",
+      outcome: "auto_execute",
+      inputs: {
+        attestation: undefined,
+        reputation: undefined,
+        trust: "seen",
+      },
+    },
+    T(0),
+  );
+
+  const persisted = JSON.parse(JSON.stringify(log.entries())) as AuditEntry[];
+  assert.equal(new AuditLog(KEY, persisted).verify().valid, true);
+});
+
 test("entries are hash-linked to their predecessor", () => {
   const log = seeded();
   const e = log.entries();

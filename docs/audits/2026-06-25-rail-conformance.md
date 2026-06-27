@@ -12,6 +12,10 @@ adapter code.
 against a real counterparty), **INTEGRITY** (compiles and "works" but a claimed security property
 isn't enforced), **CORRECTNESS** (wrong/inverted behavior), **COSMETIC** (naming/labelling).
 
+> Superseded in part on 2026-06-27. Visa TAP verification, the dev-verifier
+> downgrade, UCP conservatism, provider-ID routing, and direct-onchain labeling
+> are fixed in current code. The x402 V2 migration and Stripe adapter remain open.
+
 ---
 
 ## Verdict table

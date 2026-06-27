@@ -17,9 +17,14 @@
 
 import type { AuditLog, AuditEventType } from "./audit.ts";
 import { evaluateGate } from "./gate.ts";
-import { computePolicyHash, effectivePolicy } from "./enforcement.ts";
+import {
+  computeContextDigest,
+  computePolicyHash,
+  effectivePolicy,
+  type ReplayInputs,
+} from "./enforcement.ts";
 import { payeeTrust } from "./trust.ts";
-import { convertMinor, type FxRateSource } from "./fx.ts";
+import { convertMinorCrossDecimal, type FxRateSource } from "./fx.ts";
 import type { ReputationSource } from "./reputation.ts";
 import { RAIL_REVERSIBILITY } from "./types.ts";
 import { noopTracer, type Tracer } from "../obs/tracer.ts";
@@ -109,6 +114,7 @@ export function createExecutor(deps: ExecutorDeps) {
     now: string,
     intent: PaymentIntent,
     attestation?: Attestation,
+    reputation = deps.reputation?.reputation(intent.payee),
   ): GateContext {
     const provider = deps.rails.get(intent.rail);
     return {
@@ -120,11 +126,13 @@ export function createExecutor(deps: ExecutorDeps) {
       convert: deps.fxRates
         ? (amount, from, to) => {
             const r = deps.fxRates?.rate(from, to);
-            return r === undefined ? undefined : convertMinor(amount, r);
+            return r === undefined
+              ? undefined
+              : convertMinorCrossDecimal(amount, r, from, to);
           }
         : undefined,
       attestation,
-      reputationOf: deps.reputation ? (payee) => deps.reputation?.reputation(payee) : undefined,
+      reputationOf: reputation !== undefined ? () => reputation : undefined,
       denyRules: deps.denyRules,
       config: deps.config,
       reversibility: provider?.capabilities.reversibility,
@@ -236,7 +244,35 @@ export function createExecutor(deps: ExecutorDeps) {
       return { intentId: intent.id, status: "blocked", decision, receipt: null, verified: null };
     }
 
-    const decision = evaluateGate(intent, context(now, intent, opts.attestation));
+    const reputation = deps.reputation?.reputation(intent.payee);
+    const decision = evaluateGate(
+      intent,
+      context(now, intent, opts.attestation, reputation),
+    );
+    const activeMandates = deps.store.listActiveMandates(now);
+    const fxRates = Object.fromEntries(
+      activeMandates.flatMap((mandate) => {
+        if (!deps.fxRates || mandate.currency === intent.currency) return [];
+        const rate = deps.fxRates.rate(intent.currency, mandate.currency);
+        return rate === undefined ? [] : [[`${intent.currency}/${mandate.currency}`, rate]];
+      }),
+    );
+    const replayInputs: ReplayInputs = {
+      reversibility:
+        deps.rails.get(intent.rail)?.capabilities.reversibility ??
+        RAIL_REVERSIBILITY[intent.rail],
+      trust: payeeTrust(deps.store.payeeSettledCount(intent.payee)),
+      knownPayees: [...deps.store.knownPayees()].sort(),
+      periodSpendByMandate: Object.fromEntries(
+        activeMandates.map((mandate) => [
+          mandate.id,
+          deps.store.periodSpend(mandate.id, now),
+        ]),
+      ),
+      ...(opts.attestation !== undefined ? { attestation: opts.attestation } : {}),
+      ...(reputation !== undefined ? { reputation } : {}),
+      ...(Object.keys(fxRates).length > 0 ? { fxRates } : {}),
+    };
     // Snapshot the intent + the decision inputs so the audit chain can be REPLAYED
     // deterministically against a candidate mandate set (PayGraph's policy-snapshot
     // insight). The external inputs (reversibility/attestation/reputation/trust) are
@@ -250,6 +286,8 @@ export function createExecutor(deps: ExecutorDeps) {
         reasons: decision.reasons,
         mandateId: decision.mandateId,
         riskTier: decision.risk.tier,
+        verdict: decision,
+        ctxDigest: computeContextDigest(replayInputs),
         intent: {
           id: intent.id,
           payee: intent.payee,
@@ -260,14 +298,7 @@ export function createExecutor(deps: ExecutorDeps) {
           rationale: intent.rationale,
           createdAt: intent.createdAt,
         },
-        inputs: {
-          reversibility:
-            deps.rails.get(intent.rail)?.capabilities.reversibility ??
-            RAIL_REVERSIBILITY[intent.rail],
-          attestation: opts.attestation,
-          reputation: deps.reputation?.reputation(intent.payee),
-          trust: payeeTrust(deps.store.payeeSettledCount(intent.payee)),
-        },
+        inputs: replayInputs,
       },
       now,
     );

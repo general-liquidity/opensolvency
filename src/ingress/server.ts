@@ -27,7 +27,7 @@ import type { RateLimiter } from "./rateLimit.ts";
 import type { Executor } from "../core/executor.ts";
 import type { Store } from "../core/store.ts";
 import type { AuditLog } from "../core/audit.ts";
-import type { PaymentIntent } from "../core/types.ts";
+import type { Attestation, PaymentIntent } from "../core/types.ts";
 
 const GENESIS = "0".repeat(64);
 
@@ -69,6 +69,10 @@ export interface IngressDeps {
   maxBodyBytes?: number;
   /** Verifiable Agency disclosure surface (requires `store` for the signing key). */
   disclosure?: DisclosureIngressConfig;
+  /** Trusted transport identity mapping. The request body cannot self-assert it. */
+  resolveAttestation?: (context: {
+    authorization?: string;
+  }) => Promise<Attestation> | Attestation;
 }
 
 export interface IngressResponse {
@@ -196,7 +200,9 @@ export async function handleIngress(
       id: deps.newId(),
       createdAt: deps.clock(),
     };
-    const result = await deps.executor.execute(intent);
+    const attestation =
+      await deps.resolveAttestation?.({ authorization: authHeader }) ?? "none";
+    const result = await deps.executor.execute(intent, { attestation });
     if (idempotencyKey && deps.store) rememberKey(deps.store, idempotencyKey, result.intentId);
     const status =
       result.status === "settled"

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   computePolicyHash,
+  decisionRecordFromAuditEntry,
   effectivePolicy,
   replayDecision,
   type DecisionRecord,
@@ -19,6 +20,10 @@ import {
   type BuildDisclosureDeps,
 } from "../src/disclosure/builders.ts";
 import { createMemoryStore } from "../src/store/memoryStore.ts";
+import { createExecutor } from "../src/core/executor.ts";
+import { createRailRegistry } from "../src/rails/registry.ts";
+import { createFakeRail } from "../src/rails/fakeRail.ts";
+import { fixedRateSource } from "../src/core/fx.ts";
 import { generateAgentKeyPair, verifyDisclosureSignature } from "@general-liquidity/agent-disclosure";
 import type {
   GateContext,
@@ -187,6 +192,58 @@ test("an audit entry carries policyHash and still verifies", () => {
   // tampering with the bound policyHash breaks verification
   (entry.payload as { policyHash: string }).policyHash = "deadbeef";
   assert.equal(log.verify().valid, false);
+});
+
+test("a production audit entry can be replayed without hand-built inputs", async () => {
+  const store = createMemoryStore("op-key");
+  const liveMandate = mandate({
+    currency: "GBP",
+    perTxCap: 100_00,
+    perPeriodCap: 200_00,
+  });
+  store.insertMandate(liveMandate);
+  store.insertIntent({
+    intent: intent({
+      id: "seed",
+      amount: 20_00,
+      currency: "GBP",
+    }),
+    status: "settled",
+    mandateId: liveMandate.id,
+    reasons: [],
+    settledAt: "2026-06-25T12:00:00.000Z",
+    receiptId: "r_seed",
+  });
+  const audit = new AuditLog(store.operatorKey());
+  const executor = createExecutor({
+    store,
+    rails: createRailRegistry([createFakeRail("card")]),
+    audit,
+    config: DEFAULT_GATE_CONFIG,
+    denyRules: DEFAULT_DENY_RULES,
+    clock: () => NOW,
+    fxRates: fixedRateSource({ "JPY/GBP": 0.0053 }),
+  });
+
+  await executor.execute(
+    intent({
+      id: "pi_jpy",
+      amount: 10_000,
+      currency: "JPY",
+    }),
+  );
+
+  const entry = audit.entries().find((candidate) => candidate.type === "gate.decision");
+  assert.ok(entry);
+  const record = decisionRecordFromAuditEntry(entry);
+  assert.ok(record);
+  assert.deepEqual(record.inputs.knownPayees, ["tesco"]);
+  assert.equal(record.inputs.periodSpendByMandate[liveMandate.id][0].amount, 20_00);
+  assert.equal(record.inputs.fxRates?.["JPY/GBP"], 0.0053);
+
+  const policy = policyOf([liveMandate]);
+  assert.equal(record.policyHash, computePolicyHash(policy));
+  assert.equal(replayDecision(record, policy, DEFAULT_DENY_RULES).matches, true);
 });
 
 function disclosureDeps(): BuildDisclosureDeps {

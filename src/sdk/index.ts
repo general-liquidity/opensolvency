@@ -17,6 +17,10 @@ import { DEFAULT_GATE_CONFIG } from "../core/types.ts";
 import { createMemoryStore } from "../store/memoryStore.ts";
 import { createRailRegistry, type RailRegistry } from "../rails/registry.ts";
 import { createFakeRail } from "../rails/fakeRail.ts";
+import type { FxRateSource } from "../core/fx.ts";
+import type { ReputationSource } from "../core/reputation.ts";
+import type { Notifier } from "../notify/notifier.ts";
+import type { Tracer } from "../obs/tracer.ts";
 import type { Store, StoredIntent } from "../core/store.ts";
 import type {
   Attestation,
@@ -76,8 +80,11 @@ export interface AgentWorthOptions {
   store?: Store;
   /** Audit-signing key. Defaults to the store's own operator key. */
   auditKey?: string;
-  /** Rail registry. Defaults to in-process fake rails for every RailKind. */
+  /** Rail registry. Defaults to an empty fail-closed registry. */
   rails?: RailRegistry;
+  /** Explicitly use in-process fake rails. They mint test receipts and move no
+   * money. Defaults to false so an unconfigured runtime fails closed. */
+  simulation?: boolean;
   /** Gate tuning. Defaults to DEFAULT_GATE_CONFIG. */
   config?: GateConfig;
   /** Hard deny-list. Defaults to DEFAULT_DENY_RULES. */
@@ -92,11 +99,19 @@ export interface AgentWorthOptions {
   /** Durability barrier awaited after each payment op (async stores wire their
    * `flush` here). Synchronous stores (memory/sqlite) leave it unset. */
   commit?: () => Promise<void>;
+  /** FX rates used to enforce cross-currency mandates in the mandate's units. */
+  fxRates?: FxRateSource;
+  /** Optional payee reputation signal. It can raise/lower risk, never the floor. */
+  reputation?: ReputationSource;
+  /** Best-effort out-of-band approval notifications. */
+  notifier?: Notifier;
+  /** Live lifecycle event sink. The signed audit remains the source of truth. */
+  tracer?: Tracer;
 }
 
 const DEFAULT_EXPIRY_DAYS = 30;
 
-function defaultRails(): RailRegistry {
+function simulationRails(): RailRegistry {
   return createRailRegistry([
     createFakeRail("card"),
     createFakeRail("checkout"),
@@ -124,7 +139,9 @@ export class AgentWorth {
       options.auditKey ?? this.store.operatorKey(),
       this.store.loadAudit(),
     );
-    this.rails = options.rails ?? defaultRails();
+    this.rails =
+      options.rails ??
+      (options.simulation === true ? simulationRails() : createRailRegistry([]));
     this.#clock = options.clock ?? (() => new Date().toISOString());
     this.#executor = createExecutor({
       store: this.store,
@@ -136,6 +153,10 @@ export class AgentWorth {
       circuitBreakerThreshold: options.circuitBreakerThreshold,
       challengeThresholdMinor: options.challengeThresholdMinor,
       commit: options.commit,
+      fxRates: options.fxRates,
+      reputation: options.reputation,
+      notifier: options.notifier,
+      tracer: options.tracer,
     });
   }
 
@@ -343,9 +364,12 @@ export type {
 export {
   effectivePolicy,
   computePolicyHash,
+  computeContextDigest,
+  decisionRecordFromAuditEntry,
   replayDecision,
   type EffectivePolicy,
   type DecisionRecord,
+  type ReplayInputs,
   type PoEAttestation,
 } from "../core/enforcement.ts";
 export { decodeEnforcementBinding, type EnforcementBinding } from "../disclosure/builders.ts";
@@ -364,3 +388,23 @@ export {
   SPENDTRUST_METHODOLOGY_VERSION,
 } from "../benchmark/spendTrust.ts";
 export { minorUnitExponent, convertMinorCrossDecimal } from "../core/fx.ts";
+export type { FxRateSource } from "../core/fx.ts";
+export type { ReputationSource } from "../core/reputation.ts";
+export {
+  noopNotifier,
+  consoleNotifier,
+  webhookNotifier,
+  type Notifier,
+  type Notification,
+  type WebhookNotifierOptions,
+} from "../notify/notifier.ts";
+export {
+  noopTracer,
+  consoleTracer,
+  type Tracer,
+} from "../obs/tracer.ts";
+export {
+  otlpTracer,
+  buildLogPayload,
+  type OtlpTracerOptions,
+} from "../obs/otlpTracer.ts";

@@ -38,6 +38,11 @@ export interface IdentityVerifier {
   verify(presented: unknown): Promise<IdentityResult> | IdentityResult;
 }
 
+/** Safe verifier-result adapter for transport `resolveAttestation` hooks. */
+export function attestationFromIdentityResult(result: IdentityResult): Attestation {
+  return result.verified ? result.identity.attestation : "none";
+}
+
 /** No verifier configured → nothing is attested. */
 export const noopVerifier: IdentityVerifier = {
   verify: () => ({
