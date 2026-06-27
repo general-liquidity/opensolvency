@@ -5,7 +5,7 @@
 // registry's owner of `agentId` IS the signer).
 //
 // AgentWorth consumes the verdict as a risk INPUT (identity attestation). The
-// registry call is injected/mocked — OS never opens a socket from the kernel.
+// registry call is injected/mocked — AgentWorth never opens a socket from the kernel.
 
 import type { Attestation } from "../core/types.ts";
 import type { AgentIdentity, IdentityResult, IdentityVerifier } from "./verifier.ts";
@@ -105,7 +105,7 @@ export function parseSiwaMessage(text: string): SiwaMessage {
 }
 
 /** Resolves an ERC-8004 agent registry entry: who OWNS `agentId` (and optional
- * metadata). Injected so OS never hits the chain from the kernel. */
+ * metadata). Injected so AgentWorth never hits the chain from the kernel. */
 export type RegistryResolver = (
   agentRegistry: string,
   agentId: string,
@@ -234,11 +234,11 @@ export function siwaIdentityVerifier(opts: VerifySiwaOptions): IdentityVerifier 
   };
 }
 
-// --- OS Self risk-input -------------------------------------------------------
+// --- AgentWorth Self risk-input -----------------------------------------------
 
-/** Map a *verified* Self proof verdict to the OS `Attestation` risk input. OS does
+/** Map a *verified* Self proof verdict to the AgentWorth `Attestation` risk input. AgentWorth does
  * NOT verify the Self proof here — full proof verification is delegated to ADP / the
- * Self SDK; OS only consumes the boolean verdict. `registryBacked` lifts a valid
+ * Self SDK; AgentWorth only consumes the boolean verdict. `registryBacked` lifts a valid
  * proof to `registry_attested` (an issuer-attested identity bound to a registry). */
 export function mapSelfToAttestation(verdict: {
   valid: boolean;

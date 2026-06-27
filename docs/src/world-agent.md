@@ -25,7 +25,7 @@ AgentWorth mirrors steps 2–3 in two halves:
   requiring it to equal `address`. The secp256k1 recover is the same one ERC-8128 uses
   (`@noble`, dynamic-imported; no crypto pulled unless a World Agent is actually
   verified). agentkit reconstructs the signed string from the structured fields with
-  viem's `createSiweMessage`; OS cannot pull viem into the kernel, so the consumer
+  viem's `createSiweMessage`; AgentWorth cannot pull viem into the kernel, so the consumer
   supplies the canonical `message` the agent signed.
 - **Injected seam.** The AgentBook `eth_call` is an `AgentBookResolver` callback the
   consumer wires with viem/ethers. Without a resolver the result is
@@ -64,7 +64,7 @@ const ABI = [
 ] as const;
 
 const verifier = worldAgentIdentityVerifier({
-  // injected AgentBook resolver — the OS core never opens an RPC socket
+  // injected AgentBook resolver — the AgentWorth core never opens an RPC socket
   resolver: async (address) => {
     const humanId = await client.readContract({
       address: AGENT_BOOK,

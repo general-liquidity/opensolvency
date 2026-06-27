@@ -1,7 +1,7 @@
 // World ID — proof-of-personhood as the gate's `attestation` input. A World ID
 // proof is a Groth16 ZK proof over the on-chain Orb set; AgentWorth CANNOT verify
 // it locally (no trusted setup, no Merkle membership in the kernel). So, like the
-// Self/SIWA path, OS consumes the verdict of an INJECTED verifier — the consumer
+// Self/SIWA path, AgentWorth consumes the verdict of an INJECTED verifier — the consumer
 // wires the Worldcoin cloud `/verify` endpoint or the on-chain Router `verifyProof`.
 // Without that verifier the result is structural-only (`verified: false`,
 // attestation "none") — never thrown.
@@ -58,7 +58,7 @@ export function validateWorldIdStructural(a: WorldIdAttestation): boolean {
   return true;
 }
 
-/** Map a *verified* World ID proof to the OS `Attestation` risk input. An invalid
+/** Map a *verified* World ID proof to the AgentWorth `Attestation` risk input. An invalid
  * proof is `none`. A valid orb proof is an issuer-attested human → `registry_attested`;
  * any other valid level (device, document) is the weaker `signed`. */
 export function mapWorldIdToAttestation(
@@ -70,7 +70,7 @@ export function mapWorldIdToAttestation(
 }
 
 /** Verify a World ID proof: structural check, then the injected verifier. Without a
- * verifier the result is structural-only (`valid: false`) — OS can never assert a
+ * verifier the result is structural-only (`valid: false`) — AgentWorth can never assert a
  * cryptographic verdict it didn't perform. The returned `nullifier` is the canonical
  * one from the verifier when present, else the asserted `nullifier_hash`. */
 export async function verifyWorldId(

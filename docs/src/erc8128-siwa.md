@@ -93,8 +93,8 @@ Helpers: `formatSiwaMessage`, `parseSiwaMessage`.
 
 ## Self proofs (`mapSelfToAttestation`)
 
-OS does **not** verify a Self (Self Protocol) proof itself — full proof verification
-is delegated to ADP / the Self SDK. OS only consumes the boolean verdict as a risk
+AgentWorth does **not** verify a Self (Self Protocol) proof itself — full proof verification
+is delegated to ADP / the Self SDK. AgentWorth only consumes the boolean verdict as a risk
 input:
 
 ```ts

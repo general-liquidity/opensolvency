@@ -1,11 +1,11 @@
 // Human Passport (formerly Gitcoin Passport) — a humanity score as the gate's
-// `reputationOf` input. A passport aggregates verified "stamps" into a score; OS maps
+// `reputationOf` input. A passport aggregates verified "stamps" into a score; AgentWorth maps
 // that score to a `ReputationLevel` (good | neutral | flagged | unknown) the gate
 // consumes as a network-reputation risk input (it feeds risk, never relaxes the floor).
 //
-// OS does not fetch the score from the kernel: the consumer injects a `PassportScorer`
+// AgentWorth does not fetch the score from the kernel: the consumer injects a `PassportScorer`
 // (the Passport Stamps / Models API client). The score arrives from the API as a
-// numeric STRING — the consumer's scorer parses it to a number at the boundary; OS
+// numeric STRING — the consumer's scorer parses it to a number at the boundary; AgentWorth
 // only consumes the numeric verdict. Without a scorer, the embedded `score` is used.
 
 import type { ReputationLevel } from "../core/types.ts";
@@ -20,7 +20,7 @@ export interface HumanPassportAttestation {
   timestamp?: string; // when the score was computed (ISO)
 }
 
-/** Fetch a live humanity score for an address. Injected because OS never opens a
+/** Fetch a live humanity score for an address. Injected because AgentWorth never opens a
  * socket from the kernel — the consumer wires the Passport Stamps / Models API and
  * parses the API's numeric-string score into a number here. */
 export type PassportScorer = (

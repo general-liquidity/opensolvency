@@ -4,20 +4,20 @@
 // three mandates — IntentMandate (coarse user intent), CartMandate (a merchant's
 // signed cart), PaymentMandate (the binding to a payment method) — passed in A2A
 // Message DataParts. AgentWorth is the POLICY ENGINE behind AP2 authorization:
-// an AP2 CartMandate becomes an OS PaymentIntent and runs through `evaluateGate`,
+// an AP2 CartMandate becomes an AgentWorth PaymentIntent and runs through `evaluateGate`,
 // which decides auto_execute / confirm_operator / block under the operator's
 // mandates, caps, deny-list, and risk. This module is the seam, nothing more — it
 // re-implements no policy; it maps shapes and calls into the existing kernel.
 //
 // Wire shape is snake_case (the AP2 pydantic models are snake_case) and is kept
-// verbatim in the TS interfaces below — these are the wire types, not OS types, so
+// verbatim in the TS interfaces below — these are the wire types, not AgentWorth types, so
 // they are deliberately NOT camelCased.
 //
 // Documented assumptions (AP2 leaves these unspecified):
 //  - cart_hash canonicalization: RFC 8785 JCS (we reuse the ADP `canonicalize`,
 //    which is a JCS implementation), hashed with SHA-256.
 //  - Money: W3C PaymentCurrencyAmount.value is MAJOR units (a number, e.g. "12.50"
-//    dollars); OS money is integer MINOR units. Converted with an injectable
+//    dollars); AgentWorth money is integer MINOR units. Converted with an injectable
 //    `minorUnitsPerMajor` (default 100).
 //  - PaymentMandate VP crypto (issuer/holder SD-JWT-VC signatures) is OUT OF SCOPE
 //    and delegated to a VC verifier. `verifyPaymentMandateBinding` does STRUCTURAL
@@ -130,7 +130,7 @@ export interface PaymentMandate {
 
 // --- canonicalization / hashing ----------------------------------------------
 
-/** RFC 8785 JCS canonical JSON. Reuses the ADP implementation so OS and ADP
+/** RFC 8785 JCS canonical JSON. Reuses the ADP implementation so AgentWorth and ADP
  * agree on the canonical form used for hashing. */
 export function canonicalize(value: unknown): string {
   return adpCanonicalize(value);
@@ -150,8 +150,8 @@ export function cartHash(
 
 // --- Mandate ⇄ IntentMandate (pure) ------------------------------------------
 
-/** Map an OS Mandate to an AP2 IntentMandate. AP2's IntentMandate is COARSER than
- * an OS Mandate: it carries no amount caps (perTxCap/perPeriodCap have no native
+/** Map an AgentWorth Mandate to an AP2 IntentMandate. AP2's IntentMandate is COARSER than
+ * an AgentWorth Mandate: it carries no amount caps (perTxCap/perPeriodCap have no native
  * field). Those are dropped here and must be re-supplied on ingest. */
 export function mandateToIntentMandate(
   m: Mandate,
@@ -180,7 +180,7 @@ export interface IntentMandateToMandateOpts {
   payeeClass?: string;
 }
 
-/** Map an AP2 IntentMandate to an OS Mandate. AP2 carries no caps, so the caller
+/** Map an AP2 IntentMandate to an AgentWorth Mandate. AP2 carries no caps, so the caller
  * supplies perTxCap / perPeriodCap / period / currency / rails via `opts`. */
 export function intentMandateToMandate(
   im: IntentMandate,
@@ -208,7 +208,7 @@ export function intentMandateToMandate(
 
 const DEFAULT_MINOR_UNITS_PER_MAJOR = 100;
 
-/** Total of a cart in OS minor-units + its currency. `value` is W3C major units;
+/** Total of a cart in AgentWorth minor-units + its currency. `value` is W3C major units;
  * convert with `minorUnitsPerMajor` (default 100). Rounds to the nearest integer
  * minor-unit (W3C values may carry sub-cent precision). */
 export function cartTotal(
@@ -231,7 +231,7 @@ export interface CartMandateToIntentOpts {
   minorUnitsPerMajor?: number;
 }
 
-/** Turn an AP2 CartMandate into an OS PaymentIntent. The payee is the cart's
+/** Turn an AP2 CartMandate into an AgentWorth PaymentIntent. The payee is the cart's
  * `merchant_name`; amount + currency come from the cart total. Everything the
  * gate needs but AP2 doesn't carry (payeeClass, rail, rationale) comes from opts. */
 export function cartMandateToIntent(
@@ -253,7 +253,7 @@ export function cartMandateToIntent(
 
 // --- Gate seam ---------------------------------------------------------------
 
-/** Derive an OS PaymentIntent from an AP2 CartMandate and run it through the gate.
+/** Derive an AgentWorth PaymentIntent from an AP2 CartMandate and run it through the gate.
  * The gate is the policy engine behind AP2 authorization — it decides
  * auto_execute / confirm_operator / block. Returns both the derived intent and the
  * decision so the caller can act on (and audit) exactly what was evaluated. */
@@ -332,7 +332,7 @@ function algToDigest(alg: string | undefined): { digest: string | null } | undef
  *  3. enforce the exp/iat window,
  *  4. recompute cart_hash over JCS(CartContents) and compare to the claim.
  * An unsigned cart (null merchant_authorization) is `{ok:false}` with cartHashOk
- * false — AP2 leaves merchant_authorization optional; OS treats unsigned as
+ * false — AP2 leaves merchant_authorization optional; AgentWorth treats unsigned as
  * unverified, never authorized. */
 export async function verifyCartMandate(
   cart: CartMandate,
