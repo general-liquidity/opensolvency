@@ -186,3 +186,33 @@ test("a reversible provider on an onchain-kind intent is not hard-denied", () =>
   );
   assert.notEqual(d.outcome, "block");
 });
+
+test("returns suggestedFix for mandate cap violations and missing mandates", () => {
+  // 1. Missing mandate
+  const d1 = evaluateGate(intent({ payeeClass: "electronics" }), ctx());
+  assert.equal(d1.outcome, "confirm_operator");
+  assert.equal(d1.suggestedFix?.code, "GRANT_MANDATE");
+  assert.ok(d1.suggestedFix?.message.includes("mandate grant"));
+
+  // 2. Tx Cap exceeded
+  const d2 = evaluateGate(intent({ amount: 600_00 }), ctx());
+  assert.equal(d2.outcome, "block");
+  assert.equal(d2.suggestedFix?.code, "INCREASE_TX_CAP");
+
+  // 3. Period Cap exceeded
+  const d3 = evaluateGate(
+    intent({ amount: 300_00 }),
+    ctx({}, [
+      { amount: 400_00, at: "2026-05-27T10:00:00.000Z" },
+      { amount: 400_00, at: "2026-05-28T10:00:00.000Z" },
+    ]),
+  );
+  assert.equal(d3.outcome, "block");
+  assert.equal(d3.suggestedFix?.code, "INCREASE_PERIOD_CAP");
+
+  // 4. Too short rationale
+  const d4 = evaluateGate(intent({ rationale: "short" }), ctx());
+  assert.equal(d4.outcome, "block");
+  assert.equal(d4.suggestedFix?.code, "EXPAND_RATIONALE");
+});
+

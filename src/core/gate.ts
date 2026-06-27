@@ -46,12 +46,17 @@ export function evaluateGate(
 ): GateDecision {
   const noRisk: SpendRisk = { tier: "none", score: 0, reasons: [] };
 
-  const block = (reasons: string[], mandateId: string | null = null): GateDecision => ({
+  const block = (
+    reasons: string[],
+    mandateId: string | null = null,
+    suggestedFix?: import("./types.ts").SafeFix,
+  ): GateDecision => ({
     outcome: "block",
     reasons,
     mandateId,
     risk: noRisk,
     remainingPeriodBudget: null,
+    suggestedFix,
   });
 
   // 1. Boundary validation — never trust an unstructured intent.
@@ -59,9 +64,14 @@ export function evaluateGate(
     return block(["amount must be a positive integer in minor-units"]);
   }
   if (intent.rationale.trim().length < ctx.config.minRationaleChars) {
-    return block([
-      `rationale must be at least ${ctx.config.minRationaleChars} characters`,
-    ]);
+    return block(
+      [`rationale must be at least ${ctx.config.minRationaleChars} characters`],
+      null,
+      {
+        code: "EXPAND_RATIONALE",
+        message: `Add more details to rationale (must be at least ${ctx.config.minRationaleChars} characters)`,
+      },
+    );
   }
 
   // Reversibility of the provider that will settle this — injected by the
@@ -71,7 +81,14 @@ export function evaluateGate(
   // 2. Hard deny-list — unconditional, before any mandate or trust.
   for (const rule of ctx.denyRules) {
     if (rule.match(intent, { knownPayees: ctx.knownPayees, reversibility })) {
-      return block([`deny-list: ${rule.reason}`]);
+      return block(
+        [`deny-list: ${rule.reason}`],
+        null,
+        {
+          code: "DENY_LIST_BYPASS",
+          message: "Payment is on a hard deny-list. Verify payee or request operator override.",
+        },
+      );
     }
   }
 
@@ -88,6 +105,11 @@ export function evaluateGate(
       mandateId: null,
       risk: noRisk,
       remainingPeriodBudget: null,
+      suggestedFix: {
+        code: "GRANT_MANDATE",
+        message: `Run 'agentworth mandate grant --label target --class ${intent.payeeClass} ...'`,
+        parameters: { payeeClass: intent.payeeClass, payee: intent.payee },
+      },
     };
   }
 
@@ -122,6 +144,11 @@ export function evaluateGate(
       mandateId: mandate.id,
       risk,
       remainingPeriodBudget: null,
+      suggestedFix: {
+        code: "INCREASE_TX_CAP",
+        message: `Exceeds per-transaction limit of ${mandate.perTxCap} ${mandate.currency}. Request operator to increase cap or split payment.`,
+        parameters: { mandateId: mandate.id, limit: mandate.perTxCap },
+      },
     };
   }
   const spent = periodSpend.reduce((sum, s) => sum + s.amount, 0);
@@ -136,6 +163,11 @@ export function evaluateGate(
       mandateId: mandate.id,
       risk,
       remainingPeriodBudget: null,
+      suggestedFix: {
+        code: "INCREASE_PERIOD_CAP",
+        message: `Exceeds period budget (${spent} spent of ${mandate.perPeriodCap}). Request operator to increase period cap.`,
+        parameters: { mandateId: mandate.id, limit: mandate.perPeriodCap, spent },
+      },
     };
   }
 
@@ -164,6 +196,11 @@ export function evaluateGate(
       mandateId: mandate.id,
       risk,
       remainingPeriodBudget: remaining,
+      suggestedFix: {
+        code: "CONFIRM_OPERATOR",
+        message: `Requires operator confirmation. Ask operator to approve intent ID ${intent.id}.`,
+        parameters: { intentId: intent.id },
+      },
     };
   }
 

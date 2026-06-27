@@ -17,6 +17,7 @@
 
 import type { AuditLog, AuditEventType } from "./audit.ts";
 import { evaluateGate } from "./gate.ts";
+import { evaluateRiskChain } from "./riskChain.ts";
 import {
   computeContextDigest,
   computePolicyHash,
@@ -245,10 +246,42 @@ export function createExecutor(deps: ExecutorDeps) {
     }
 
     const reputation = deps.reputation?.reputation(intent.payee);
-    const decision = evaluateGate(
+    let decision = evaluateGate(
       intent,
       context(now, intent, opts.attestation, reputation),
     );
+
+    // Check if the authorizing mandate is a streaming mandate (period === "day")
+    let isStreaming = false;
+    if (decision.mandateId) {
+      const mand = deps.store.getMandate(decision.mandateId);
+      if (mand?.period === "day") {
+        isStreaming = true;
+      }
+    }
+
+    // Evaluate session-level risk chains from the audit logs
+    const chainAlert = evaluateRiskChain(intent, deps.audit.entries(), { isStreaming });
+    if (chainAlert.triggered) {
+      if (decision.outcome === "auto_execute") {
+        decision = {
+          ...decision,
+          outcome: "confirm_operator",
+          reasons: [...decision.reasons, `RiskChain: ${chainAlert.reason}`],
+          suggestedFix: {
+            code: "CONFIRM_OPERATOR",
+            message: `Requires operator confirmation due to multi-step risk alerts.`,
+            parameters: { type: chainAlert.type, reason: chainAlert.reason },
+          },
+        };
+      } else {
+        decision = {
+          ...decision,
+          reasons: [...decision.reasons, `RiskChain: ${chainAlert.reason}`],
+        };
+      }
+    }
+
     const activeMandates = deps.store.listActiveMandates(now);
     const fxRates = Object.fromEntries(
       activeMandates.flatMap((mandate) => {

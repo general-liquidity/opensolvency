@@ -285,3 +285,36 @@ test("approving a high-value pending intent requires acknowledgement", async () 
   });
   assert.equal(acked.status, "settled");
 });
+
+test("RiskChain tracker detects smurfing and probing across intents", async () => {
+  const { store, executor } = harness();
+  store.insertMandate(mandate());
+  seedKnown(store);
+
+  // 1. Trigger Smurfing:
+  // Execute three successful payments to the same payee (tesco) in rapid succession
+  await executor.execute(intent({ id: "p1" }));
+  await executor.execute(intent({ id: "p2" }));
+  await executor.execute(intent({ id: "p3" }));
+
+  // The 4th execution should trigger the RiskChain: SMURFING alert
+  // and be escalated to pending (confirm_operator) even though it is under the mandate cap.
+  const r4 = await executor.execute(intent({ id: "p4" }));
+  assert.equal(r4.status, "pending");
+  assert.ok(r4.decision.reasons.some((r) => r.includes("RiskChain: Smurfing/Slicing alert")));
+
+  // 2. Trigger Probing:
+  // Clean executor state for probing check
+  const { store: store2, executor: executor2 } = harness();
+  store2.insertMandate(mandate());
+  // Execute 4 failed/operator-pending requests to different unknown payees
+  await executor2.execute(intent({ id: "pb1", payee: "payee-1" }));
+  await executor2.execute(intent({ id: "pb2", payee: "payee-2" }));
+  await executor2.execute(intent({ id: "pb3", payee: "payee-3" }));
+  await executor2.execute(intent({ id: "pb4", payee: "payee-4" }));
+
+  // The next one triggers PROBING
+  const rPb5 = await executor2.execute(intent({ id: "pb5", payee: "payee-5" }));
+  assert.ok(rPb5.decision.reasons.some((r) => r.includes("RiskChain: Probing/Scan alert")));
+});
+

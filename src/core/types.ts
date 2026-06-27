@@ -92,6 +92,12 @@ export interface Receipt {
 
 export type GateOutcome = "auto_execute" | "confirm_operator" | "block";
 
+export interface SafeFix {
+  code: string;
+  message: string;
+  parameters?: Record<string, any>;
+}
+
 export interface GateDecision {
   outcome: GateOutcome;
   reasons: string[];
@@ -99,6 +105,7 @@ export interface GateDecision {
   risk: SpendRisk;
   /** period budget left AFTER this payment, if a mandate matched (minor-units) */
   remainingPeriodBudget: number | null;
+  suggestedFix?: SafeFix;
 }
 
 export interface GateConfig {
