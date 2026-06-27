@@ -30,6 +30,7 @@ test("startShield performs initial check and watches for file changes to engage 
 
   const shield = startShield({
     dbPath: tempDb,
+    poll: true, // fs.watch is flaky for this temp file; poll deterministically
     executor: mockExecutor,
     audit: mockAudit,
   });

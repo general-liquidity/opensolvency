@@ -14,10 +14,13 @@ export interface RiskChainAlert {
 export function evaluateRiskChain(
   intent: PaymentIntent,
   entries: readonly AuditEntry[],
-  opts: { isStreaming?: boolean; windowMinutes?: number } = {},
+  opts: { isStreaming?: boolean; windowMinutes?: number; now?: string } = {},
 ): RiskChainAlert {
   const windowMinutes = opts.windowMinutes ?? 15;
-  const nowMs = new Date(intent.createdAt).getTime();
+  // Anchor the window on the executor's TRUSTED clock (`opts.now`), not the
+  // agent-supplied `intent.createdAt` — an agent could future-date createdAt to
+  // push the window past every real audit entry and slip this detector.
+  const nowMs = new Date(opts.now ?? intent.createdAt).getTime();
   const windowMs = windowMinutes * 60 * 1000;
   const startMs = nowMs - windowMs;
 

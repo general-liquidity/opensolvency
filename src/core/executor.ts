@@ -261,7 +261,7 @@ export function createExecutor(deps: ExecutorDeps) {
     }
 
     // Evaluate session-level risk chains from the audit logs
-    const chainAlert = evaluateRiskChain(intent, deps.audit.entries(), { isStreaming });
+    const chainAlert = evaluateRiskChain(intent, deps.audit.entries(), { isStreaming, now });
     if (chainAlert.triggered) {
       if (decision.outcome === "auto_execute") {
         decision = {

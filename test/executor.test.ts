@@ -318,3 +318,25 @@ test("RiskChain tracker detects smurfing and probing across intents", async () =
   assert.ok(rPb5.decision.reasons.some((r) => r.includes("RiskChain: Probing/Scan alert")));
 });
 
+test("RiskChain never upgrades a blocked verdict toward execution (downgrade-only)", async () => {
+  const { store, executor } = harness();
+  store.insertMandate(mandate());
+  seedKnown(store);
+
+  // Build an active probing pattern: 4 pending intents to distinct unknown payees.
+  await executor.execute(intent({ id: "q1", payee: "u-1" }));
+  await executor.execute(intent({ id: "q2", payee: "u-2" }));
+  await executor.execute(intent({ id: "q3", payee: "u-3" }));
+  await executor.execute(intent({ id: "q4", payee: "u-4" }));
+
+  // A payment the gate BLOCKS on the hard £500 per-tx cap, submitted while the
+  // probing alert is firing. The alert may append a reason but must NEVER flip a
+  // blocked verdict into auto_execute / a settlement.
+  const r = await executor.execute(intent({ id: "q5", payee: "tesco", amount: 600_00 }));
+  assert.equal(r.decision.outcome, "block");
+  assert.equal(r.status, "blocked");
+  assert.equal(r.receipt, null);
+  // Prove the alert WAS active on this call yet the verdict stayed blocked.
+  assert.ok(r.decision.reasons.some((reason) => reason.includes("RiskChain")));
+});
+

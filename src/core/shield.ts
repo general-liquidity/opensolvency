@@ -3,6 +3,10 @@ import type { AuditLog } from "./audit.ts";
 
 export interface ShieldOptions {
   dbPath: string;
+  /** Force the polling watcher instead of native fs events. Needed on
+   *  virtualized mounts (WSL `/mnt/…`) and in tests where `fs.watch` is flaky.
+   *  Defaults to true for `/mnt/` paths, false otherwise. */
+  poll?: boolean;
   executor: {
     engageKillSwitch(): void;
     isKillSwitchEngaged(): boolean;
@@ -46,10 +50,10 @@ export function startShield(opts: ShieldOptions) {
   // Perform startup verification
   checkIntegrity();
 
-  const isMnt = opts.dbPath.startsWith("/mnt/") || opts.dbPath.includes("temp_shield_test.db");
+  const usePolling = opts.poll ?? opts.dbPath.startsWith("/mnt/");
   let watcher: { close(): void };
 
-  if (isMnt) {
+  if (usePolling) {
     // Polling watch for WSL / virtualized mounts
     watchFile(opts.dbPath, { interval: 50 }, (curr, prev) => {
       if (curr.mtimeMs !== prev.mtimeMs) {

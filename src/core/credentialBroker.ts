@@ -2,26 +2,36 @@ import type { PaymentIntent, Receipt } from "./types.ts";
 import type { PaymentProvider } from "../rails/provider.ts";
 
 /**
+ * Symbol-keyed so a brokered secret is never enumerated, JSON-serialized, or
+ * logged with the intent. Only a rail adapter that imports this symbol can read
+ * the injected credential off the settlement intent.
+ */
+export const BROKERED_SECRET = Symbol("agentworth.brokeredSecret");
+
+/**
  * Gated Rail Credential Brokerage.
- * Stores sensitive payment rail credentials (e.g. Stripe API Keys, wallet private keys)
- * in an in-memory vault. It exposes a wrapper to inject these credentials into
- * outbound transactions ONLY after the mandate checks have successfully passed.
+ *
+ * Holds sensitive rail credentials (Stripe API keys, wallet private keys, …) in a
+ * PER-INSTANCE in-memory vault — there is no global/static state, so one
+ * operator/tenant's broker can never read another's keys. A credential is injected
+ * into an outbound settlement ONLY after the gate has authorized the payment
+ * (the broker wraps the provider, and the executor only reaches `settle` on an
+ * auto-execute decision).
  */
 export class CredentialBroker {
-  private static credentials = new Map<string, string>();
+  private readonly credentials = new Map<string, string>();
 
-  /**
-   * Securely store a credential under a specific key name.
-   */
-  static storeCredential(key: string, secret: string): void {
+  /** Store a credential under a key name (this broker instance only). */
+  storeCredential(key: string, secret: string): void {
     this.credentials.set(key, secret);
   }
 
   /**
-   * Retrieve the raw credential bytes. Must only be invoked inside the executor's
-   * settlement phase.
+   * Retrieve the raw credential. Throws if unregistered — inside `executor.settle`
+   * that throw is caught and recorded as `payment.failed`, so a missing credential
+   * fails safe (no fabricated settlement).
    */
-  static retrieveCredential(key: string): string {
+  retrieveCredential(key: string): string {
     const val = this.credentials.get(key);
     if (!val) {
       throw new Error(`CredentialBroker: credential "${key}" is not registered or configured.`);
@@ -29,51 +39,39 @@ export class CredentialBroker {
     return val;
   }
 
-  /**
-   * Check if a credential key is configured.
-   */
-  static hasCredential(key: string): boolean {
+  /** Whether a credential key is configured on this broker. */
+  hasCredential(key: string): boolean {
     return this.credentials.has(key);
   }
 
-  /**
-   * Clear all credentials from the memory vault.
-   */
-  static clear(): void {
+  /** Clear all credentials from this broker's vault. */
+  clear(): void {
     this.credentials.clear();
   }
 
   /**
-   * Wraps a PaymentProvider to inject the retrieved credential on-the-fly during settlement,
-   * replacing dummy placeholder tokens passed by the agent.
+   * Wrap a PaymentProvider so the retrieved credential is injected on-the-fly at
+   * settlement (replacing any placeholder token the agent passed). The secret is
+   * attached under the `BROKERED_SECRET` symbol, so it is excluded from
+   * `JSON.stringify`/`Object.keys` and cannot leak through audit/logging of the intent.
    */
-  static brokerProvider(
-    provider: PaymentProvider,
-    credentialKey: string,
-  ): PaymentProvider {
+  brokerProvider(provider: PaymentProvider, credentialKey: string): PaymentProvider {
+    const broker = this;
     return {
       capabilities: provider.capabilities,
       settle: async (intent: PaymentIntent, now: string): Promise<Receipt> => {
-        const secret = CredentialBroker.retrieveCredential(credentialKey);
-
-        // Simulate credential substitution: attach the secret to the executing payload.
-        // In production, this maps to auth headers or private key signing in the rail adapter.
-        const brokeredIntent: PaymentIntent & { _brokeredSecret?: string } = {
+        const secret = broker.retrieveCredential(credentialKey);
+        const brokeredIntent: PaymentIntent & { [BROKERED_SECRET]?: string } = {
           ...intent,
-          _brokeredSecret: secret,
+          [BROKERED_SECRET]: secret,
         };
-
         return await provider.settle(brokeredIntent, now);
       },
-      verifyReceipt: (receipt: Receipt): boolean => {
-        return provider.verifyReceipt(receipt);
-      },
-      refund: (receipt: Receipt, amountMinor: number, now: string) => {
-        if (!provider.refund) {
-          throw new Error("Underlying provider does not support refunds.");
-        }
-        return provider.refund(receipt, amountMinor, now);
-      },
+      verifyReceipt: (receipt: Receipt): boolean => provider.verifyReceipt(receipt),
+      refund: provider.refund
+        ? (receipt: Receipt, amountMinor: number, now: string) =>
+            provider.refund!(receipt, amountMinor, now)
+        : undefined,
     };
   }
 }

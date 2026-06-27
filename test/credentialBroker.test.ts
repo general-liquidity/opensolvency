@@ -1,12 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { CredentialBroker } from "../src/core/credentialBroker.ts";
+import { CredentialBroker, BROKERED_SECRET } from "../src/core/credentialBroker.ts";
 import type { PaymentProvider } from "../src/rails/provider.ts";
 import type { PaymentIntent, Receipt } from "../src/core/types.ts";
 
 test("CredentialBroker stores credentials and injects them during settlement", async () => {
-  // Setup: store the secret
-  CredentialBroker.storeCredential("stripe_prod_key", "sk_test_12345");
+  const broker = new CredentialBroker();
+  broker.storeCredential("stripe_prod_key", "sk_test_12345");
 
   // Create a mock provider that verifies the secret is injected
   let lastSettleIntent: any = null;
@@ -33,7 +33,7 @@ test("CredentialBroker stores credentials and injects them during settlement", a
     verifyReceipt: () => true,
   };
 
-  const brokeredProvider = CredentialBroker.brokerProvider(mockBaseProvider, "stripe_prod_key");
+  const brokeredProvider = broker.brokerProvider(mockBaseProvider, "stripe_prod_key");
 
   // Perform settlement
   const intentPayload: PaymentIntent = {
@@ -51,10 +51,20 @@ test("CredentialBroker stores credentials and injects them during settlement", a
 
   assert.equal(receipt.id, "rcpt_1");
   assert.ok(lastSettleIntent);
-  assert.equal(lastSettleIntent._brokeredSecret, "sk_test_12345");
+  // The secret rides under a Symbol key — readable by an adapter that imports it…
+  assert.equal(lastSettleIntent[BROKERED_SECRET], "sk_test_12345");
+  // …but invisible to enumeration / JSON logging, so it can't leak into an audit line.
+  assert.equal(JSON.stringify(lastSettleIntent).includes("sk_test_12345"), false);
+  assert.equal(Object.keys(lastSettleIntent).includes("_brokeredSecret"), false);
+});
 
-  // Clean up
-  CredentialBroker.clear();
+test("CredentialBroker instances are isolated (no shared global vault)", () => {
+  const a = new CredentialBroker();
+  const b = new CredentialBroker();
+  a.storeCredential("k", "secret-a");
+  // b never stored "k" — a's credential must not be visible to b.
+  assert.equal(b.hasCredential("k"), false);
+  assert.equal(a.hasCredential("k"), true);
 });
 
 test("CredentialBroker throws when credential key is not registered", async () => {
@@ -71,7 +81,7 @@ test("CredentialBroker throws when credential key is not registered", async () =
     verifyReceipt: () => true,
   };
 
-  const brokeredProvider = CredentialBroker.brokerProvider(mockBaseProvider, "missing_key");
+  const brokeredProvider = new CredentialBroker().brokerProvider(mockBaseProvider, "missing_key");
 
   const intentPayload: PaymentIntent = {
     id: "pi_1",
