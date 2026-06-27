@@ -1,7 +1,7 @@
 // EU AI Act Article 26 — deployer-oversight report.
 //
 // Article 26 puts obligations on the DEPLOYER of a high-risk AI system (here: the
-// operator running an agent that spends money). This module projects OpenSolvency's
+// operator running an agent that spends money). This module projects AgentWorth's
 // signed audit chain + mandate set into the three obligations a regulator checks:
 //
 //   - human oversight (Art. 26(1)/(2)): the intervention points — what the agent

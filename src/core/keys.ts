@@ -17,7 +17,7 @@ export function staticKeyProvider(key: string): KeyProvider {
   return { operatorKey: () => key };
 }
 
-export function envKeyProvider(envVar = "OPENSOLVENCY_AUDIT_KEY"): KeyProvider {
+export function envKeyProvider(envVar = "AGENTWORTH_AUDIT_KEY"): KeyProvider {
   const key = process.env[envVar];
   if (!key) throw new Error(`audit key not found in ${envVar}`);
   return { operatorKey: () => key };

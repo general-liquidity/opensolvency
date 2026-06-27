@@ -48,7 +48,7 @@ export function buildFinanceSystemPrompt(
       "daily slips compound both ways.",
     // The publication-bias discipline (Mertens vs Maier/Szaszi): prefer the one
     // nudge class the corrected evidence backs — changing the default by acting —
-    // over informing/reminding. OpenSolvency can do this precisely because it acts.
+    // over informing/reminding. AgentWorth can do this precisely because it acts.
     ...choiceArchitectureGuidance().map((line) => `- ${line}`),
     "- Honest about limits (i-frame/s-frame): never imply individual budgeting can fix " +
       "a structural squeeze. When the constraint is systemic, name it plainly — without " +

@@ -1,12 +1,12 @@
 [project]
-name = "opensolvency"
-version = "0.1.7"
-description = "Python client for the OpenSolvency governance gate (REST over the HTTP ingress)"
+name = "agentworth"
+version = "0.1.8"
+description = "Python client for the AgentWorth governance gate (REST over the HTTP ingress)"
 readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "MIT" }
 authors = [{ name = "General Liquidity" }]
-keywords = ["agentic-payments", "governance", "opensolvency"]
+keywords = ["agentic-payments", "governance", "agentworth"]
 dependencies = []
 
 [build-system]
@@ -14,4 +14,4 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-only-include = ["opensolvency.py"]
+only-include = ["agentworth.py"]

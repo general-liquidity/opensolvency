@@ -1,4 +1,4 @@
-// OpenSolvency as an MCP server — "make it accessible to agents" (Base MCP-style).
+// AgentWorth as an MCP server — "make it accessible to agents" (Base MCP-style).
 // Other agents (Claude, etc.) call these tools. The SECURITY BOUNDARY is the
 // point: the MCP surface exposes only what an external agent should have — propose
 // a payment (which still runs through the gate) and READ state. It deliberately
@@ -27,8 +27,8 @@ export interface McpDeps {
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] });
 
-export function createOpenSolvencyMcpServer(deps: McpDeps): McpServer {
-  const server = new McpServer({ name: "opensolvency", version: VERSION });
+export function createAgentWorthMcpServer(deps: McpDeps): McpServer {
+  const server = new McpServer({ name: "agentworth", version: VERSION });
 
   // PROPOSE (gated) — the only money-touching tool; the gate still governs.
   server.registerTool(

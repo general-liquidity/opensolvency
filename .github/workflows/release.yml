@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   npm:
-    name: npm (opensolvency + opensolvency-mcp)
+    name: npm (agentworth + agentworth-mcp)
     if: ${{ vars.PUBLISH_NPM == 'true' }}
     runs-on: ubuntu-latest
     environment: npm
@@ -35,26 +35,26 @@ jobs:
       # npm trusted publishing (OIDC) needs npm >= 11.5; provenance is automatic.
       - run: npm install -g npm@latest
       - run: npm ci
-      - name: Publish @general-liquidity/opensolvency (skip if version exists)
+      - name: Publish @general-liquidity/agentworth (skip if version exists)
         run: |
           V=$(node -p "require('./package.json').version")
-          if npm view "@general-liquidity/opensolvency@$V" version >/dev/null 2>&1; then
-            echo "@general-liquidity/opensolvency@$V already published — skipping"
+          if npm view "@general-liquidity/agentworth@$V" version >/dev/null 2>&1; then
+            echo "@general-liquidity/agentworth@$V already published — skipping"
           else
             npm publish --access public
           fi
-      - name: Publish @general-liquidity/opensolvency-mcp (skip if version exists)
-        working-directory: opensolvency-mcp
+      - name: Publish @general-liquidity/agentworth-mcp (skip if version exists)
+        working-directory: agentworth-mcp
         run: |
           V=$(node -p "require('./package.json').version")
-          if npm view "@general-liquidity/opensolvency-mcp@$V" version >/dev/null 2>&1; then
-            echo "@general-liquidity/opensolvency-mcp@$V already published — skipping"
+          if npm view "@general-liquidity/agentworth-mcp@$V" version >/dev/null 2>&1; then
+            echo "@general-liquidity/agentworth-mcp@$V already published — skipping"
           else
             npm publish --access public
           fi
 
   pypi:
-    name: PyPI (opensolvency)
+    name: PyPI (agentworth)
     if: ${{ vars.PUBLISH_PYPI == 'true' }}
     runs-on: ubuntu-latest
     # A dedicated publishing environment (configure protection rules under
@@ -80,7 +80,7 @@ jobs:
           skip-existing: true
 
   crates:
-    name: crates.io (opensolvency)
+    name: crates.io (agentworth)
     if: ${{ vars.PUBLISH_CRATES == 'true' }}
     runs-on: ubuntu-latest
     environment: crates
@@ -96,9 +96,9 @@ jobs:
         working-directory: clients/rust
         run: |
           V=$(grep -m1 '^version' Cargo.toml | sed -E 's/.*"([^"]+)".*/\1/')
-          CODE=$(curl -s -o /dev/null -w "%{http_code}" -A "opensolvency-ci" "https://crates.io/api/v1/crates/opensolvency/$V")
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" -A "agentworth-ci" "https://crates.io/api/v1/crates/agentworth/$V")
           if [ "$CODE" = "200" ]; then
-            echo "opensolvency $V already on crates.io — skipping"
+            echo "agentworth $V already on crates.io — skipping"
           else
             cargo publish
           fi

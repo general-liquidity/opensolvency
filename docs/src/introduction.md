@@ -1,6 +1,6 @@
 # Introduction
 
-OpenSolvency is the **operator-aligned governance plane for agentic spend** — the
+AgentWorth is the **operator-aligned governance plane for agentic spend** — the
 trust layer that sits *above* payment rails (x402, cards, ACP/checkout) and *below*
 an agent, enforcing a single invariant:
 
@@ -11,15 +11,15 @@ an agent, enforcing a single invariant:
 
 It is **not** a wallet, a rail, or a payment processor. Autonomous-money agents
 already move real funds with no mandate, no cap, no risk gate, and no approver;
-OpenSolvency is the missing layer that lets an agent spend autonomously *inside*
+AgentWorth is the missing layer that lets an agent spend autonomously *inside*
 operator-defined bounds and confirm above them. **The gate is what lets autonomy go
 further, safely — not less far.**
 
 ## Install
 
 ```bash
-npm i @general-liquidity/opensolvency           # library + `opensolvency` CLI
-npx -y @general-liquidity/opensolvency-mcp       # the MCP server, zero-install
+npm i @general-liquidity/agentworth           # library + `agentworth` CLI
+npx -y @general-liquidity/agentworth-mcp       # the MCP server, zero-install
 ```
 
 ## The two halves

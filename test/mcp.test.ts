@@ -8,7 +8,7 @@ import { createRailRegistry } from "../src/rails/registry.ts";
 import { createFakeRail } from "../src/rails/fakeRail.ts";
 import { DEFAULT_DENY_RULES } from "../src/core/denyList.ts";
 import { DEFAULT_GATE_CONFIG } from "../src/core/types.ts";
-import { createOpenSolvencyMcpServer } from "../src/mcp/server.ts";
+import { createAgentWorthMcpServer } from "../src/mcp/server.ts";
 
 // The MCP server registers its tool surface without error. The behaviour of each
 // tool is the executor's/store's (covered exhaustively elsewhere); this guards the
@@ -23,7 +23,7 @@ test("the MCP server constructs and registers its tool surface", () => {
     denyRules: DEFAULT_DENY_RULES,
     clock: () => "2026-05-30T12:00:00.000Z",
   });
-  const server = createOpenSolvencyMcpServer({
+  const server = createAgentWorthMcpServer({
     executor,
     store,
     audit: new AuditLog(store.operatorKey()),

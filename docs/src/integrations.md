@@ -5,7 +5,7 @@ binding:
 
 ```ts
 import { generateText } from "ai";
-import { createGatedPayTool } from "@general-liquidity/opensolvency/integrations";
+import { createGatedPayTool } from "@general-liquidity/agentworth/integrations";
 
 await generateText({
   model, prompt,
@@ -18,7 +18,7 @@ handler with the shared schema:
 
 ```ts
 import { gatedPay, gatedPayInputSchema, GATED_PAY_DESCRIPTION }
-  from "@general-liquidity/opensolvency/integrations";
+  from "@general-liquidity/agentworth/integrations";
 
 // Mastra
 createTool({ id: "pay", description: GATED_PAY_DESCRIPTION, inputSchema: gatedPayInputSchema,
@@ -37,7 +37,7 @@ or block. No prompt can override it.
 A GitHub Action gates spend inside pipelines (an agent buying compute/credits):
 
 ```yaml
-- uses: general-liquidity/opensolvency@v0.1.0
+- uses: general-liquidity/agentworth@v0.1.0
   with: { payee: vast-ai, payee-class: compute, amount: "5000", rationale: "GPU hours" }
-  env: { OPENSOLVENCY_DB: ${{ github.workspace }}/opensolvency.db }
+  env: { AGENTWORTH_DB: ${{ github.workspace }}/agentworth.db }
 ```

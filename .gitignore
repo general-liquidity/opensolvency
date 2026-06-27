@@ -3,8 +3,8 @@ dist/
 *.log
 .env
 .DS_Store
-opensolvency.db
-opensolvency.db-*
+agentworth.db
+agentworth.db-*
 clients/rust/target/
 clients/rust/Cargo.lock
 clients/c/example

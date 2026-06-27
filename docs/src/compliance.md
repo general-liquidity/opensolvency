@@ -1,6 +1,6 @@
 # Compliance-grade reporting (EU AI Act Article 26)
 
-OpenSolvency's signed audit chain is not just tamper-evidence — it is the evidentiary
+AgentWorth's signed audit chain is not just tamper-evidence — it is the evidentiary
 substrate for **deployer-oversight reporting**. Article 26 of the EU AI Act puts
 obligations on the *deployer* of a high-risk AI system (here: the operator running an
 agent that spends money). `deployerOversightReport` projects the audit chain + the
@@ -14,10 +14,10 @@ rest of the kernel. There is no second hashing implementation to drift out of sy
 ## The report
 
 ```ts
-import { OpenSolvency } from "@general-liquidity/opensolvency";
-import { deployerOversightReport } from "@general-liquidity/opensolvency/compliance";
+import { AgentWorth } from "@general-liquidity/agentworth";
+import { deployerOversightReport } from "@general-liquidity/agentworth/compliance";
 
-const os = new OpenSolvency();
+const os = new AgentWorth();
 // … grant mandates, run the agent through the gate …
 
 const report = deployerOversightReport({
@@ -50,18 +50,18 @@ re-verify it standalone with the operator key:
 import {
   exportCompliancePackage,
   verifyCompliancePackage,
-} from "@general-liquidity/opensolvency/compliance";
+} from "@general-liquidity/agentworth/compliance";
 
 const pkg = exportCompliancePackage({
   entries: os.auditTimeline(),
   mandates: os.listMandates(),
   period: { start: "2026-06-01T00:00:00.000Z", end: "2026-07-01T00:00:00.000Z" },
-  operatorKey: process.env.OPENSOLVENCY_AUDIT_KEY!,
+  operatorKey: process.env.AGENTWORTH_AUDIT_KEY!,
 });
 
 // … hand `pkg` to the auditor …
 
-const v = verifyCompliancePackage(pkg, process.env.OPENSOLVENCY_AUDIT_KEY!);
+const v = verifyCompliancePackage(pkg, process.env.AGENTWORTH_AUDIT_KEY!);
 // v.valid === true   only when the bundled chain re-verifies AND the integrity
 //                    proof (tip, entry count, verdict) matches what the chain says
 ```

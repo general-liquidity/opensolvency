@@ -46,8 +46,8 @@ test("transaction_id binds the payment mandate to the checkout (base64url hash)"
   assert.ok(!/[+/=]/.test(a)); // base64url (no +,/,=)
 });
 
-// THE RESONANCE: an OpenSolvency mandate IS an AP2 open Payment Mandate's constraints.
-test("an OpenSolvency mandate maps onto AP2 open-mandate constraints", () => {
+// THE RESONANCE: an AgentWorth mandate IS an AP2 open Payment Mandate's constraints.
+test("an AgentWorth mandate maps onto AP2 open-mandate constraints", () => {
   const mandate: Mandate = {
     id: "m",
     label: "groceries",

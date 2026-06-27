@@ -2,7 +2,7 @@
 //
 // The point: ANY agent that pays for things — a CLI coding agent, an HTTP client
 // hitting an x402 paywall — points its outbound traffic at this proxy and has its
-// spend governed WITHOUT integrating with OpenSolvency at all. The agent never
+// spend governed WITHOUT integrating with AgentWorth at all. The agent never
 // knew it had a spend to govern; the gate governs it anyway.
 //
 // The flow (the x402 protocol, intercepted):
@@ -57,7 +57,7 @@ export interface X402Challenge {
   resource?: string;
 }
 
-/** How a chosen requirement maps onto an OpenSolvency PaymentIntent. The proxy
+/** How a chosen requirement maps onto an AgentWorth PaymentIntent. The proxy
  * governs the SAME structured numbers the gate decides on, derived from the
  * machine-readable challenge — not from any agent-supplied text. */
 export interface ChallengeContext {
@@ -262,7 +262,7 @@ export function createX402Proxy(deps: X402ProxyDeps) {
       // approval. It can poll / re-issue once the operator confirms.
       return {
         status: 402,
-        headers: { "content-type": "application/json", "x-opensolvency": "pending-operator" },
+        headers: { "content-type": "application/json", "x-agentworth": "pending-operator" },
         body,
       };
     }
@@ -270,7 +270,7 @@ export function createX402Proxy(deps: X402ProxyDeps) {
     // block / failed / no_requirement → refuse.
     return {
       status: 403,
-      headers: { "content-type": "application/json", "x-opensolvency": "blocked" },
+      headers: { "content-type": "application/json", "x-agentworth": "blocked" },
       body,
     };
   }

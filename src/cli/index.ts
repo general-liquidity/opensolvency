@@ -1,15 +1,15 @@
 #!/usr/bin/env node
-// OpenSolvency CLI — the first transport over the kernel. The same executor and
+// AgentWorth CLI — the first transport over the kernel. The same executor and
 // gate are transport-agnostic, so an event ingress (x402/ACP webhook) will call
 // the identical path later.
 //
-//   opensolvency mandate grant --label "groceries" --class groceries \
+//   agentworth mandate grant --label "groceries" --class groceries \
 //       --currency GBP --rails card --per-tx 50000 --per-period 100000 \
 //       --period week --expires-days 30
-//   opensolvency agent "PAY 8000 GBP tesco groceries card :: weekly shop"
-//   opensolvency pending
-//   opensolvency approve <intentId> --rationale "yes, I know this payee"
-//   opensolvency audit verify
+//   agentworth agent "PAY 8000 GBP tesco groceries card :: weekly shop"
+//   agentworth pending
+//   agentworth approve <intentId> --rationale "yes, I know this payee"
+//   agentworth audit verify
 //
 // Amounts are integer minor-units (8000 = £80.00).
 
@@ -37,7 +37,7 @@ import { createIngressServer } from "../ingress/server.ts";
 import { getIngressToken, setIngressToken, isLoopbackHost } from "../ingress/auth.ts";
 import { createRateLimiter } from "../ingress/rateLimit.ts";
 import { runAcpStdio } from "../acp/entry.ts";
-import { startOpenSolvencyMcp } from "../mcp/run.ts";
+import { startAgentWorthMcp } from "../mcp/run.ts";
 import { VERSION } from "../version.ts";
 import { runEvalSuite } from "../evals/index.ts";
 import { exportAuditChain, verifyAuditExport } from "../audit/export.ts";
@@ -75,22 +75,22 @@ function parseFlags(args: string[]): Record<string, string> {
 
 /** A real model is used (via the Vercel AI SDK) when a key is available for the
  * selected provider; otherwise the deterministic offline stub handles the
- * `PAY …` DSL. Provider chosen by OPENSOLVENCY_MODEL_PROVIDER (openai default). */
+ * `PAY …` DSL. Provider chosen by AGENTWORTH_MODEL_PROVIDER (openai default). */
 function realModelConfig(): AiModelConfig | null {
-  const raw = process.env.OPENSOLVENCY_MODEL_PROVIDER ?? "openai";
+  const raw = process.env.AGENTWORTH_MODEL_PROVIDER ?? "openai";
   const provider = isModelProvider(raw) ? raw : "openai";
   const apiKey =
-    process.env.OPENSOLVENCY_MODEL_API_KEY ??
+    process.env.AGENTWORTH_MODEL_API_KEY ??
     process.env[PROVIDER_API_KEY_ENV[provider]];
   if (!apiKey) return null;
-  const modelId = process.env.OPENSOLVENCY_MODEL ?? DEFAULT_MODEL_ID[provider];
+  const modelId = process.env.AGENTWORTH_MODEL ?? DEFAULT_MODEL_ID[provider];
   return { provider, modelId, apiKey };
 }
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   const [command, sub, ...rest] = argv;
-  const dbPath = process.env.OPENSOLVENCY_DB ?? "opensolvency.db";
+  const dbPath = process.env.AGENTWORTH_DB ?? "agentworth.db";
 
   const store = createSqliteStore(dbPath);
   const audit = new AuditLog(store.operatorKey(), store.loadAudit());
@@ -114,7 +114,7 @@ async function main(): Promise<void> {
     const hasMandates = store.listMandates().length > 0;
     const hasProfile = getProfile(store) !== undefined;
     const tokenSet = getIngressToken(store.getMeta.bind(store)) !== undefined;
-    console.log("OpenSolvency — first-run setup\n");
+    console.log("AgentWorth — first-run setup\n");
     if (!hasMandates) {
       const m: Mandate = {
         id: `m_${randomUUID().slice(0, 8)}`, label: "starter",
@@ -130,11 +130,11 @@ async function main(): Promise<void> {
     console.log(hasProfile ? "✓ a finance profile is set" : "• no finance profile yet — `profile set …` (for the advisory agent)");
     console.log(tokenSet ? "✓ an ingress token is set" : "• no ingress token — `token set <token>` before exposing the HTTP ingress");
     console.log("\nNext steps:");
-    console.log("  opensolvency mandate grant --label groceries --class groceries --currency GBP \\");
+    console.log("  agentworth mandate grant --label groceries --class groceries --currency GBP \\");
     console.log("      --rails card --per-tx 50000 --per-period 100000 --period week --expires-days 30");
-    console.log("  opensolvency pay --payee tesco --class groceries --amount 8000 --rationale 'weekly shop'");
-    console.log("  opensolvency serve            # the HTTP ingress (set a token first)");
-    console.log("  npx -y @general-liquidity/opensolvency-mcp   # the MCP server for your editor");
+    console.log("  agentworth pay --payee tesco --class groceries --amount 8000 --rationale 'weekly shop'");
+    console.log("  agentworth serve            # the HTTP ingress (set a token first)");
+    console.log("  npx -y @general-liquidity/agentworth-mcp   # the MCP server for your editor");
     return;
   }
 
@@ -341,7 +341,7 @@ async function main(): Promise<void> {
     // Verify a previously-exported chain standalone, with this operator's key.
     const path = rest[0];
     if (!path) {
-      console.log("usage: opensolvency audit verify-export <file>");
+      console.log("usage: agentworth audit verify-export <file>");
       return;
     }
     const r = verifyAuditExport(readFileSync(path, "utf8"), store.operatorKey());
@@ -427,7 +427,7 @@ async function main(): Promise<void> {
     }
     const cfg = realModelConfig();
     if (!cfg) {
-      console.log("the finance agent needs a model key (OPENSOLVENCY_MODEL_API_KEY).");
+      console.log("the finance agent needs a model key (AGENTWORTH_MODEL_API_KEY).");
       return;
     }
     const r = await runFinanceAgent(goal, {
@@ -456,7 +456,7 @@ async function main(): Promise<void> {
       store,
       audit,
       agentKey,
-      systemPrompt: "OpenSolvency spending agent: every payment passes the governance gate.",
+      systemPrompt: "AgentWorth spending agent: every payment passes the governance gate.",
       operator: {
         id: f["operator-id"] ?? "operator",
         deniabilityBoundary:
@@ -475,7 +475,7 @@ async function main(): Promise<void> {
   // ── verify-disclosure: a counterparty checks a disclosure before transacting ──
   if (command === "verify-disclosure") {
     if (!sub) {
-      console.log("usage: opensolvency verify-disclosure <file> [--require-grade B] [--require-enforced] [--require-non-custodial]");
+      console.log("usage: agentworth verify-disclosure <file> [--require-grade B] [--require-enforced] [--require-non-custodial]");
       return;
     }
     const f = parseFlags(rest);
@@ -528,7 +528,7 @@ async function main(): Promise<void> {
   // ── ingress token (operator-only; gates the HTTP transport) ─────────────────
   if (command === "token" && sub === "set") {
     if (!rest[0]) {
-      console.log("usage: opensolvency token set <token>");
+      console.log("usage: agentworth token set <token>");
       return;
     }
     setIngressToken(store.setMeta.bind(store), rest[0]);
@@ -545,14 +545,14 @@ async function main(): Promise<void> {
     // Token resolution: an env var (ergonomic for containers) overrides the stored
     // one, so a deployment configures auth without a writable DB step.
     const resolveToken = () =>
-      process.env.OPENSOLVENCY_INGRESS_TOKEN ?? getIngressToken(store.getMeta.bind(store));
+      process.env.AGENTWORTH_INGRESS_TOKEN ?? getIngressToken(store.getMeta.bind(store));
     const isLoopback = isLoopbackHost(host);
     // FAIL CLOSED: binding to a public interface without a token would expose the
     // ingress unauthenticated. The gate still governs spend, but the transport must
     // not be open to the internet — refuse to start.
     if (!isLoopback && !resolveToken()) {
       console.error(
-        `refusing to bind ${host} without an ingress token — set OPENSOLVENCY_INGRESS_TOKEN ` +
+        `refusing to bind ${host} without an ingress token — set AGENTWORTH_INGRESS_TOKEN ` +
           "or run `token set <token>` first (binding a public interface unauthenticated is unsafe).",
       );
       process.exitCode = 1;
@@ -589,7 +589,7 @@ async function main(): Promise<void> {
   // ── mcp: the MCP server over stdio (Claude Code / Cursor) ────────────────────
   if (command === "mcp") {
     // Reuse the already-composed runtime (no second sqlite connection).
-    await startOpenSolvencyMcp({ store, executor, audit, clock });
+    await startAgentWorthMcp({ store, executor, audit, clock });
     return;
   }
 
@@ -603,7 +603,7 @@ async function main(): Promise<void> {
       return;
     }
     if (!cfg) {
-      console.error("the ACP agent needs a model key (OPENSOLVENCY_MODEL_API_KEY).");
+      console.error("the ACP agent needs a model key (AGENTWORTH_MODEL_API_KEY).");
       process.exitCode = 1;
       return;
     }
@@ -626,7 +626,7 @@ async function main(): Promise<void> {
   }
 
   console.log(
-    "usage: opensolvency <init|mandate grant|mandate list|mandate revoke|pay|" +
+    "usage: agentworth <init|mandate grant|mandate list|mandate revoke|pay|" +
       "agent|finance|profile set|profile show|goal set|pending|approve [--ack]|" +
       "kill|unkill|reset-breaker|status|audit verify|audit log|audit replay|" +
       "audit replay-sim [--mandates file.json]|audit export|audit verify-export <file>|" +

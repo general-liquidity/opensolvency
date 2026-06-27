@@ -117,7 +117,7 @@ export async function handleIngress(
         store: deps.store,
         audit: deps.disclosure.audit,
         agentKey: loadOrCreateAgentKey(deps.store),
-        systemPrompt: deps.disclosure.systemPrompt ?? "OpenSolvency spending agent.",
+        systemPrompt: deps.disclosure.systemPrompt ?? "AgentWorth spending agent.",
         operator: deps.disclosure.operator,
         now: deps.clock(),
         nonce: deps.newId(),

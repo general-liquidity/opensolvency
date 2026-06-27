@@ -1,5 +1,5 @@
 // Non-custodial account connection. The operator connects their OWN bank/exchange
-// accounts READ-ONLY, so OpenSolvency can read balances + statements (to ground
+// accounts READ-ONLY, so AgentWorth can read balances + statements (to ground
 // the profile and reconcile against reality) — but the interface has NO method
 // that moves money. That's the non-custodial guarantee made structural: the
 // connector can observe, never transact. Actual settlement happens on a rail

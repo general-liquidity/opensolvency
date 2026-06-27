@@ -1,5 +1,5 @@
 // World ID — proof-of-personhood as the gate's `attestation` input. A World ID
-// proof is a Groth16 ZK proof over the on-chain Orb set; OpenSolvency CANNOT verify
+// proof is a Groth16 ZK proof over the on-chain Orb set; AgentWorth CANNOT verify
 // it locally (no trusted setup, no Merkle membership in the kernel). So, like the
 // Self/SIWA path, OS consumes the verdict of an INJECTED verifier — the consumer
 // wires the Worldcoin cloud `/verify` endpoint or the on-chain Router `verifyProof`.

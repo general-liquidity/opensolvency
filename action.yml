@@ -1,23 +1,23 @@
-# OpenSolvency spend gate — a GitHub Action that routes an agent payment through
+# AgentWorth spend gate — a GitHub Action that routes an agent payment through
 # the gate inside a CI pipeline (e.g. an agent buying compute/credits in CI). The
 # job fails if the payment isn't authorized, so a pipeline can't spend outside the
 # operator's mandates.
 #
-#   - uses: general-liquidity/opensolvency@v0.1.0
+#   - uses: general-liquidity/agentworth@v0.1.0
 #     with:
 #       payee: vast-ai
 #       payee-class: compute
 #       amount: "5000"            # minor-units
 #       rationale: "GPU hours for the eval run"
 #     env:
-#       OPENSOLVENCY_DB: ${{ github.workspace }}/opensolvency.db   # store with your mandates
+#       AGENTWORTH_DB: ${{ github.workspace }}/agentworth.db   # store with your mandates
 #
-# Provide the store (with mandates) via OPENSOLVENCY_DB — restore it from a cache /
+# Provide the store (with mandates) via AGENTWORTH_DB — restore it from a cache /
 # artifact / secret, or grant a mandate in a prior step. The gate still decides:
 # auto-execute inside a mandate, else the job fails (or reports, if fail-unless-settled=false).
 
-name: "OpenSolvency spend gate"
-description: "Gate an agent payment through OpenSolvency's mandates/caps/deny-list in CI."
+name: "AgentWorth spend gate"
+description: "Gate an agent payment through AgentWorth's mandates/caps/deny-list in CI."
 inputs:
   payee:
     description: "Payee id"
@@ -56,7 +56,7 @@ runs:
     - id: gate
       shell: bash
       run: |
-        out=$(npx -y @general-liquidity/opensolvency pay \
+        out=$(npx -y @general-liquidity/agentworth pay \
           --payee "${{ inputs.payee }}" \
           --class "${{ inputs.payee-class }}" \
           --amount "${{ inputs.amount }}" \
@@ -67,6 +67,6 @@ runs:
         status=$(printf '%s\n' "$out" | head -1 | cut -d: -f1 | tr -d '[:space:]')
         echo "outcome=$status" >> "$GITHUB_OUTPUT"
         if [ "${{ inputs.fail-unless-settled }}" = "true" ] && [ "$status" != "settled" ]; then
-          echo "::error::OpenSolvency did not authorize this payment (outcome: $status)"
+          echo "::error::AgentWorth did not authorize this payment (outcome: $status)"
           exit 1
         fi

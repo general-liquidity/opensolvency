@@ -1,6 +1,6 @@
 # Deployment
 
-The ingress (`opensolvency serve`) turns the gate into an always-on HTTP service.
+The ingress (`agentworth serve`) turns the gate into an always-on HTTP service.
 It adds no authority — it's another transport into the invariant — but an
 internet-reachable endpoint must be authenticated.
 
@@ -9,13 +9,13 @@ internet-reachable endpoint must be authenticated.
 `serve` binds loopback (`127.0.0.1`) by default. Binding a public interface
 (`--host 0.0.0.0`) **requires an ingress token** — the command refuses to start
 without one, so the endpoint is never exposed unauthenticated. Set the token via
-`OPENSOLVENCY_INGRESS_TOKEN` or `opensolvency token set <token>`; callers then send
+`AGENTWORTH_INGRESS_TOKEN` or `agentworth token set <token>`; callers then send
 `Authorization: Bearer <token>`. `/health` and `/ready` are always reachable.
 
 ## Docker
 
 ```bash
-OPENSOLVENCY_INGRESS_TOKEN=$(openssl rand -hex 24) docker compose up --build
+AGENTWORTH_INGRESS_TOKEN=$(openssl rand -hex 24) docker compose up --build
 curl localhost:8787/ready
 ```
 

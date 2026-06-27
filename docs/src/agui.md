@@ -2,7 +2,7 @@
 
 [AG-UI](https://docs.ag-ui.com) (the Agent-User Interaction Protocol) is the open
 protocol for streaming an agent's run to a frontend as a sequence of typed events.
-OpenSolvency uses it for one thing: the human-in-the-loop **"confirm with operator"**
+AgentWorth uses it for one thing: the human-in-the-loop **"confirm with operator"**
 flow. When the gate routes a payment to the operator, OS emits the AG-UI
 frontend-tool-call sequence for a `confirm_spend` tool, so any AG-UI client renders
 *"the agent wants to spend £X — approve / deny"*, pauses, and ships the human's
@@ -15,7 +15,7 @@ import {
   parseApprovalResult,
   encodeStream,
   CONFIRM_SPEND_TOOL,
-} from "@general-liquidity/opensolvency/agui";
+} from "@general-liquidity/agentworth/agui";
 ```
 
 ## The decision → events mapping

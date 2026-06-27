@@ -1,6 +1,6 @@
-# Deploying OpenSolvency
+# Deploying AgentWorth
 
-The ingress (`opensolvency serve`) turns the gate into an always-on HTTP service:
+The ingress (`agentworth serve`) turns the gate into an always-on HTTP service:
 external systems and agents submit payment intents over HTTP and they run through
 the **same executor and gate** as the CLI. The HTTP layer adds no authority — it is
 just another transport into the invariant.
@@ -11,37 +11,37 @@ just another transport into the invariant.
   Binding a public interface (`--host 0.0.0.0`) **requires an ingress token** — the
   command refuses to start without one, so the endpoint is never exposed
   unauthenticated. The gate still governs every payment regardless.
-- **Set the token** via `OPENSOLVENCY_INGRESS_TOKEN` (preferred for containers) or
-  `opensolvency token set <token>`. Callers then send `Authorization: Bearer <token>`.
+- **Set the token** via `AGENTWORTH_INGRESS_TOKEN` (preferred for containers) or
+  `agentworth token set <token>`. Callers then send `Authorization: Bearer <token>`.
 - `/health` and `/ready` are always reachable (probes); everything else needs the token.
 
 ## Docker
 
 ```bash
 # Build + run, with a generated token (the volume persists the sqlite store).
-OPENSOLVENCY_INGRESS_TOKEN=$(openssl rand -hex 24) docker compose up --build
+AGENTWORTH_INGRESS_TOKEN=$(openssl rand -hex 24) docker compose up --build
 
 # Verify it's live (no auth needed for the probe):
 curl localhost:8787/ready
 
 # Submit an intent (auth required):
 curl -X POST localhost:8787/payment-intent \
-  -H "authorization: Bearer $OPENSOLVENCY_INGRESS_TOKEN" \
+  -H "authorization: Bearer $AGENTWORTH_INGRESS_TOKEN" \
   -H "idempotency-key: $(uuidgen)" \
   -H "content-type: application/json" \
   -d '{"payee":"tesco","payeeClass":"groceries","amount":8000,"currency":"GBP","rail":"card","rationale":"the weekly grocery shop"}'
 ```
 
 The image runs as non-root, healthchecks `/ready`, and stores the sqlite DB on the
-`osdata` volume at `/data/opensolvency.db`.
+`osdata` volume at `/data/agentworth.db`.
 
 ## Environment
 
 | Variable | Purpose |
 |---|---|
-| `OPENSOLVENCY_INGRESS_TOKEN` | Bearer token guarding the HTTP transport (required to bind a public interface). |
-| `OPENSOLVENCY_DB` | sqlite path (default `/data/opensolvency.db` in the image). |
-| `OPENSOLVENCY_MODEL_API_KEY` + `OPENSOLVENCY_MODEL_PROVIDER` | Optional — enable the real agent (else the deterministic stub). |
+| `AGENTWORTH_INGRESS_TOKEN` | Bearer token guarding the HTTP transport (required to bind a public interface). |
+| `AGENTWORTH_DB` | sqlite path (default `/data/agentworth.db` in the image). |
+| `AGENTWORTH_MODEL_API_KEY` + `AGENTWORTH_MODEL_PROVIDER` | Optional — enable the real agent (else the deterministic stub). |
 
 ## Always-on / hibernating hosts
 

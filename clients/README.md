@@ -1,29 +1,29 @@
 # Language clients
 
-Thin REST clients for the OpenSolvency HTTP ingress, for the half of the agent
+Thin REST clients for the AgentWorth HTTP ingress, for the half of the agent
 ecosystem that isn't TypeScript. They add **no authority** - every payment they
 submit runs through the same gate (auto-execute inside a mandate, park for approval,
-or block). Point them at a running `opensolvency serve` (set an ingress token for
+or block). Point them at a running `agentworth serve` (set an ingress token for
 anything non-loopback). A `blocked` outcome is a normal result, not an error.
 
 | Client | Path | Deps | Registry |
 |:--|:--|:--|:--|
-| **TypeScript** | (the main package) | - | npm `@general-liquidity/opensolvency` |
-| **Python** | `clients/python/` | stdlib only | PyPI `opensolvency` |
-| **Go** | `clients/go/` | stdlib only | `go get github.com/general-liquidity/opensolvency/clients/go` |
-| **Rust** | `clients/rust/` | `ureq`, `serde` | crates.io `opensolvency` |
+| **TypeScript** | (the main package) | - | npm `@general-liquidity/agentworth` |
+| **Python** | `clients/python/` | stdlib only | PyPI `agentworth` |
+| **Go** | `clients/go/` | stdlib only | `go get github.com/general-liquidity/agentworth/clients/go` |
+| **Rust** | `clients/rust/` | `ureq`, `serde` | crates.io `agentworth` |
 | **C / C++** | `clients/c/` | libcurl | source / vcpkg / Conan |
 
-> The TypeScript SDK (`@general-liquidity/opensolvency`) is the in-process,
+> The TypeScript SDK (`@general-liquidity/agentworth`) is the in-process,
 > full-feature surface; these REST clients are for cross-language hosts that talk to a
 > running ingress.
 
 ## Python
 
 ```python
-from opensolvency import OpenSolvencyClient
+from agentworth import AgentWorthClient
 
-os = OpenSolvencyClient("http://127.0.0.1:8787", token="...")
+os = AgentWorthClient("http://127.0.0.1:8787", token="...")
 res = os.pay(payee="tesco", payee_class="groceries", amount=8000,
              rationale="the weekly grocery shop")
 print(res["outcome"])   # settled | pending | blocked | failed
@@ -32,10 +32,10 @@ print(res["outcome"])   # settled | pending | blocked | failed
 ## Go
 
 ```go
-import opensolvency "github.com/general-liquidity/opensolvency/clients/go"
+import agentworth "github.com/general-liquidity/agentworth/clients/go"
 
-c := opensolvency.New("http://127.0.0.1:8787", "token")
-res, err := c.Pay(opensolvency.PaymentIntent{
+c := agentworth.New("http://127.0.0.1:8787", "token")
+res, err := c.Pay(agentworth.PaymentIntent{
     Payee: "tesco", PayeeClass: "groceries", Amount: 8000,
     Currency: "GBP", Rail: "card", Rationale: "the weekly grocery shop",
 }, "")
@@ -45,7 +45,7 @@ res, err := c.Pay(opensolvency.PaymentIntent{
 ## Rust
 
 ```rust
-use opensolvency::{Client, PaymentIntent};
+use agentworth::{Client, PaymentIntent};
 
 let c = Client::new("http://127.0.0.1:8787", Some("token".into()));
 let res = c.pay(&PaymentIntent {
@@ -58,7 +58,7 @@ println!("{:?}", res.outcome); // settled | pending | blocked | failed
 ## C / C++
 
 ```c
-#include "opensolvency.h"
+#include "agentworth.h"
 
 os_global_init();
 os_client_t *c = os_client_new("http://127.0.0.1:8787", "token");

@@ -1,6 +1,6 @@
 // Agent Client Protocol (ACP) — the JSON-RPC surface editors/IDEs (Zed and the
 // growing set of ACP clients) speak to drive an agent in-editor. This exposes
-// OpenSolvency's finance agent over that protocol so it shows up as a first-class
+// AgentWorth's finance agent over that protocol so it shows up as a first-class
 // agent inside an IDE, alongside the MCP server (for Claude Code / Cursor) and the
 // HTTP ingress.
 //

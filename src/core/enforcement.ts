@@ -1,7 +1,7 @@
 // PROOF-OF-ENFORCEMENT (PoE) — the keystone.
 //
 // ADP's `constitution.enforced: true` is, on its own, an assertion. This module
-// turns it into a CRYPTOGRAPHICALLY FALSIFIABLE claim, backed by OpenSolvency's
+// turns it into a CRYPTOGRAPHICALLY FALSIFIABLE claim, backed by AgentWorth's
 // deterministic, signed, hash-linked audit chain:
 //
 //   1. `effectivePolicy(deps)` snapshots the governing policy at decision time.

@@ -1,6 +1,6 @@
 # Proof-of-personhood — World ID & Human Passport
 
-OpenSolvency never issues identity. It **consumes** an identity verdict as a risk
+AgentWorth never issues identity. It **consumes** an identity verdict as a risk
 input to the gate. Two proof-of-personhood sources plug into the existing identity
 layer alongside `visaTapVerifier`, ERC-8128, and SIWA:
 
@@ -16,7 +16,7 @@ verifier opens a socket from the kernel: the cryptographic / network step is an
 ## World ID — proof-of-personhood as `attestation`
 
 A World ID proof is a Groth16 zero-knowledge proof over the on-chain Orb identity
-set. OpenSolvency **cannot verify it locally** (no trusted setup, no Merkle
+set. AgentWorth **cannot verify it locally** (no trusted setup, no Merkle
 membership in the kernel), so — like the Self path — OS consumes the verdict of an
 **injected `WorldIdVerifier`**. The consumer wires either the Worldcoin cloud
 `/verify` endpoint or the on-chain Router `verifyProof`. Without a verifier the
@@ -35,7 +35,7 @@ stable, privacy-preserving `agentId`.
 | `device` / `document` / `secure_document` | `true` | `signed` |
 
 ```ts
-import { worldIdIdentityVerifier } from "@general-liquidity/opensolvency/identity";
+import { worldIdIdentityVerifier } from "@general-liquidity/agentworth/identity";
 
 const verifier = worldIdIdentityVerifier({
   // consumer wires the cloud /verify endpoint or the on-chain Router verifyProof
@@ -90,7 +90,7 @@ For the **0–100 Models API**, pass `threshold = 100` (so `>= 100 good`, `>= 50
 else `flagged`) — or rescale to taste.
 
 ```ts
-import { passportReputationOf } from "@general-liquidity/opensolvency/identity";
+import { passportReputationOf } from "@general-liquidity/agentworth/identity";
 
 const reputationOf = await passportReputationOf(passportAttestation, {
   scorer: async (address) => {

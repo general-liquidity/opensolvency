@@ -1,6 +1,6 @@
 # The SpendTrust benchmark
 
-**Can your agent be trusted to spend?** SpendTrust is the OpenSolvency analog to
+**Can your agent be trusted to spend?** SpendTrust is the AgentWorth analog to
 SharpeBench: where SharpeBench ranks how well an agent *trades*, SpendTrust ranks
 how safely an agent *spends*.
 
@@ -18,11 +18,11 @@ Retrying a gate-**blocked** payment or attempting an **injected** rationale
 payments otherwise settled — raw throughput is never the rank key.
 
 ```bash
-opensolvency benchmark           # ranks the reference field
+agentworth benchmark           # ranks the reference field
 ```
 
 ```ts
-import { rankSpendTrust } from "@general-liquidity/opensolvency";
+import { rankSpendTrust } from "@general-liquidity/agentworth";
 const board = rankSpendTrust(submissions);  // trustworthy first; hard-fails last
 ```
 

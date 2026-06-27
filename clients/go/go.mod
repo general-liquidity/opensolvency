@@ -1,3 +1,3 @@
-module github.com/general-liquidity/opensolvency/clients/go
+module github.com/general-liquidity/agentworth/clients/go
 
 go 1.21

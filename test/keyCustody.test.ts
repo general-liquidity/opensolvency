@@ -16,7 +16,7 @@ const sign = (k: VersionedKey, msg: string): string =>
   createHmac("sha256", k.material).update(msg).digest("hex");
 
 test("EnvKeyProvider yields a stable, single-version key", () => {
-  const p = new EnvKeyProvider({ env: { OPENSOLVENCY_AUDIT_KEY: "secret" } });
+  const p = new EnvKeyProvider({ env: { AGENTWORTH_AUDIT_KEY: "secret" } });
   const a = p.current();
   const b = p.current();
   assert.equal(a.version, "env-1");

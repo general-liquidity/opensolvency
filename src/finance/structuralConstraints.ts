@@ -3,7 +3,7 @@
 // Their thesis: focusing on individual-level ("i-frame") fixes deflects from the
 // systemic ("s-frame") causes — and the financial industry's emphasis on personal
 // financial planning is named outright as an i-frame trap that "overlooks
-// structural barriers". OpenSolvency IS a personal-financial-planning agent, so
+// structural barriers". AgentWorth IS a personal-financial-planning agent, so
 // this is a mirror held up to it. The honest posture: when the operator faces a
 // genuinely structural constraint (income below essentials, support they're owed
 // and not claiming, predatory credit pushed onto them by the infrastructure),

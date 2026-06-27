@@ -1,4 +1,4 @@
-// Core domain types for the OpenSolvency trust kernel.
+// Core domain types for the AgentWorth trust kernel.
 //
 // Money is ALWAYS integer minor-units (cents, satoshis, wei-scaled) — never floats.
 // Time is ALWAYS an injected ISO-8601 string — the kernel never reads the clock,

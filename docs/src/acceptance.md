@@ -15,7 +15,7 @@ Run them yourself:
 
 ```bash
 npm run example:shopping     # the four verdicts, deterministic, no key
-opensolvency evals           # the generated scenario suite + process checks
+agentworth evals           # the generated scenario suite + process checks
 ```
 
 ## Continuous eval

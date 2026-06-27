@@ -7,8 +7,8 @@
 //
 // THE RESONANCE: an AP2 *open* Payment Mandate carries `payment.amount_range`
 // (per-tx cap), `payment.budget` (aggregate cap), `payment.allowed_payees`, and
-// `payment.execution_date` (expiry) — which is exactly an OpenSolvency Mandate.
-// `mandateToAp2Constraints` makes that mapping concrete (interop: OpenSolvency
+// `payment.execution_date` (expiry) — which is exactly an AgentWorth Mandate.
+// `mandateToAp2Constraints` makes that mapping concrete (interop: AgentWorth
 // could issue AP2 open mandates from its own grants).
 //
 // This module models the mandate CONTENT + the constraint mapping (pure, tested).
@@ -74,7 +74,7 @@ export interface BuildMandateOptions {
   expSeconds?: number;
 }
 
-/** Build the Payment Mandate content from an OpenSolvency PaymentIntent. The
+/** Build the Payment Mandate content from an AgentWorth PaymentIntent. The
  * binding (`transaction_id`) is added later by the client via bindTransactionId. */
 export function buildPaymentMandateContent(
   intent: PaymentIntent,
@@ -96,7 +96,7 @@ export function bindTransactionId(checkoutJwt: string): string {
   return createHash("sha256").update(checkoutJwt).digest("base64url");
 }
 
-/** OpenSolvency Mandate → AP2 open Payment Mandate constraints. This is the exact
+/** AgentWorth Mandate → AP2 open Payment Mandate constraints. This is the exact
  * correspondence: caps, payees, and expiry are the same authorization primitives. */
 export function mandateToAp2Constraints(m: Mandate): Ap2Constraint[] {
   const constraints: Ap2Constraint[] = [

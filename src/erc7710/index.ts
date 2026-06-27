@@ -1,6 +1,6 @@
 // ERC-7710 delegated-permissions interop.
 //
-// Expresses an OpenSolvency `Mandate` as a MetaMask-delegation-framework
+// Expresses an AgentWorth `Mandate` as a MetaMask-delegation-framework
 // `Delegation` + `Caveat[]`, computes the EIP-712 delegation hash, and signs /
 // verifies it (ECDSA secp256k1, EOA only).
 //
@@ -265,7 +265,7 @@ export function deterministicSalt(id: string): bigint {
 }
 
 /**
- * Build an ERC-7710 root delegation from an OpenSolvency mandate.
+ * Build an ERC-7710 root delegation from an AgentWorth mandate.
  *
  * Caveats:
  *  - expiresAt → TimestampEnforcer (beforeThreshold).
@@ -568,7 +568,7 @@ function bytesToBigint(bytes: Uint8Array): bigint {
 // ---------------------------------------------------------------------------
 //
 // A signed ERC-7710 delegation grants the delegate an on-chain spend bound by its
-// caveats. Before the delegate redeems it, OpenSolvency governs the spend: we
+// caveats. Before the delegate redeems it, AgentWorth governs the spend: we
 // decode the caveats into the OS authority shape (a Mandate), map the proposed
 // redemption into a PaymentIntent, and run BOTH through the same `evaluateGate`
 // that governs every other OS payment. So a MetaMask-style delegation spends only
@@ -690,7 +690,7 @@ export interface DelegationRedemptionOpts {
 }
 
 /**
- * Govern an ERC-7710 delegation redemption through the OpenSolvency gate.
+ * Govern an ERC-7710 delegation redemption through the AgentWorth gate.
  *
  * Decodes the delegation's caveats into an OS `Mandate` (caps/expiry/scope), maps
  * the proposed redemption into a `PaymentIntent`, then runs the intent through

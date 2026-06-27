@@ -1,6 +1,6 @@
-# OpenSolvency C / C++ client
+# AgentWorth C / C++ client
 
-A thin REST client for the [OpenSolvency](https://github.com/general-liquidity/opensolvency)
+A thin REST client for the [AgentWorth](https://github.com/general-liquidity/agentworth)
 governance gate, over libcurl. The API is `extern "C"`, usable from C and C++.
 Every payment runs through the same gate; a `blocked` outcome is a normal result
 (HTTP 403 with a JSON body), not a transport error.
@@ -15,12 +15,12 @@ make            # builds the example (links -lcurl)
 make check      # syntax-only check of the library
 ```
 
-Or vendor `opensolvency.c` + `opensolvency.h` into your build and link `-lcurl`.
+Or vendor `agentworth.c` + `agentworth.h` into your build and link `-lcurl`.
 
 ## Use
 
 ```c
-#include "opensolvency.h"
+#include "agentworth.h"
 
 os_global_init();
 os_client_t *c = os_client_new("http://127.0.0.1:8787", "token"); /* token may be NULL */

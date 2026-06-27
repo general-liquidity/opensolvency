@@ -1,7 +1,7 @@
-# OpenSolvency Rail-Conformance Audit — adapters vs upstream protocol specs
+# AgentWorth Rail-Conformance Audit — adapters vs upstream protocol specs
 
 **Date:** 2026-06-25
-**Scope:** do OpenSolvency's payment/identity **rail adapters** faithfully implement the upstream
+**Scope:** do AgentWorth's payment/identity **rail adapters** faithfully implement the upstream
 specs they integrate? Companion to the ADP audits in the sibling repo
 (`agent-disclosure-protocol/docs/audits/`): `2026-06-25-integration-conformance.md` (integration
 lens, incl. the ADP-side ERC-8004 finding) and `2026-06-25-sota-design-audit.md` (ADP's own
@@ -19,7 +19,7 @@ isn't enforced), **CORRECTNESS** (wrong/inverted behavior), **COSMETIC** (naming
 | Protocol / adapter | File(s) | Verdict | Severity |
 |---|---|---|---|
 | AP2 content schemas | `src/rails/ap2/ap2Rail.ts`, `ap2/mandate.ts` | Field-exact against upstream JSON Schemas — **strongest adapter we ship** | ✅ conformant |
-| MCP server | `src/mcp/server.ts`, `opensolvency-mcp/` | Real `@modelcontextprotocol/sdk@^1.29.0`, conformant | ✅ conformant |
+| MCP server | `src/mcp/server.ts`, `agentworth-mcp/` | Real `@modelcontextprotocol/sdk@^1.29.0`, conformant | ✅ conformant |
 | Agent Client Protocol (Zed) | `src/acp/` | Conformant | ✅ conformant |
 | Visa Trusted Agent Protocol | `src/identity/verifier.ts` | Claims RFC 9421; ships only string-map `staticIdentityVerifier` | **INTEGRITY** |
 | x402 | `src/rails/x402.ts`, `clients/x402Client.ts`, `proxy/x402Proxy.ts` | V1-shaped but wire-incomplete | CORRECTNESS |

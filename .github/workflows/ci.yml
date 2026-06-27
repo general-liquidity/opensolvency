@@ -1,6 +1,6 @@
 name: CI
 
-# OpenSolvency governance plane — CI. The TypeScript core runs on Node 24 (the
+# AgentWorth governance plane — CI. The TypeScript core runs on Node 24 (the
 # engines floor is >=22.18, and the full suite touches node:sqlite). Each language
 # client is additionally compile/test-gated on its own toolchain (Go / Rust / C /
 # Python), so every published client is proven to build on every push.
@@ -148,5 +148,5 @@ jobs:
       - name: Compile + import (stdlib only)
         working-directory: clients/python
         run: |
-          python -m py_compile opensolvency.py
-          python -c "import opensolvency; print('import ok:', opensolvency.OpenSolvencyClient)"
+          python -m py_compile agentworth.py
+          python -c "import agentworth; print('import ok:', agentworth.AgentWorthClient)"

@@ -2,7 +2,7 @@
 // SDK agent's `tools` and its spend is gated:
 //
 //   import { generateText } from "ai";
-//   import { createGatedPayTool } from "@general-liquidity/opensolvency/integrations";
+//   import { createGatedPayTool } from "@general-liquidity/agentworth/integrations";
 //
 //   await generateText({
 //     model, prompt,
@@ -10,7 +10,7 @@
 //   });
 //
 // The model's `pay` calls execute THROUGH the gate — the autonomous loop can't
-// bypass it. This is the same gate-enforced tool OpenSolvency uses internally,
+// bypass it. This is the same gate-enforced tool AgentWorth uses internally,
 // exposed for external AI SDK agents.
 
 import { tool } from "ai";

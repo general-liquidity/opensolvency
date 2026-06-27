@@ -23,7 +23,7 @@ no viem). Like the World ID / AgentBook / SIWA verifiers, the live spend is an
 **injected seam** the consumer wires:
 
 ```ts
-import { governedWallet } from "@general-liquidity/opensolvency/...";
+import { governedWallet } from "@general-liquidity/agentworth/...";
 
 const wallet = governedWallet({
   // The gate context (or a per-spend builder so spend history advances between calls).

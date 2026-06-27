@@ -8,7 +8,7 @@
 //
 //   npm run example:shopping     (or: node --import tsx examples/shopping-agent.ts)
 
-import { OpenSolvency } from "../src/sdk/index.ts";
+import { AgentWorth } from "../src/sdk/index.ts";
 
 export interface ExampleStep {
   label: string;
@@ -19,7 +19,7 @@ export interface ExampleStep {
 /** Run the scripted shopping agent and return each step's gate verdict. Pure-ish
  *  (in-memory store, fixed clock) so it's deterministic and testable. */
 export async function runShoppingAgentExample(): Promise<ExampleStep[]> {
-  const os = new OpenSolvency({ clock: () => "2026-06-24T12:00:00.000Z" });
+  const os = new AgentWorth({ clock: () => "2026-06-24T12:00:00.000Z" });
 
   // Operator grants a weekly grocery mandate.
   os.grantMandate({

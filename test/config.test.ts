@@ -6,13 +6,13 @@ import {
   migrateConfig,
   defaultConfig,
   CURRENT_CONFIG_VERSION,
-  OpenSolvencyConfigSchema,
+  AgentWorthConfigSchema,
 } from "../src/config/schema.ts";
 
 test("defaultConfig is valid and current", () => {
   const c = defaultConfig();
   assert.equal(c.version, CURRENT_CONFIG_VERSION);
-  assert.doesNotThrow(() => OpenSolvencyConfigSchema.parse(c));
+  assert.doesNotThrow(() => AgentWorthConfigSchema.parse(c));
 });
 
 test("a pre-versioning (v0) config migrates up and fills defaults", () => {

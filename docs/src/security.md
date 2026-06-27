@@ -1,7 +1,7 @@
 # Security & compliance
 
 The security model *is* the product. The full posture (and the honest gaps) lives in
-[`SECURITY.md`](https://github.com/general-liquidity/opensolvency/blob/main/SECURITY.md);
+[`SECURITY.md`](https://github.com/general-liquidity/agentworth/blob/main/SECURITY.md);
 the highlights:
 
 - **Deny-first gate** over structured data — injection-resistant, fuzz-verified.
@@ -10,8 +10,8 @@ the highlights:
   standalone:
 
   ```bash
-  opensolvency audit export > chain.jsonl
-  opensolvency audit verify-export chain.jsonl
+  agentworth audit export > chain.jsonl
+  agentworth audit verify-export chain.jsonl
   ```
 
 - **Non-custodial** — execution runs through the operator's own accounts; the system

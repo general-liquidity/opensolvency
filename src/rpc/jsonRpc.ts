@@ -1,5 +1,5 @@
 // JSON-RPC 2.0 interface — a low-latency, method-based embedding surface over the
-// OpenSolvency SDK. This is the OPERATOR-SIDE API (the operator's own systems call
+// AgentWorth SDK. This is the OPERATOR-SIDE API (the operator's own systems call
 // it): unlike the MCP server (the untrusted-agent surface, gated `pay` + read-only),
 // this exposes the full operator API including approve / revoke / kill. Put it on a
 // trusted transport (loopback / authenticated socket), never the open internet.
@@ -8,7 +8,7 @@
 // Every money-moving method still routes through the gate inside the SDK — JSON-RPC
 // adds reach, not authority.
 
-import type { OpenSolvency, GrantMandateInput, PayInput } from "../sdk/index.ts";
+import type { AgentWorth, GrantMandateInput, PayInput } from "../sdk/index.ts";
 
 export interface JsonRpcRequest {
   jsonrpc: "2.0";
@@ -31,7 +31,7 @@ function fail(id: JsonRpcRequest["id"], code: number, message: string): JsonRpcR
   return { jsonrpc: "2.0", id: id ?? null, error: { code, message } };
 }
 
-type Handler = (sdk: OpenSolvency, params: Record<string, unknown>) => unknown | Promise<unknown>;
+type Handler = (sdk: AgentWorth, params: Record<string, unknown>) => unknown | Promise<unknown>;
 
 /** The exposed method table. Money methods (`pay`, `approve`) route through the gate
  *  inside the SDK; read methods are side-effect-free. */
@@ -60,7 +60,7 @@ export const RPC_METHODS: Record<string, Handler> = {
  *  still execute but no response is meaningful to the caller; we return one anyway
  *  for the transport to drop if it likes. Pure w.r.t. the protocol layer. */
 export async function handleJsonRpcCall(
-  sdk: OpenSolvency,
+  sdk: AgentWorth,
   req: JsonRpcRequest,
 ): Promise<JsonRpcResponse> {
   if (req.jsonrpc !== "2.0" || typeof req.method !== "string") {

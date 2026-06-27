@@ -1,5 +1,5 @@
-// OpenSolvency REFERENCE adversarial corpus. Like builders.ts, this is the
-// OpenSolvency-specific half and does NOT lift into the vendor-neutral
+// AgentWorth REFERENCE adversarial corpus. Like builders.ts, this is the
+// AgentWorth-specific half and does NOT lift into the vendor-neutral
 // `agent-disclosure` repo: it wraps the LIVE SpendTrust benchmark + the live
 // deny-list into a versioned, signable red-team corpus an agent runs to produce a
 // signed attestation. The vendor-neutral schema only knows the SHAPE of the
@@ -111,7 +111,7 @@ function casesFromDenyList(): AdversarialCase[] {
 }
 
 export const ADVERSARIAL_CORPUS: { name: string; version: string; cases: AdversarialCase[] } = {
-  name: "opensolvency-spendtrust",
+  name: "agentworth-spendtrust",
   version: "1.0.0",
   cases: [...casesFromReference(), ...casesFromDenyList()],
 };

@@ -1,4 +1,4 @@
-// Disclose-before-settle for OpenSolvency rails. The rails settle value the gate has
+// Disclose-before-settle for AgentWorth rails. The rails settle value the gate has
 // already authorized; this layer adds the OTHER half of the disclosure protocol on the
 // way out: before a rail moves value to a PAYEE, the payee's signed disclosure is
 // fetched, evaluated against our policy, and the live handshake is run. A payee that

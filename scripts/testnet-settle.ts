@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // REAL on-chain settlement through the gate — on a TESTNET.
 //
-// This is the operator-run path that takes OpenSolvency past the fail-safe stubs:
+// This is the operator-run path that takes AgentWorth past the fail-safe stubs:
 // a genuine ERC-20 stablecoin transfer (e.g. testnet USDC) executed by the SAME
 // executor + gate as everything else. It lives in scripts/ (not the shipped dist):
 // the published package exposes the `OnchainSigner` seam + `createOnchainRailClient`,
@@ -10,12 +10,12 @@
 // It needs a funded testnet key — which only YOU can supply, so the actual money
 // movement is yours. Set the env below and run:
 //
-//   OPENSOLVENCY_RPC_URL=https://sepolia.base.org \
-//   OPENSOLVENCY_PRIVATE_KEY=0x...        (a funded testnet key) \
-//   OPENSOLVENCY_TOKEN_ADDRESS=0x...      (testnet USDC, 6 decimals) \
-//   OPENSOLVENCY_PAYEE_ADDRESS=0x...      (where to send) \
-//   OPENSOLVENCY_AMOUNT=10000             (base units; 10000 = 0.01 USDC) \
-//   OPENSOLVENCY_CHAIN=base-sepolia       (or sepolia) \
+//   AGENTWORTH_RPC_URL=https://sepolia.base.org \
+//   AGENTWORTH_PRIVATE_KEY=0x...        (a funded testnet key) \
+//   AGENTWORTH_TOKEN_ADDRESS=0x...      (testnet USDC, 6 decimals) \
+//   AGENTWORTH_PAYEE_ADDRESS=0x...      (where to send) \
+//   AGENTWORTH_AMOUNT=10000             (base units; 10000 = 0.01 USDC) \
+//   AGENTWORTH_CHAIN=base-sepolia       (or sepolia) \
 //   npm run testnet-settle
 //
 // Defaults: Base Sepolia, 0.01 USDC. The gate runs for real — an over-cap or
@@ -46,12 +46,12 @@ function env(name: string, fallback?: string): string {
 const CHAINS = { "base-sepolia": baseSepolia, sepolia } as const;
 
 async function main(): Promise<void> {
-  const rpcUrl = env("OPENSOLVENCY_RPC_URL", "https://sepolia.base.org");
-  const privateKey = env("OPENSOLVENCY_PRIVATE_KEY") as `0x${string}`;
-  const tokenAddress = env("OPENSOLVENCY_TOKEN_ADDRESS") as Address;
-  const payeeAddress = env("OPENSOLVENCY_PAYEE_ADDRESS") as Address;
-  const amount = Number(env("OPENSOLVENCY_AMOUNT", "10000")); // 0.01 USDC (6 dp)
-  const chainKey = env("OPENSOLVENCY_CHAIN", "base-sepolia") as keyof typeof CHAINS;
+  const rpcUrl = env("AGENTWORTH_RPC_URL", "https://sepolia.base.org");
+  const privateKey = env("AGENTWORTH_PRIVATE_KEY") as `0x${string}`;
+  const tokenAddress = env("AGENTWORTH_TOKEN_ADDRESS") as Address;
+  const payeeAddress = env("AGENTWORTH_PAYEE_ADDRESS") as Address;
+  const amount = Number(env("AGENTWORTH_AMOUNT", "10000")); // 0.01 USDC (6 dp)
+  const chainKey = env("AGENTWORTH_CHAIN", "base-sepolia") as keyof typeof CHAINS;
   const chain = CHAINS[chainKey];
   if (!chain) {
     console.error(`unknown chain '${chainKey}' — use one of: ${Object.keys(CHAINS).join(", ")}`);

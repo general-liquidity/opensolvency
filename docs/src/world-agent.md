@@ -2,7 +2,7 @@
 
 [worldcoin/agentkit](https://github.com/worldcoin/agentkit) answers a question the
 proof-of-personhood path does not: **is this agent operated by a real, World
-ID-verified human, and who is accountable for it?** OpenSolvency consumes that verdict
+ID-verified human, and who is accountable for it?** AgentWorth consumes that verdict
 as the gate's `Attestation` input — the same risk channel as ERC-8128, SIWA, and World
 ID. It never relaxes the floor (caps / deny-list); it only informs risk.
 
@@ -18,7 +18,7 @@ ID. It never relaxes the floor (caps / deny-list); it only informs risk.
 3. **Verification.** The server recovers the signer (EIP-191 for `type: "eip191"`),
    then resolves the registering human from AgentBook and applies its access policy.
 
-OpenSolvency mirrors steps 2–3 in two halves:
+AgentWorth mirrors steps 2–3 in two halves:
 
 - **Core (no network).** `verifyWorldAgent` does structural CAIP-122 validation and —
   for `type: "eip191"` — EIP-191-recovers the signer from the signed `message`,
@@ -47,7 +47,7 @@ accountable `principal` and the `agentId`; otherwise the agent address is the `a
 ## Usage
 
 ```ts
-import { worldAgentIdentityVerifier } from "@general-liquidity/opensolvency/identity";
+import { worldAgentIdentityVerifier } from "@general-liquidity/agentworth/identity";
 import { createPublicClient, http } from "viem";
 import { worldchain } from "viem/chains";
 

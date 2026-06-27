@@ -4,7 +4,7 @@
 // verifier branches on the `keyid` prefix `erc8128:<chainId>:<0xaddress>`, and the
 // expected signer IS the keyid address (no registry lookup for plain ERC-8128).
 //
-// OpenSolvency consumes the verdict as a risk INPUT (identity attestation), exactly
+// AgentWorth consumes the verdict as a risk INPUT (identity attestation), exactly
 // like `visaTapVerifier`. A valid recovered-address match yields `attestation:"signed"`
 // (or `"registry_attested"` when `identityOf` binds the address to a principal).
 //

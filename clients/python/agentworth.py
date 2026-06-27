@@ -1,12 +1,12 @@
-"""OpenSolvency Python client — a thin REST client over the HTTP ingress.
+"""AgentWorth Python client — a thin REST client over the HTTP ingress.
 
 The ingress runs the SAME gate as everything else, so this client adds no
 authority: a payment it submits is auto-executed inside a mandate, parked for
 operator approval, or blocked. Standard-library only (no dependencies).
 
-    from opensolvency import OpenSolvencyClient
+    from agentworth import AgentWorthClient
 
-    os = OpenSolvencyClient("http://127.0.0.1:8787", token="...")
+    os = AgentWorthClient("http://127.0.0.1:8787", token="...")
     result = os.pay(payee="tesco", payee_class="groceries", amount=8000,
                     rationale="the weekly grocery shop")
     print(result["outcome"])   # "settled" | "pending" | "blocked" | "failed"
@@ -20,14 +20,14 @@ import urllib.error
 import urllib.request
 from typing import Any, Optional
 
-__all__ = ["OpenSolvencyClient", "OpenSolvencyError"]
+__all__ = ["AgentWorthClient", "AgentWorthError"]
 
 
-class OpenSolvencyError(Exception):
+class AgentWorthError(Exception):
     """Raised on a transport error (not on a gate 'blocked' — that's a normal result)."""
 
 
-class OpenSolvencyClient:
+class AgentWorthClient:
     def __init__(self, base_url: str = "http://127.0.0.1:8787", token: Optional[str] = None):
         self.base_url = base_url.rstrip("/")
         self.token = token
@@ -49,7 +49,7 @@ class OpenSolvencyClient:
             # 403/401/413/429 carry a JSON body too — return it, don't raise.
             return e.code, (json.loads(payload) if payload else None)
         except urllib.error.URLError as e:
-            raise OpenSolvencyError(f"transport error: {e}") from e
+            raise AgentWorthError(f"transport error: {e}") from e
 
     def pay(
         self,

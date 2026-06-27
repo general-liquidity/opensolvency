@@ -21,7 +21,7 @@ export interface OtlpTracerOptions {
   endpoint: string;
   /** injected fetch (Node 18+ global, or a stub in tests) */
   fetch: OtlpFetch;
-  /** service.name resource attribute (default "opensolvency") */
+  /** service.name resource attribute (default "agentworth") */
   serviceName?: string;
   /** optional headers (e.g. an API key for a hosted backend) */
   headers?: Record<string, string>;
@@ -51,7 +51,7 @@ export function buildLogPayload(
         resource: { attributes: [toAttr("service.name", serviceName)] },
         scopeLogs: [
           {
-            scope: { name: "opensolvency" },
+            scope: { name: "agentworth" },
             logRecords: [
               {
                 timeUnixNano,
@@ -68,7 +68,7 @@ export function buildLogPayload(
 }
 
 export function otlpTracer(opts: OtlpTracerOptions): Tracer {
-  const serviceName = opts.serviceName ?? "opensolvency";
+  const serviceName = opts.serviceName ?? "agentworth";
   const now = opts.now ?? Date.now;
   const url = `${opts.endpoint.replace(/\/$/, "")}/v1/logs`;
   return {

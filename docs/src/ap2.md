@@ -10,8 +10,8 @@ mandates passed in A2A Message DataParts:
 | `CartMandate`   | A specific merchant cart, signed by the merchant         |
 | `PaymentMandate`| The binding of a cart to a payment method (a VP)         |
 
-OpenSolvency is the **policy engine behind AP2 authorization**. AP2 says *what* the
-agent wants to buy and *who* signed the cart; OpenSolvency's gate decides *whether
+AgentWorth is the **policy engine behind AP2 authorization**. AP2 says *what* the
+agent wants to buy and *who* signed the cart; AgentWorth's gate decides *whether
 the agent may pay autonomously* — under the operator's mandates, caps, deny-list,
 and risk. The `src/ap2` module is the seam: it maps AP2 shapes to OS shapes and
 calls the existing `evaluateGate`. It re-implements no policy.
@@ -34,7 +34,7 @@ An AP2 `IntentMandate` carries **no amount caps** — it has `merchants`, `skus`
   doesn't carry them. The `merchants` list becomes an `allowlist` scope; an absent
   list becomes a `class` scope (`opts.payeeClass ?? "ap2"`).
 
-This is by design: AP2 expresses intent, OpenSolvency expresses bounded authority.
+This is by design: AP2 expresses intent, AgentWorth expresses bounded authority.
 
 ## Money: major units → minor units
 
@@ -64,7 +64,7 @@ unsigned as unverified, never authorized.
 
 ### Canonicalization assumption (cart_hash)
 
-**AP2 does not specify the canonical-JSON algorithm for `cart_hash`.** OpenSolvency
+**AP2 does not specify the canonical-JSON algorithm for `cart_hash`.** AgentWorth
 chooses **RFC 8785 JCS** (reusing the `canonicalize` from
 `@general-liquidity/agent-disclosure`, so OS and ADP agree on the canonical form),
 hashed with **SHA-256** (hex). If you interoperate with a merchant that hashes
@@ -106,7 +106,7 @@ import {
   cartMandateToIntent,
   gateAp2Cart,
   verifyCartMandate,
-} from "@general-liquidity/opensolvency/ap2";
+} from "@general-liquidity/agentworth/ap2";
 
 // 1. verify the merchant signed the cart (and it wasn't tampered)
 const v = await verifyCartMandate(cart, { resolveKey: (h) => merchantKeys.get(h.kid) });

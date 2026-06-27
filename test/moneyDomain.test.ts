@@ -48,9 +48,9 @@ test("the account connector is read-only and feeds reconcile/watch", () => {
 test("key providers supply the audit key from custody, not the DB", () => {
   assert.equal(staticKeyProvider("k123").operatorKey(), "k123");
   assert.throws(() => staticKeyProvider(""));
-  process.env.OPENSOLVENCY_AUDIT_KEY = "env-key";
+  process.env.AGENTWORTH_AUDIT_KEY = "env-key";
   assert.equal(envKeyProvider().operatorKey(), "env-key");
-  delete process.env.OPENSOLVENCY_AUDIT_KEY;
+  delete process.env.AGENTWORTH_AUDIT_KEY;
 });
 
 // --- mandate templates ---

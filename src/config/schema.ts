@@ -18,7 +18,7 @@ const GateConfigSchema = z.object({
   anomalyMultiple: z.number().positive(),
 });
 
-export const OpenSolvencyConfigSchema = z.object({
+export const AgentWorthConfigSchema = z.object({
   version: z.literal(CURRENT_CONFIG_VERSION),
   gate: GateConfigSchema,
   /** consecutive blocks/failures before the circuit breaker trips */
@@ -31,9 +31,9 @@ export const OpenSolvencyConfigSchema = z.object({
   }),
 });
 
-export type OpenSolvencyConfig = z.infer<typeof OpenSolvencyConfigSchema>;
+export type AgentWorthConfig = z.infer<typeof AgentWorthConfigSchema>;
 
-export function defaultConfig(): OpenSolvencyConfig {
+export function defaultConfig(): AgentWorthConfig {
   return {
     version: CURRENT_CONFIG_VERSION,
     gate: { ...DEFAULT_GATE_CONFIG },
@@ -66,6 +66,6 @@ export function migrateConfig(raw: unknown): unknown {
 }
 
 /** Migrate then validate. Throws (zod) on a config that can't be made valid. */
-export function loadConfig(raw: unknown): OpenSolvencyConfig {
-  return OpenSolvencyConfigSchema.parse(migrateConfig(raw));
+export function loadConfig(raw: unknown): AgentWorthConfig {
+  return AgentWorthConfigSchema.parse(migrateConfig(raw));
 }

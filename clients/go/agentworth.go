@@ -1,15 +1,15 @@
-// Package opensolvency is a thin REST client over the OpenSolvency HTTP ingress.
+// Package agentworth is a thin REST client over the AgentWorth HTTP ingress.
 // The ingress runs the SAME gate as everything else, so this client adds no
 // authority: a submitted payment is auto-executed inside a mandate, parked for
 // operator approval, or blocked. Standard library only.
 //
-//	c := opensolvency.New("http://127.0.0.1:8787", "token")
-//	res, err := c.Pay(opensolvency.PaymentIntent{
+//	c := agentworth.New("http://127.0.0.1:8787", "token")
+//	res, err := c.Pay(agentworth.PaymentIntent{
 //	    Payee: "tesco", PayeeClass: "groceries", Amount: 8000,
 //	    Currency: "GBP", Rail: "card", Rationale: "the weekly grocery shop",
 //	}, "")
 //	// res.Outcome is "settled" | "pending" | "blocked" | "failed"
-package opensolvency
+package agentworth
 
 import (
 	"bytes"
@@ -22,7 +22,7 @@ import (
 	"strings"
 )
 
-// Client talks to an OpenSolvency ingress.
+// Client talks to an AgentWorth ingress.
 type Client struct {
 	BaseURL string
 	Token   string

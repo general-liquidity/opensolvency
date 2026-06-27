@@ -4,9 +4,9 @@ import assert from "node:assert/strict";
 import { otlpTracer, buildLogPayload, type OtlpFetch } from "../src/obs/otlpTracer.ts";
 
 test("buildLogPayload shapes a valid OTLP LogRecord with service + attributes", () => {
-  const p = buildLogPayload("payment.settled", { intentId: "pi_1", amount: 500 }, "opensolvency", 1_700_000_000_000) as any;
+  const p = buildLogPayload("payment.settled", { intentId: "pi_1", amount: 500 }, "agentworth", 1_700_000_000_000) as any;
   const rl = p.resourceLogs[0];
-  assert.deepEqual(rl.resource.attributes[0], { key: "service.name", value: { stringValue: "opensolvency" } });
+  assert.deepEqual(rl.resource.attributes[0], { key: "service.name", value: { stringValue: "agentworth" } });
   const rec = rl.scopeLogs[0].logRecords[0];
   assert.equal(rec.body.stringValue, "payment.settled");
   assert.equal(rec.timeUnixNano, "1700000000000000000"); // ms → ns

@@ -49,7 +49,7 @@ async function agent(goal: string) {
   return r.execution;
 }
 
-console.log("\n=== OpenSolvency — agent-that-can't-spend-wrong demo ===\n");
+console.log("\n=== AgentWorth — agent-that-can't-spend-wrong demo ===\n");
 
 line("1. Operator grants a mandate: groceries, GBP, card, £500/tx, £1000/week");
 store.insertMandate({

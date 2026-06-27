@@ -1,7 +1,7 @@
-// The OpenSolvency-specific half: populate a vendor-neutral AgentDisclosure from
+// The AgentWorth-specific half: populate a vendor-neutral AgentDisclosure from
 // the LIVE governance primitives. This is the part that does NOT lift into the
 // standalone `agent-disclosure` repo - it IS the reference implementation that
-// makes OpenSolvency a credible counterparty. Every field is derived from
+// makes AgentWorth a credible counterparty. Every field is derived from
 // something real (the enforced gate, the granted mandates, the signed audit
 // chain, a SpendTrust run), not asserted.
 
@@ -35,7 +35,7 @@ import {
 const GENESIS = "0".repeat(64);
 const DEFAULT_VALIDITY_MS = 60 * 60 * 1000; // 1 hour
 
-// The canonical OpenSolvency tool surface + its permission boundary: one gated
+// The canonical AgentWorth tool surface + its permission boundary: one gated
 // money path, read-only introspection, operator-only controls the agent can't reach.
 const DEFAULT_TOOL_INVENTORY: ToolInventory = {
   valuePath: "executor",
@@ -67,7 +67,7 @@ export interface BuildDisclosureDeps {
   nonce: string;
   /** disclosure validity window (default 1h) */
   validityMs?: number;
-  /** override the declared tool surface (default = the canonical OpenSolvency one) */
+  /** override the declared tool surface (default = the canonical AgentWorth one) */
   toolInventory?: ToolInventory;
   /** a SpendTrust run to attest to (the red-team field) */
   spendTrust?: { corpus: { name: string; version: string }; result: TrustScore };
@@ -86,7 +86,7 @@ export interface EnforcementBinding {
 }
 
 const PoE_EVIDENCE_PREFIX =
-  "opensolvency-gate (evaluateGate over structured intent); poe=";
+  "agentworth-gate (evaluateGate over structured intent); poe=";
 
 /** Encode the PoE binding into the schema-stable `enforcementEvidence` string.
  *  A nested constitution field cannot carry it on the wire yet: the published
@@ -139,7 +139,7 @@ function buildConstitution(deps: BuildDisclosureDeps, auditAnchor: string): Cons
     hardConstraints,
     parameters,
     digest: sha256Hex(canonicalize({ hardConstraints, parameters })),
-    // OpenSolvency ENFORCES these: the gate is a pure function the agent cannot
+    // AgentWorth ENFORCES these: the gate is a pure function the agent cannot
     // override. This is the field that separates a disclosure from a promise.
     enforced: true,
     // Proof-of-Enforcement binding (policyHash + auditAnchor) — encoded into the
@@ -217,7 +217,7 @@ function buildModel(input: NonNullable<BuildDisclosureDeps["model"]>): ModelIden
 function buildProvenance(deps: BuildDisclosureDeps): Record<string, FieldProvenance> {
   const p: Record<string, FieldProvenance> = {
     systemPrompt: { derivedFrom: "persona (sha256 of composed system prompt)" },
-    constitution: { derivedFrom: "opensolvency-gate (DEFAULT_DENY_RULES + gate config)", attestedBy: "opensolvency-gate" },
+    constitution: { derivedFrom: "agentworth-gate (DEFAULT_DENY_RULES + gate config)", attestedBy: "agentworth-gate" },
     tools: { derivedFrom: "agent tool surface + permission boundary" },
     capital: { derivedFrom: "mandate store (operator-granted)" },
     operator: { derivedFrom: "operator configuration" },
@@ -228,7 +228,7 @@ function buildProvenance(deps: BuildDisclosureDeps): Record<string, FieldProvena
   return p;
 }
 
-/** Build the disclosure document from the live OpenSolvency runtime. */
+/** Build the disclosure document from the live AgentWorth runtime. */
 export function buildAgentDisclosure(deps: BuildDisclosureDeps): AgentDisclosure {
   const agentId = deps.agentKey.publicKeyHex;
   const validUntil = new Date(Date.parse(deps.now) + (deps.validityMs ?? DEFAULT_VALIDITY_MS)).toISOString();

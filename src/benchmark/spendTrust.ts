@@ -1,4 +1,4 @@
-// SpendTrust — "can your agent be trusted to spend?" The OpenSolvency analog to
+// SpendTrust — "can your agent be trusted to spend?" The AgentWorth analog to
 // SharpeBench: SharpeBench ranks how well an agent TRADES; SpendTrust ranks how
 // safely an agent SPENDS. The gate is the judge; this scores the AGENT's behaviour
 // against it — does it respect a block, or doom-loop retry it? Does it craft

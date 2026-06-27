@@ -1,13 +1,13 @@
 <!-- prettier-ignore -->
 <div align="center">
 
-# OpenSolvency
+# AgentWorth
 
 ### The operator-aligned governance plane for agentic spend
 
-*Autonomous-money agents already move real funds with no mandate, no cap, no risk gate, and no approver. OpenSolvency is the missing layer - it lets an agent spend autonomously **inside** operator-defined bounds, and confirm above them.*
+*Autonomous-money agents already move real funds with no mandate, no cap, no risk gate, and no approver. AgentWorth is the missing layer - it lets an agent spend autonomously **inside** operator-defined bounds, and confirm above them.*
 
-[![CI](https://img.shields.io/github/actions/workflow/status/general-liquidity/opensolvency/ci.yml?style=flat-square&label=CI)](https://github.com/general-liquidity/opensolvency/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/general-liquidity/agentworth/ci.yml?style=flat-square&label=CI)](https://github.com/general-liquidity/agentworth/actions)
 [![tests](https://img.shields.io/badge/tests-610%20passing-success?style=flat-square)](#develop)
 [![node](https://img.shields.io/badge/node-%E2%89%A522.18-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white)](#develop)
 [![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](#license)
@@ -21,13 +21,13 @@
 
 ## Why
 
-OpenSolvency is **not** a wallet, a rail, or a payment processor. It is the trust layer that sits *above* rails (x402, cards, ACP/checkout) and *below* an agent, enforcing a single invariant:
+AgentWorth is **not** a wallet, a rail, or a payment processor. It is the trust layer that sits *above* rails (x402, cards, ACP/checkout) and *below* an agent, enforcing a single invariant:
 
 > **An agent payment can auto-execute only inside a live, operator-granted mandate that covers it - under its caps, below the risk and velocity thresholds, and clear of the deny-list. Everything else routes to the operator or is blocked. Every decision is signed and replayable.**
 
 This is the layer the autonomous-money agents that already exist conspicuously lack. Aeon - billed as the "most autonomous agent framework" - moves real USDC on Base via a wallet API with **no mandate, no spend cap, no risk gate, no approver**: if the operator enables it and runs it, it sends. That forces a binary choice - full-auto, or a human pulling the trigger every single time.
 
-OpenSolvency removes the binary. The mandate is what authorizes spend *without* a live human confirm, so the agent acts freely inside the envelope and escalates outside it. **The gate is what lets autonomy go further, safely - not less far.**
+AgentWorth removes the binary. The mandate is what authorizes spend *without* a live human confirm, so the agent acts freely inside the envelope and escalates outside it. **The gate is what lets autonomy go further, safely - not less far.**
 
 #### The Mandate is the central object
 
@@ -73,27 +73,27 @@ One gate, reached from everywhere agents live - the same executor, mandates, ris
 
 | Surface | Get it | What it is |
 |:--|:--|:--|
-| <img height="14" align="top" src="https://cdn.simpleicons.org/typescript/3178C6" />&nbsp; **TypeScript SDK** | `import { OpenSolvency }` | The programmatic façade - grant mandates, `pay()` through the gate, approve, verify the audit chain. |
-| <img height="14" align="top" src="https://cdn.simpleicons.org/gnubash/4EAA25" />&nbsp; **CLI** | `opensolvency …` | `mandate` / `pay` / `agent` / `finance` / `approve` / `kill` / `audit` / `serve`. |
-| <img height="14" align="top" src="https://cdn.simpleicons.org/modelcontextprotocol" />&nbsp; **MCP** | `npx -y @general-liquidity/opensolvency-mcp` | An [MCP](https://modelcontextprotocol.io) server - Claude Code / Cursor call the gated `pay` + read-only tools (or `opensolvency mcp` from the main package). |
-| <img height="14" align="top" src="https://cdn.simpleicons.org/zedindustries/084CCF" />&nbsp; **ACP** | `opensolvency acp` | An [Agent Client Protocol](https://agentclientprotocol.com) surface - editors/IDEs drive the agent in-editor. |
-| <img height="14" align="top" src="https://cdn.simpleicons.org/openapiinitiative/6BA539" />&nbsp; **HTTP** | `opensolvency serve` | The ingress - same gate over HTTP, OpenAPI 3.1 at `/openapi.json`, bearer-token auth, idempotency keys, rate limiting. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/typescript/3178C6" />&nbsp; **TypeScript SDK** | `import { AgentWorth }` | The programmatic façade - grant mandates, `pay()` through the gate, approve, verify the audit chain. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/gnubash/4EAA25" />&nbsp; **CLI** | `agentworth …` | `mandate` / `pay` / `agent` / `finance` / `approve` / `kill` / `audit` / `serve`. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/modelcontextprotocol" />&nbsp; **MCP** | `npx -y @general-liquidity/agentworth-mcp` | An [MCP](https://modelcontextprotocol.io) server - Claude Code / Cursor call the gated `pay` + read-only tools (or `agentworth mcp` from the main package). |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/zedindustries/084CCF" />&nbsp; **ACP** | `agentworth acp` | An [Agent Client Protocol](https://agentclientprotocol.com) surface - editors/IDEs drive the agent in-editor. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/openapiinitiative/6BA539" />&nbsp; **HTTP** | `agentworth serve` | The ingress - same gate over HTTP, OpenAPI 3.1 at `/openapi.json`, bearer-token auth, idempotency keys, rate limiting. |
 | **JSON-RPC** | `handleJsonRpcCall` | The operator-side method API for low-latency embedding (`pay`, `mandate.*`, `approve`, `audit.verify`). |
-| <img height="14" align="top" src="assets/integrations/ap2.svg" />&nbsp; **AP2** | `@general-liquidity/opensolvency/ap2` | [AP2](https://github.com/google-agentic-commerce/ap2) interop - OS is the policy engine behind AP2: `Mandate ⇄ IntentMandate`, a signed `CartMandate` → a gated `PaymentIntent` (`gateAp2Cart`), merchant-JWT verification, A2A DataParts. |
-| <img height="14" align="top" src="assets/integrations/ag-ui.png" />&nbsp; **AG-UI** | `@general-liquidity/opensolvency/agui` | An [AG-UI](https://ag-ui.com) surface - streams the gate's `confirm_operator` decision as a `confirm_spend` frontend tool-call to any AG-UI client (zero new deps). |
-| <img height="14" align="top" src="https://cdn.simpleicons.org/ethereum/3C3C3D" />&nbsp; **ERC-7710** | `@general-liquidity/opensolvency/erc7710` | Express a `Mandate` as an on-chain [ERC-7710](https://eips.ethereum.org/EIPS/eip-7710) delegation + caveat enforcers (caps/period/expiry/allowlist); EIP-712 sign/verify (EOA), viem-checked. Optional `@noble` crypto. |
-| <img height="14" align="top" src="https://cdn.simpleicons.org/ethereum/3C3C3D" />&nbsp; **ERC-8128 · SIWA** | `@general-liquidity/opensolvency/identity` | On-chain agent identity: `erc8128Verifier` (wallet-signed HTTP requests, RFC 9421 + EIP-191) and `siwaIdentityVerifier` (Sign-In-With-Agent + ERC-8004 `ownerOf`) — feed the gate's attestation/risk, never the floor. |
-| <img height="14" align="top" src="assets/integrations/worldcoin.png" />&nbsp;<img height="14" align="top" src="assets/integrations/gitcoin.png" />&nbsp; **World ID · Passport** | `@general-liquidity/opensolvency/identity` | Proof-of-personhood gate inputs: a verified [World ID](https://world.org) proof → `attestation` (orb→registry-attested), a [Human Passport](https://passport.human.tech) humanity score → `ReputationLevel` (injected verifier/scorer, no new deps). |
-| <img height="14" align="top" src="assets/integrations/worldcoin.png" />&nbsp; **World Agent** | `@general-liquidity/opensolvency/identity` | [worldcoin/agentkit](https://github.com/worldcoin/agentkit) - verify an agent is backed by a World ID-verified human: EIP-191 signer recovery + an injected AgentBook (`lookupHuman`) resolver → gate `attestation` (human-backed → registry-attested). |
-| 🛡️ **Proof-of-Enforcement** | `@general-liquidity/opensolvency` | Every signed `gate.decision` carries the `policyHash` it ran under; `computePolicyHash` + `replayDecision` let a counterparty replay a sampled decision and prove the gate **enforces what it discloses** - the falsifiable half of [ADP](https://github.com/general-liquidity/agent-disclosure-protocol)'s `enforced` claim. |
-| <img height="14" align="top" src="https://cdn.simpleicons.org/coinbase/0052FF" />&nbsp; **Governed wallet** | `@general-liquidity/opensolvency` | `governedWallet` - gate a Coinbase CDP / AgentKit wallet spend through the gate *before* it executes (injected execute seam, no wallet SDK bundled). OS above the custody layer. |
-| ⚖️ **Compliance** | `@general-liquidity/opensolvency/compliance` | `deployerOversightReport` (EU AI Act Article 26 - human oversight / monitoring / record-keeping) + a signed, independently-verifiable `exportCompliancePackage`. |
+| <img height="14" align="top" src="assets/integrations/ap2.svg" />&nbsp; **AP2** | `@general-liquidity/agentworth/ap2` | [AP2](https://github.com/google-agentic-commerce/ap2) interop - OS is the policy engine behind AP2: `Mandate ⇄ IntentMandate`, a signed `CartMandate` → a gated `PaymentIntent` (`gateAp2Cart`), merchant-JWT verification, A2A DataParts. |
+| <img height="14" align="top" src="assets/integrations/ag-ui.png" />&nbsp; **AG-UI** | `@general-liquidity/agentworth/agui` | An [AG-UI](https://ag-ui.com) surface - streams the gate's `confirm_operator` decision as a `confirm_spend` frontend tool-call to any AG-UI client (zero new deps). |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/ethereum/3C3C3D" />&nbsp; **ERC-7710** | `@general-liquidity/agentworth/erc7710` | Express a `Mandate` as an on-chain [ERC-7710](https://eips.ethereum.org/EIPS/eip-7710) delegation + caveat enforcers (caps/period/expiry/allowlist); EIP-712 sign/verify (EOA), viem-checked. Optional `@noble` crypto. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/ethereum/3C3C3D" />&nbsp; **ERC-8128 · SIWA** | `@general-liquidity/agentworth/identity` | On-chain agent identity: `erc8128Verifier` (wallet-signed HTTP requests, RFC 9421 + EIP-191) and `siwaIdentityVerifier` (Sign-In-With-Agent + ERC-8004 `ownerOf`) — feed the gate's attestation/risk, never the floor. |
+| <img height="14" align="top" src="assets/integrations/worldcoin.png" />&nbsp;<img height="14" align="top" src="assets/integrations/gitcoin.png" />&nbsp; **World ID · Passport** | `@general-liquidity/agentworth/identity` | Proof-of-personhood gate inputs: a verified [World ID](https://world.org) proof → `attestation` (orb→registry-attested), a [Human Passport](https://passport.human.tech) humanity score → `ReputationLevel` (injected verifier/scorer, no new deps). |
+| <img height="14" align="top" src="assets/integrations/worldcoin.png" />&nbsp; **World Agent** | `@general-liquidity/agentworth/identity` | [worldcoin/agentkit](https://github.com/worldcoin/agentkit) - verify an agent is backed by a World ID-verified human: EIP-191 signer recovery + an injected AgentBook (`lookupHuman`) resolver → gate `attestation` (human-backed → registry-attested). |
+| 🛡️ **Proof-of-Enforcement** | `@general-liquidity/agentworth` | Every signed `gate.decision` carries the `policyHash` it ran under; `computePolicyHash` + `replayDecision` let a counterparty replay a sampled decision and prove the gate **enforces what it discloses** - the falsifiable half of [ADP](https://github.com/general-liquidity/agent-disclosure-protocol)'s `enforced` claim. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/coinbase/0052FF" />&nbsp; **Governed wallet** | `@general-liquidity/agentworth` | `governedWallet` - gate a Coinbase CDP / AgentKit wallet spend through the gate *before* it executes (injected execute seam, no wallet SDK bundled). OS above the custody layer. |
+| ⚖️ **Compliance** | `@general-liquidity/agentworth/compliance` | `deployerOversightReport` (EU AI Act Article 26 - human oversight / monitoring / record-keeping) + a signed, independently-verifiable `exportCompliancePackage`. |
 | <img height="14" align="top" src="https://cdn.simpleicons.org/python/3776AB" />&nbsp; **Python** · <img height="14" align="top" src="https://cdn.simpleicons.org/go/00ADD8" />&nbsp; **Go** · <img height="14" align="top" src="https://cdn.simpleicons.org/rust/DEA584" />&nbsp; **Rust** · <img height="14" align="top" src="https://cdn.simpleicons.org/c/A8B9CC" />&nbsp; **C/C++** | [`clients/`](clients/) | Dependency-light REST clients over the ingress, for non-TS hosts. |
 
 ```ts
-import { OpenSolvency } from "@general-liquidity/opensolvency";
+import { AgentWorth } from "@general-liquidity/agentworth";
 
-const os = new OpenSolvency();                       // in-memory by default; pass a Store for persistence
+const os = new AgentWorth();                       // in-memory by default; pass a Store for persistence
 os.grantMandate({
   label: "groceries", scope: { kind: "class", value: "groceries" },
   currency: "GBP", allowedRails: ["card"],
@@ -111,11 +111,11 @@ os.verifyAudit().valid;   // true - every decision is signed and hash-linked
 For durable, server-grade persistence, back it with Postgres (the operator brings the `pg` client):
 
 ```ts
-import { OpenSolvency, createPostgresStore } from "@general-liquidity/opensolvency";
+import { AgentWorth, createPostgresStore } from "@general-liquidity/agentworth";
 
 const { store, ready, flush } = createPostgresStore(pgPool);   // pgPool: a node-postgres Pool
 await ready;
-const os = new OpenSolvency({ store, commit: flush });         // writes are durable before pay() resolves
+const os = new AgentWorth({ store, commit: flush });         // writes are durable before pay() resolves
 ```
 
 ### CLI commands
@@ -141,7 +141,7 @@ binding:
 
 ```ts
 import { generateText } from "ai";
-import { createGatedPayTool } from "@general-liquidity/opensolvency/integrations";
+import { createGatedPayTool } from "@general-liquidity/agentworth/integrations";
 
 await generateText({
   model, prompt,
@@ -154,7 +154,7 @@ handler with the shared schema - e.g. a **Mastra** / **LangChain** / **OpenAI
 Agents** / **CrewAI** tool:
 
 ```ts
-import { gatedPay, gatedPayInputSchema, GATED_PAY_DESCRIPTION } from "@general-liquidity/opensolvency/integrations";
+import { gatedPay, gatedPayInputSchema, GATED_PAY_DESCRIPTION } from "@general-liquidity/agentworth/integrations";
 
 // Mastra
 createTool({ id: "pay", description: GATED_PAY_DESCRIPTION, inputSchema: gatedPayInputSchema,
@@ -179,7 +179,7 @@ never fabricates a settlement.
 | Integration | What it is |
 |:--|:--|
 | <img height="14" align="top" src="assets/integrations/x402.jpg" />&nbsp; **x402** | [HTTP-402 + stablecoin settlement](https://www.x402.org) (x402 Foundation) - challenge → authorize → settle. |
-| <img height="14" align="top" src="assets/integrations/ap2.svg" />&nbsp; **AP2** | [Agent Payments Protocol](https://ap2-protocol.org) (Google + FIDO) - SD-JWT payment mandates; an AP2 mandate maps onto an OpenSolvency mandate. |
+| <img height="14" align="top" src="assets/integrations/ap2.svg" />&nbsp; **AP2** | [Agent Payments Protocol](https://ap2-protocol.org) (Google + FIDO) - SD-JWT payment mandates; an AP2 mandate maps onto an AgentWorth mandate. |
 | <img height="14" align="top" src="assets/integrations/agentic-commerce-protocol.png" />&nbsp; **Agentic Commerce Protocol** | [ACP](https://www.agenticcommerce.dev) (OpenAI + Stripe) - an agent completes a merchant checkout via a delegated payment token, settled over card rails. |
 | <img height="14" align="top" src="assets/integrations/ucp.svg" />&nbsp; **UCP** · <img height="14" align="top" src="assets/integrations/mpp.svg" />&nbsp; **MPP** | [Universal Commerce Protocol](https://ucp.dev) (delegated checkout) · [Machine Payments Protocol](https://mpp.dev) (rail-agnostic, instant). |
 | <img height="14" align="top" src="https://cdn.simpleicons.org/visa/1A1F71" />&nbsp; **Visa Intelligent Commerce** · <img height="14" align="top" src="https://cdn.simpleicons.org/mastercard/EB001B" />&nbsp; **Mastercard Agent Pay** | Card-network agentic-payment rails (coexist on the `card` kind). |
@@ -194,7 +194,7 @@ never fabricates a settlement.
 | <img height="14" align="top" src="https://cdn.simpleicons.org/visa/1A1F71" />&nbsp; **Visa Trusted Agent Protocol** | RFC-9421 HTTP message signatures - the same `attestation` shape. |
 | **Network reputation** | An injected payee-reputation source feeds risk (never relaxes the floor). |
 | **Sanctions / OFAC + AML** | Screening wired into the deny-list + risk classifier as a pluggable provider. |
-| **Verifiable Agency** (agent disclosure) | A signed, vendor-neutral disclosure a counterparty can verify *before* transacting - the enforced gate, the live mandates, the audit chain, and a SpendTrust score, each field provenance-stamped. The protocol + reference verifier live in the standalone [`@general-liquidity/agent-disclosure`](https://www.npmjs.com/package/@general-liquidity/agent-disclosure) package; OpenSolvency depends on it and is its reference implementation - keeping only the field builders (populate a disclosure from live primitives) + the adversarial corpus. Exposed at `@general-liquidity/opensolvency/disclosure`. |
+| **Verifiable Agency** (agent disclosure) | A signed, vendor-neutral disclosure a counterparty can verify *before* transacting - the enforced gate, the live mandates, the audit chain, and a SpendTrust score, each field provenance-stamped. The protocol + reference verifier live in the standalone [`@general-liquidity/agent-disclosure`](https://www.npmjs.com/package/@general-liquidity/agent-disclosure) package; AgentWorth depends on it and is its reference implementation - keeping only the field builders (populate a disclosure from live primitives) + the adversarial corpus. Exposed at `@general-liquidity/agentworth/disclosure`. |
 
 #### Surfaces & transports
 
@@ -204,7 +204,7 @@ never fabricates a settlement.
 | <img height="14" align="top" src="https://cdn.simpleicons.org/vercel/000000" />&nbsp; **AI SDK & frameworks** | `createGatedPayTool` (Vercel AI SDK) + the framework-agnostic `gatedPay` for Mastra / LangChain / OpenAI Agents / CrewAI. |
 | <img height="14" align="top" src="https://cdn.simpleicons.org/openapiinitiative/6BA539" />&nbsp; **HTTP + OpenAPI** · **JSON-RPC** | The ingress (auth / idempotency / rate-limit) + the operator-side RPC method API. |
 | **XMTP** | A second ingress transport - XMTP messages run through the same gate (consent-aware, sender crypto-identified). |
-| <img height="14" align="top" src="https://cdn.simpleicons.org/githubactions/2088FF" />&nbsp; **GitHub Action** | `uses: general-liquidity/opensolvency` gates agent spend inside CI pipelines. |
+| <img height="14" align="top" src="https://cdn.simpleicons.org/githubactions/2088FF" />&nbsp; **GitHub Action** | `uses: general-liquidity/agentworth` gates agent spend inside CI pipelines. |
 
 #### Agentic-economy surface
 
@@ -274,11 +274,11 @@ runs for real (a vetted payee auto-executes; an unvetted one is blocked before a
 transfer):
 
 ```bash
-OPENSOLVENCY_RPC_URL=https://sepolia.base.org \
-OPENSOLVENCY_PRIVATE_KEY=0x...        # a funded testnet key (yours)
-OPENSOLVENCY_TOKEN_ADDRESS=0x...      # testnet USDC (6 decimals)
-OPENSOLVENCY_PAYEE_ADDRESS=0x...      # where to send
-OPENSOLVENCY_AMOUNT=10000             # base units (0.01 USDC)
+AGENTWORTH_RPC_URL=https://sepolia.base.org \
+AGENTWORTH_PRIVATE_KEY=0x...        # a funded testnet key (yours)
+AGENTWORTH_TOKEN_ADDRESS=0x...      # testnet USDC (6 decimals)
+AGENTWORTH_PAYEE_ADDRESS=0x...      # where to send
+AGENTWORTH_AMOUNT=10000             # base units (0.01 USDC)
 npm run testnet-settle
 ```
 
@@ -302,7 +302,7 @@ template).
 
 ## What we took from Gordon
 
-Gordon is a **safety / governance / memory harness wrapped around a *trading* domain**. OpenSolvency is that same harness wrapped around a **payments / agentic-economy** domain. We ported the *harness*, not the trading.
+Gordon is a **safety / governance / memory harness wrapped around a *trading* domain**. AgentWorth is that same harness wrapped around a **payments / agentic-economy** domain. We ported the *harness*, not the trading.
 
 - **LIFT** (port the pattern, re-domained): deny-first gate + hard deny-list (`place_order` → `make_payment`); rejection-weighted adaptive trust; multi-dimension risk classifier → spend-risk; rationale-required-on-execute; HMAC signed audit (here a hash-linked chain); single-substrate observation discipline; hot-tier memory; propose-only ACE lessons; velocity/backpressure → the per-mandate velocity ceiling; preview→approve as an invariant.
 - **ADAPT** (reuse the shape, swap the content): the typed surface dispatcher; exchange/broker adapters → the rails layer.
@@ -323,9 +323,9 @@ npm run demo      # end-to-end walkthrough on the in-memory store (any Node)
 
 A real model (via the Vercel AI SDK) is used automatically when a key is present; otherwise the deterministic stub parses the `PAY …` DSL.
 
-- `OPENSOLVENCY_MODEL_PROVIDER` - `openai` (default), `anthropic`, or `google`.
-- key - `OPENSOLVENCY_MODEL_API_KEY`, or the provider's standard env var.
-- `OPENSOLVENCY_MODEL` - model id (defaults per provider).
+- `AGENTWORTH_MODEL_PROVIDER` - `openai` (default), `anthropic`, or `google`.
+- key - `AGENTWORTH_MODEL_API_KEY`, or the provider's standard env var.
+- `AGENTWORTH_MODEL` - model id (defaults per provider).
 
 ## Documentation
 
@@ -339,6 +339,6 @@ mdbook serve docs        # then open http://localhost:3000
 
 ## License
 
-[MIT](LICENSE) © General Liquidity. A General Liquidity product - liquidity and solvency are the two halves of financial health, and OpenSolvency is the half that keeps an autonomous agent inside its bounds.
+[MIT](LICENSE) © General Liquidity. A General Liquidity product - it keeps an autonomous agent's spending inside the bounds its operator granted, so every payment it makes is worth trusting.
 
 ---

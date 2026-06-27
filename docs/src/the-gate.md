@@ -26,7 +26,7 @@ The gate has zero `node:` dependencies, so the same invariant runs in a browser,
 an edge worker, or another-language host:
 
 ```ts
-import { evaluateGate } from "@general-liquidity/opensolvency/gate";
+import { evaluateGate } from "@general-liquidity/agentworth/gate";
 ```
 
 ## Operator controls

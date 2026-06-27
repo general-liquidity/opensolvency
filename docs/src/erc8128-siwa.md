@@ -1,6 +1,6 @@
 # On-chain agent identity — ERC-8128 & SIWA
 
-OpenSolvency never issues identity. It **consumes** an identity verdict as a risk
+AgentWorth never issues identity. It **consumes** an identity verdict as a risk
 input to the gate: the `Attestation` level (`none | signed | registry_attested`)
 feeds the gate's risk and **never relaxes the floor** (caps and the deny-list are
 never overridable by a strong attestation). These two verifiers add on-chain,
@@ -35,7 +35,7 @@ secp256k1 address. There is **no `alg` parameter**: the verifier branches on the
   plain ERC-8128 needs no RPC).
 
 ```ts
-import { erc8128Verifier } from "@general-liquidity/opensolvency/identity";
+import { erc8128Verifier } from "@general-liquidity/agentworth/identity";
 
 const verifier = erc8128Verifier({
   // identityOf?: bind a verified address to a principal → registry_attested
@@ -77,7 +77,7 @@ domain, nonce and expiry window. Then, if an ERC-8004 `ownerOf` resolver is inje
 `ownerOf(agentId) == signer` lifts the verdict from `signed` to `registry_attested`.
 
 ```ts
-import { verifySiwa, siwaIdentityVerifier } from "@general-liquidity/opensolvency/identity";
+import { verifySiwa, siwaIdentityVerifier } from "@general-liquidity/agentworth/identity";
 
 const res = await verifySiwa(msg, signature /* 65-byte r||s||v */, {
   expectedDomain: "app.example.com",
@@ -98,7 +98,7 @@ is delegated to ADP / the Self SDK. OS only consumes the boolean verdict as a ri
 input:
 
 ```ts
-import { mapSelfToAttestation } from "@general-liquidity/opensolvency/identity";
+import { mapSelfToAttestation } from "@general-liquidity/agentworth/identity";
 
 mapSelfToAttestation({ valid: true, registryBacked: true }); // "registry_attested"
 mapSelfToAttestation({ valid: true });                       // "signed"

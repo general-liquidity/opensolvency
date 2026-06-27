@@ -1,7 +1,7 @@
 // Agent-identity layer. Both AIP (Agent Identity Protocol) and Visa Trusted Agent
 // Protocol reduce to one shape: verify a presented identity artifact and return
 // who the agent is, the accountable principal, and HOW STRONGLY the identity is
-// attested. OpenSolvency doesn't try to be the identity issuer — it consumes
+// attested. AgentWorth doesn't try to be the identity issuer — it consumes
 // identity as an INPUT to the gate's risk/trust (an unverified agent is higher
 // risk; a registry-attested agent bound to a principal is lower). Identity never
 // relaxes the floor (caps/deny-list), only informs risk.

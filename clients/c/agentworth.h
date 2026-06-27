@@ -1,4 +1,4 @@
-/* OpenSolvency C/C++ client - a thin REST client over the HTTP ingress.
+/* AgentWorth C/C++ client - a thin REST client over the HTTP ingress.
  *
  * The ingress runs the SAME gate as everything else, so this client adds no
  * authority: a payment it submits is auto-executed inside a mandate, parked for
@@ -9,8 +9,8 @@
  * returns the raw JSON response body + HTTP status; parse it with the JSON library
  * of your choice.
  */
-#ifndef OPENSOLVENCY_H
-#define OPENSOLVENCY_H
+#ifndef AGENTWORTH_H
+#define AGENTWORTH_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -71,4 +71,4 @@ void os_global_cleanup(void);
 }
 #endif
 
-#endif /* OPENSOLVENCY_H */
+#endif /* AGENTWORTH_H */

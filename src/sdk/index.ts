@@ -1,6 +1,6 @@
-// The OpenSolvency SDK — the ergonomic, typed façade over the trust kernel.
+// The AgentWorth SDK — the ergonomic, typed façade over the trust kernel.
 //
-// A host (a server, a bot, an agent loop) constructs one `OpenSolvency` with a
+// A host (a server, a bot, an agent loop) constructs one `AgentWorth` with a
 // Store (default: in-memory) and drives the whole governance plane in-process:
 // grant mandates, submit payment intents THROUGH the gate, approve what the gate
 // parked, and verify the signed audit chain. Every method delegates to the same
@@ -71,7 +71,7 @@ export interface ApproveOptions {
   ack?: boolean;
 }
 
-export interface OpenSolvencyOptions {
+export interface AgentWorthOptions {
   /** Persistence boundary. Defaults to a fresh in-memory store. */
   store?: Store;
   /** Audit-signing key. Defaults to the store's own operator key. */
@@ -105,20 +105,20 @@ function defaultRails(): RailRegistry {
 }
 
 /**
- * The programmatic OpenSolvency façade. Wraps the executor + gate + store + audit
+ * The programmatic AgentWorth façade. Wraps the executor + gate + store + audit
  * so any host can drive the governance plane in-process without re-implementing
  * the wiring the CLI does. The single invariant holds exactly as in the CLI:
  * `pay()` returns the gate's decision and only settles on `auto_execute`; nothing
  * here reaches a rail except through the gate.
  */
-export class OpenSolvency {
+export class AgentWorth {
   readonly store: Store;
   readonly audit: AuditLog;
   readonly rails: RailRegistry;
   readonly #clock: () => string;
   readonly #executor: ReturnType<typeof createExecutor>;
 
-  constructor(options: OpenSolvencyOptions = {}) {
+  constructor(options: AgentWorthOptions = {}) {
     this.store = options.store ?? createMemoryStore(options.auditKey);
     this.audit = new AuditLog(
       options.auditKey ?? this.store.operatorKey(),

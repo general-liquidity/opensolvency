@@ -1,5 +1,5 @@
-/* OpenSolvency C/C++ client - libcurl implementation. See opensolvency.h. */
-#include "opensolvency.h"
+/* AgentWorth C/C++ client - libcurl implementation. See agentworth.h. */
+#include "agentworth.h"
 
 #include <curl/curl.h>
 #include <stdio.h>

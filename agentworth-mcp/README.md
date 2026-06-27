@@ -1,6 +1,6 @@
-# @general-liquidity/opensolvency-mcp
+# @general-liquidity/agentworth-mcp
 
-The [OpenSolvency](https://github.com/general-liquidity/opensolvency) governance
+The [AgentWorth](https://github.com/general-liquidity/agentworth) governance
 gate as an [MCP](https://modelcontextprotocol.io) server. An agent (Claude Code,
 Cursor, …) gets a single money-moving tool — `pay` — that is evaluated by the
 operator's mandates, caps, risk, and deny-list before anything settles, plus
@@ -17,17 +17,17 @@ Add to your MCP client config:
 ```json
 {
   "mcpServers": {
-    "opensolvency": {
+    "agentworth": {
       "command": "npx",
-      "args": ["-y", "@general-liquidity/opensolvency-mcp"],
-      "env": { "OPENSOLVENCY_DB": "/path/to/your/opensolvency.db" }
+      "args": ["-y", "@general-liquidity/agentworth-mcp"],
+      "env": { "AGENTWORTH_DB": "/path/to/your/agentworth.db" }
     }
   }
 }
 ```
 
-`OPENSOLVENCY_DB` should point at the operator's persistent store (the same DB the
-`opensolvency` CLI uses) so the server sees their real mandates. Requires Node ≥ 22.18.
+`AGENTWORTH_DB` should point at the operator's persistent store (the same DB the
+`agentworth` CLI uses) so the server sees their real mandates. Requires Node ≥ 22.18.
 
 ## Tools
 

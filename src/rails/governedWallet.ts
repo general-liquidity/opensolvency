@@ -62,7 +62,7 @@ export interface CdpSpendToIntentOptions {
 }
 
 const FALLBACK_RATIONALE =
-  "agent wallet spend gated through OpenSolvency before execution";
+  "agent wallet spend gated through AgentWorth before execution";
 
 /**
  * Map a structural wallet-spend request (CDP Spend Permission / AgentKit action /

@@ -9,7 +9,7 @@ Runnable demonstrations of the gate governing an agent's spend.
 
 ```bash
 npm run example:shopping          # deterministic, no key, no network
-node --import tsx examples/ai-sdk-agent.ts   # set OPENSOLVENCY_MODEL_API_KEY first
+node --import tsx examples/ai-sdk-agent.ts   # set AGENTWORTH_MODEL_API_KEY first
 ```
 
 Both use the in-memory store, so they leave nothing behind.

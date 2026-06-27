@@ -28,7 +28,7 @@ test("corpus has cases derived from SpendTrust + deny-list", () => {
   assert.ok(ADVERSARIAL_CORPUS.cases.length > 0);
   assert.ok(ADVERSARIAL_CORPUS.cases.some((c) => c.category === "spendtrust"));
   assert.ok(ADVERSARIAL_CORPUS.cases.some((c) => c.category === "denylist"));
-  assert.equal(ADVERSARIAL_CORPUS.name, "opensolvency-spendtrust");
+  assert.equal(ADVERSARIAL_CORPUS.name, "agentworth-spendtrust");
 });
 
 test("perfect evaluator passes every case with a high, non-hardfail grade", () => {

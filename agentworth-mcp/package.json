@@ -1,0 +1,34 @@
+{
+  "name": "@general-liquidity/agentworth-mcp",
+  "version": "0.1.8",
+  "type": "module",
+  "description": "MCP server for AgentWorth — agents call the governance-gated `pay` plus read-only mandate/audit tools over the Model Context Protocol.",
+  "license": "MIT",
+  "author": "General Liquidity",
+  "homepage": "https://github.com/general-liquidity/agentworth#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/general-liquidity/agentworth.git",
+    "directory": "agentworth-mcp"
+  },
+  "bugs": {
+    "url": "https://github.com/general-liquidity/agentworth/issues"
+  },
+  "keywords": ["mcp", "model-context-protocol", "agentic-payments", "agentworth"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "agentworth-mcp": "index.js"
+  },
+  "files": [
+    "index.js",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "dependencies": {
+    "@general-liquidity/agentworth": "^0.1.8"
+  }
+}

@@ -1,5 +1,5 @@
-/* Minimal usage of the OpenSolvency C client. Build: `make` (needs libcurl). */
-#include "opensolvency.h"
+/* Minimal usage of the AgentWorth C client. Build: `make` (needs libcurl). */
+#include "agentworth.h"
 #include <stdio.h>
 
 int main(void) {

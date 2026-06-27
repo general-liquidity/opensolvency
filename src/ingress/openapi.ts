@@ -53,7 +53,7 @@ export function buildOpenApiDocument(version: string): Record<string, unknown> {
   return {
     openapi: "3.1.0",
     info: {
-      title: "OpenSolvency ingress",
+      title: "AgentWorth ingress",
       version,
       description:
         "The operator-aligned governance plane for agentic spend. Every payment " +

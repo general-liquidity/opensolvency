@@ -1,6 +1,6 @@
 # Security & compliance posture
 
-OpenSolvency is a governance plane for agentic spend; its security model *is* the
+AgentWorth is a governance plane for agentic spend; its security model *is* the
 product. This document maps the technical controls to the kinds of assurances a
 SOC 2 / enterprise review asks for. SOC 2 itself is an audited *process* (a report
 issued by a third party over a period); this is the **engineering posture** that
@@ -22,7 +22,7 @@ process would attest to — plus the explicit gaps.
 ## Access control & isolation
 
 - **Non-custodial.** Execution runs through the operator's own connected accounts /
-  injected rail clients — OpenSolvency never holds funds. This removes the single
+  injected rail clients — AgentWorth never holds funds. This removes the single
   largest class of custodial risk.
 - **Operator-only controls.** Approve / kill / refund / amend are never exposed to
   agents (the MCP/HTTP surfaces expose a gated `pay` + read-only tools only).

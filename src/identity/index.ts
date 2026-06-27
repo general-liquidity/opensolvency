@@ -1,6 +1,6 @@
 // Identity layer — agent-identity verifiers that feed the gate's `attestation` input
 // (never the floor: identity informs risk/trust, it cannot relax caps or the deny-list).
-// Exposed as the `@general-liquidity/opensolvency/identity` subpath.
+// Exposed as the `@general-liquidity/agentworth/identity` subpath.
 //
 //  - verifier.ts: the IdentityVerifier contract + AIP / Visa Trusted Agent Protocol
 //    (RFC 9421, ed25519) + the dev static verifier, plus the reusable RFC 9421 helpers.

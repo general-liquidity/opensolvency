@@ -1,4 +1,4 @@
-// Compliance subpath (`@general-liquidity/opensolvency/compliance`) — regulated-finance
+// Compliance subpath (`@general-liquidity/agentworth/compliance`) — regulated-finance
 // reporting over the signed governance audit chain:
 //  - `deployerOversightReport` maps the chain + mandates to EU AI Act Article 26
 //    (deployer-oversight: human oversight, monitoring, record-keeping).

@@ -4,7 +4,7 @@
 // `signed` (signature valid, no registry binding) from `registry_attested` (the agent
 // registry's owner of `agentId` IS the signer).
 //
-// OpenSolvency consumes the verdict as a risk INPUT (identity attestation). The
+// AgentWorth consumes the verdict as a risk INPUT (identity attestation). The
 // registry call is injected/mocked — OS never opens a socket from the kernel.
 
 import type { Attestation } from "../core/types.ts";

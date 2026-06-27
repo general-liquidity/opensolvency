@@ -1,9 +1,9 @@
-// AP2 (Agent Payments Protocol) interop for OpenSolvency.
+// AP2 (Agent Payments Protocol) interop for AgentWorth.
 //
 // AP2 (google-agentic-commerce/AP2) carries spend authorization between agents as
 // three mandates — IntentMandate (coarse user intent), CartMandate (a merchant's
 // signed cart), PaymentMandate (the binding to a payment method) — passed in A2A
-// Message DataParts. OpenSolvency is the POLICY ENGINE behind AP2 authorization:
+// Message DataParts. AgentWorth is the POLICY ENGINE behind AP2 authorization:
 // an AP2 CartMandate becomes an OS PaymentIntent and runs through `evaluateGate`,
 // which decides auto_execute / confirm_operator / block under the operator's
 // mandates, caps, deny-list, and risk. This module is the seam, nothing more — it

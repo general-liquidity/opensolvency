@@ -12,7 +12,7 @@
 // The harness has been accreting levers (peer nudges, trap-busting, slip-costs).
 // This module tags each by Mertens's taxonomy and its POST-publication-bias
 // strength, so the agent prefers the one lever class the evidence backs —
-// changing the default — over informing/reminding. OpenSolvency is uniquely able
+// changing the default — over informing/reminding. AgentWorth is uniquely able
 // to use that class: unlike a passive app that can only inform, it ACTS (inside
 // the gate), so it can make the better choice the default. The critique doesn't
 // weaken the thesis; it says the moat IS the acting.
@@ -38,7 +38,7 @@ export interface LeverEvidence {
 }
 
 // The harness's behavioural levers, classified. The ONE robust class is the
-// default-changing one — which is exactly what OpenSolvency does when it acts on
+// default-changing one — which is exactly what AgentWorth does when it acts on
 // the operator's behalf inside the gate (move idle cash, fund the LISA, switch the
 // account). Everything informational/assistive is down-ranked to "support, never
 // rely on".

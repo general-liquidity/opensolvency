@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { OpenSolvency, createMemoryStore } from "../src/sdk/index.ts";
+import { AgentWorth, createMemoryStore } from "../src/sdk/index.ts";
 import type { Mandate, PayeeScope } from "../src/sdk/index.ts";
 
 const NOW = "2026-05-29T12:00:00.000Z";
@@ -9,7 +9,7 @@ const NOW = "2026-05-29T12:00:00.000Z";
 // A fixed clock makes the whole SDK deterministic — the kernel never reads a
 // clock itself, so every decision below is replayable.
 function sdk(opts: { challengeThresholdMinor?: number } = {}) {
-  return new OpenSolvency({
+  return new AgentWorth({
     store: createMemoryStore("test-key"),
     clock: () => NOW,
     challengeThresholdMinor: opts.challengeThresholdMinor,
@@ -18,7 +18,7 @@ function sdk(opts: { challengeThresholdMinor?: number } = {}) {
 
 const GROCERIES: PayeeScope = { kind: "class", value: "groceries" };
 
-function grantGroceries(os: OpenSolvency): Mandate {
+function grantGroceries(os: AgentWorth): Mandate {
   return os.grantMandate({
     label: "weekly groceries",
     scope: GROCERIES,

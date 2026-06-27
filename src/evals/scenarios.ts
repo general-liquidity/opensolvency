@@ -5,7 +5,7 @@
 //   • acceptance:<case>  — the gate's v0 acceptance demo (the five decisions).
 //   • denylist:<ruleId>  — each hard deny rule must block (imported from denyList).
 //
-// Because OpenSolvency's executor runs deterministically against an in-process
+// Because AgentWorth's executor runs deterministically against an in-process
 // FakeRail (no external side effects), the harness can RUN each scenario live and
 // capture the signed audit trace as the trajectory — no pre-recorded fixtures
 // needed (the gap Gordon's harness left open).

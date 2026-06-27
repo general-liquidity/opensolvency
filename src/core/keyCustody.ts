@@ -47,7 +47,7 @@ const utf8 = (s: string): Buffer => Buffer.from(s, "utf8");
 
 /**
  * Reference provider: the CURRENT behavior, wrapped. Reads the key from an env
- * var (default `OPENSOLVENCY_AUDIT_KEY`). Single, fixed version — rotation under
+ * var (default `AGENTWORTH_AUDIT_KEY`). Single, fixed version — rotation under
  * env means issuing a new provider with a new version label.
  */
 export class EnvKeyProvider implements KeyProvider {
@@ -56,7 +56,7 @@ export class EnvKeyProvider implements KeyProvider {
 
   constructor(opts: { env?: NodeJS.ProcessEnv; varName?: string; version?: string } = {}) {
     const env = opts.env ?? process.env;
-    const varName = opts.varName ?? "OPENSOLVENCY_AUDIT_KEY";
+    const varName = opts.varName ?? "AGENTWORTH_AUDIT_KEY";
     const raw = env[varName];
     if (!raw) {
       throw new Error(`EnvKeyProvider: ${varName} is unset — refusing to sign audit without a key`);

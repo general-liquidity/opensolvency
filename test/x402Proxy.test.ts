@@ -261,7 +261,7 @@ test("forward: 402 over cap → 403 to the agent, no paid retry", async () => {
   const res = await proxy.forward(agentReq);
   assert.equal(res.status, 403);
   assert.equal(calls.length, 1); // never retried
-  assert.equal(res.headers["x-opensolvency"], "blocked");
+  assert.equal(res.headers["x-agentworth"], "blocked");
 });
 
 test("forward: 402 new payee → 402 pending-operator to the agent", async () => {
@@ -273,7 +273,7 @@ test("forward: 402 new payee → 402 pending-operator to the agent", async () =>
 
   const res = await proxy.forward(agentReq);
   assert.equal(res.status, 402);
-  assert.equal(res.headers["x-opensolvency"], "pending-operator");
+  assert.equal(res.headers["x-agentworth"], "pending-operator");
   assert.equal(calls.length, 1); // not paid, not retried
   const parsed = JSON.parse(res.body) as { outcome: string; intentId: string };
   assert.equal(parsed.outcome, "route_to_operator");

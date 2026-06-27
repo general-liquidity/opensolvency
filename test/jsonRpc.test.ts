@@ -1,14 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { OpenSolvency } from "../src/sdk/index.ts";
+import { AgentWorth } from "../src/sdk/index.ts";
 import { handleJsonRpcCall, RPC_METHODS, type JsonRpcRequest } from "../src/rpc/jsonRpc.ts";
 
 const NOW = "2026-06-24T12:00:00.000Z";
 function sdk() {
-  return new OpenSolvency({ clock: () => NOW });
+  return new AgentWorth({ clock: () => NOW });
 }
-const call = (sdk: OpenSolvency, method: string, params?: unknown, id: number | string = 1) =>
+const call = (sdk: AgentWorth, method: string, params?: unknown, id: number | string = 1) =>
   handleJsonRpcCall(sdk, { jsonrpc: "2.0", id, method, params } as JsonRpcRequest);
 
 test("grant a mandate then list it over JSON-RPC", async () => {

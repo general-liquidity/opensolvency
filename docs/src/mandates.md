@@ -22,7 +22,7 @@ weekly groceries → class:groceries · GBP · card
 Grant one with the CLI or SDK:
 
 ```bash
-opensolvency mandate grant --label groceries --class groceries --currency GBP \
+agentworth mandate grant --label groceries --class groceries --currency GBP \
     --rails card --per-tx 50000 --per-period 100000 --period week --expires-days 30
 ```
 

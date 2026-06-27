@@ -1,4 +1,4 @@
-//! OpenSolvency Rust client - a thin REST client over the HTTP ingress.
+//! AgentWorth Rust client - a thin REST client over the HTTP ingress.
 //!
 //! The ingress runs the SAME gate as everything else, so this client adds no
 //! authority: a payment it submits is auto-executed inside a mandate, parked for
@@ -6,7 +6,7 @@
 //! error.
 //!
 //! ```no_run
-//! use opensolvency::{Client, PaymentIntent};
+//! use agentworth::{Client, PaymentIntent};
 //!
 //! let c = Client::new("http://127.0.0.1:8787", Some("token".into()));
 //! let res = c.pay(&PaymentIntent {
@@ -23,7 +23,7 @@
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-/// A client for an OpenSolvency ingress.
+/// A client for an AgentWorth ingress.
 pub struct Client {
     base_url: String,
     token: Option<String>,

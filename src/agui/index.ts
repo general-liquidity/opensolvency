@@ -1,4 +1,4 @@
-// AG-UI (Agent-User Interaction Protocol) approval surface for OpenSolvency.
+// AG-UI (Agent-User Interaction Protocol) approval surface for AgentWorth.
 //
 // AG-UI is the open protocol for streaming an agent's run to a frontend as a
 // sequence of typed events. OS uses it for ONE thing: the human-in-the-loop
