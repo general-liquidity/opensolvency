@@ -104,25 +104,39 @@ export function createPostgresStore(
   }
 
   // Serialized write queue: preserves ordering (the audit chain is hash-linked, so
-  // order matters), runs every write even if one fails, and surfaces the first
-  // error on the next flush (then clears so the store can continue).
-  let pending: Promise<void> = Promise.resolve();
-  let firstError: unknown;
+  // order matters). A failed write stays at the front and is retried by the next
+  // flush; the store never reports a clean barrier while its mirror is ahead of
+  // durable state.
+  const queue: Array<() => Promise<unknown>> = [];
+  let flushing: Promise<void> | undefined;
   function enqueue(fn: () => Promise<unknown>): void {
-    pending = pending.then(async () => {
-      try {
-        await fn();
-      } catch (e) {
-        if (firstError === undefined) firstError = e;
-      }
-    });
+    queue.push(fn);
   }
   async function flush(): Promise<void> {
-    await pending;
-    if (firstError !== undefined) {
-      const e = firstError;
-      firstError = undefined;
-      throw e instanceof Error ? e : new Error(String(e));
+    if (!flushing) {
+      flushing = (async () => {
+        while (queue.length > 0) {
+          await queue[0]();
+          queue.shift();
+        }
+      })().finally(() => {
+        flushing = undefined;
+      });
+    }
+    await flushing;
+  }
+
+  async function appendAuditRow(e: AuditEntry): Promise<void> {
+    const result = await client.query(
+      "INSERT INTO os_audit (seq, data) VALUES ($1, $2) " +
+        "ON CONFLICT (seq) DO UPDATE SET data = os_audit.data " +
+        "WHERE os_audit.data = excluded.data RETURNING seq",
+      [e.seq, JSON.stringify(e)],
+    );
+    if (result.rows.length === 0) {
+      throw new Error(
+        `audit fork at seq ${e.seq}: durable entry differs from the local chain`,
+      );
     }
   }
 
@@ -202,12 +216,7 @@ export function createPostgresStore(
     appendAudit(e) {
       requireMirror().appendAudit(e);
       // Append-only, keyed by the chain sequence.
-      enqueue(() =>
-        client.query(
-          "INSERT INTO os_audit (seq, data) VALUES ($1, $2) ON CONFLICT (seq) DO NOTHING",
-          [e.seq, JSON.stringify(e)],
-        ),
-      );
+      enqueue(() => appendAuditRow(e));
     },
     loadAudit: () => requireMirror().loadAudit(),
   };

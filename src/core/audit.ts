@@ -35,13 +35,21 @@ export interface AuditEntry {
 
 const GENESIS = "0".repeat(64);
 
-/** Deterministic JSON: object keys sorted recursively so the hash is stable. */
+/** Deterministic JSON: object keys sorted recursively so the hash is stable.
+ * Values JSON persistence drops from objects are omitted here too, and values it
+ * converts to null inside arrays are normalized the same way. */
 function canonicalize(value: unknown): string {
-  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value) ?? "null";
+  }
   if (Array.isArray(value)) return `[${value.map(canonicalize).join(",")}]`;
   const obj = value as Record<string, unknown>;
   const body = Object.keys(obj)
     .sort()
+    .filter((k) => {
+      const type = typeof obj[k];
+      return type !== "undefined" && type !== "function" && type !== "symbol";
+    })
     .map((k) => `${JSON.stringify(k)}:${canonicalize(obj[k])}`)
     .join(",");
   return `{${body}}`;

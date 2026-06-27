@@ -11,12 +11,12 @@ is a transport into the invariant.
 | **ACP** | `agentworth acp` | An Agent Client Protocol surface — editors/IDEs drive the agent in-editor. |
 | **HTTP** | `agentworth serve` | The ingress — same gate over HTTP, OpenAPI 3.1 at `/openapi.json`, bearer-token auth, idempotency keys, rate limiting. |
 | **JSON-RPC** | `handleJsonRpcCall` | The operator-side method API for low-latency embedding. |
-| **Python / Go** | `clients/` | Dependency-light REST clients over the ingress, for non-TS hosts. |
+| **Python / Go / Rust / C/C++** | `clients/` | Dependency-light REST clients over the ingress, for non-TS hosts. |
 
 ```ts
 import { AgentWorth } from "@general-liquidity/agentworth";
 
-const os = new AgentWorth();
+const os = new AgentWorth({ simulation: true }); // fake receipts; moves no money
 os.grantMandate({ /* … */ });
 await os.pay({ payee: "tesco", amount: 80_00, currency: "GBP", rail: "card",
                rationale: "the weekly grocery shop" });

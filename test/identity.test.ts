@@ -5,6 +5,7 @@ import { generateKeyPairSync, sign as edSign } from "node:crypto";
 
 import {
   noopVerifier,
+  attestationFromIdentityResult,
   staticIdentityVerifier,
   visaTapVerifier,
   httpMessageSignaturesVerifier,
@@ -37,6 +38,7 @@ test("the static verifier NEVER attests cryptographically (asserted id only)", a
   assert.equal(unknown.identity.attestation, "none");
 
   assert.equal((await noopVerifier.verify("anything")).verified, false);
+  assert.equal(attestationFromIdentityResult(matched), "none");
 });
 
 // --- Visa TAP RFC 9421 verification ------------------------------------------
@@ -88,6 +90,7 @@ test("visaTapVerifier verifies a valid RFC 9421 ed25519 signature", async () => 
   assert.equal(res.verified, true);
   assert.equal(res.identity.attestation, "signed");
   assert.equal(res.identity.agentId, KEYID);
+  assert.equal(attestationFromIdentityResult(res), "signed");
 });
 
 test("visaTapVerifier binds a principal via identityOf (registry_attested)", async () => {

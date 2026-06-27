@@ -5,7 +5,7 @@ import { AuditLog } from "../src/core/audit.ts";
 import { createExecutor } from "../src/core/executor.ts";
 import { createMemoryStore } from "../src/store/memoryStore.ts";
 import { createRailRegistry } from "../src/rails/registry.ts";
-import { createX402Rail } from "../src/rails/x402.ts";
+import { createOnchainRail } from "../src/rails/onchain.ts";
 import { createOnchainRailClient, type Address, type OnchainSigner, type TxHash } from "../src/rails/clients/onchainClient.ts";
 import { DEFAULT_DENY_RULES } from "../src/core/denyList.ts";
 import { DEFAULT_GATE_CONFIG, type Mandate, type PaymentIntent } from "../src/core/types.ts";
@@ -36,7 +36,7 @@ function wire(opts: { vetted: boolean; amount: number }) {
   const audit = new AuditLog(store.operatorKey());
   const executor = createExecutor({
     store,
-    rails: createRailRegistry([createX402Rail(railClient)]),
+    rails: createRailRegistry([createOnchainRail(railClient)]),
     audit,
     config: DEFAULT_GATE_CONFIG,
     denyRules: DEFAULT_DENY_RULES,

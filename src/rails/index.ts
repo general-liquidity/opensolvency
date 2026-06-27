@@ -18,6 +18,7 @@ export {
 } from "./networkRail.ts";
 
 export { createX402Rail, type X402Client } from "./x402.ts";
+export { createOnchainRail, type OnchainClient } from "./onchain.ts";
 export {
   createAgenticCommerceRail,
   type AgenticCommerceClient,
@@ -43,3 +44,29 @@ export {
   type Ap2Merchant,
   type Ap2PaymentInstrument,
 } from "./ap2/mandate.ts";
+export {
+  createOnchainRailClient,
+  type Address,
+  type TxHash,
+  type OnchainSigner,
+  type OnchainRailConfig,
+} from "./clients/onchainClient.ts";
+export {
+  createVirtualCardRailClient,
+  type CardIssuer,
+  type IssuedCard,
+  type VirtualCardRailConfig,
+} from "./clients/virtualCardClient.ts";
+export {
+  createX402RailClient,
+  encodePaymentHeader,
+  decodePaymentHeader,
+  X402_VERSION,
+  type PaymentRequirements,
+  type X402Authorization,
+  type X402PaymentPayload,
+  type X402SettleResponse,
+  type SettledPayment,
+  type X402Facilitator,
+  type X402RailConfig,
+} from "./clients/x402Client.ts";

@@ -13,9 +13,13 @@ const NOW = "2026-06-24T12:00:00.000Z";
 
 // A fake Postgres: a tiny SQL-shaped key/value engine over Maps. It understands
 // only the handful of statements the adapter issues, enough to prove the
-// load/persist/flush contract without a live database. An optional `failFrom`
+// load/persist/flush contract without a live database. An optional `failAfter`
 // makes writes start throwing, to exercise the flush error surface.
-function fakePg(opts: { failAfter?: number } = {}): PgClient & { tables: Record<string, Map<string | number, unknown>>; writes: number } {
+function fakePg(opts: { failAfter?: number } = {}): PgClient & {
+  tables: Record<string, Map<string | number, unknown>>;
+  writes: number;
+  failAfter?: number;
+} {
   const tables: Record<string, Map<string | number, unknown>> = {
     os_meta: new Map(),
     os_mandates: new Map(),
@@ -26,6 +30,7 @@ function fakePg(opts: { failAfter?: number } = {}): PgClient & { tables: Record<
   const api = {
     tables,
     writes: 0,
+    failAfter: opts.failAfter,
     async query(text: string, params: unknown[] = []) {
       const t = text.trim();
       if (t.startsWith("CREATE TABLE")) return { rows: [] };
@@ -35,7 +40,7 @@ function fakePg(opts: { failAfter?: number } = {}): PgClient & { tables: Record<
       // passes both key and value as params.
       if (/INSERT INTO os_meta/.test(t)) {
         api.writes++;
-        if (opts.failAfter !== undefined && api.writes > opts.failAfter) throw new Error("pg down");
+        if (api.failAfter !== undefined && api.writes > api.failAfter) throw new Error("pg down");
         if (t.includes("'operator_key'")) {
           tables.os_meta.set("operator_key", { key: "operator_key", value: params[0] });
         } else {
@@ -45,16 +50,19 @@ function fakePg(opts: { failAfter?: number } = {}): PgClient & { tables: Record<
       }
       if (/INSERT INTO os_(mandates|intents|receipts)/.test(t)) {
         api.writes++;
-        if (opts.failAfter !== undefined && api.writes > opts.failAfter) throw new Error("pg down");
+        if (api.failAfter !== undefined && api.writes > api.failAfter) throw new Error("pg down");
         const table = /os_(mandates|intents|receipts)/.exec(t)![0];
         tables[table].set(String(params[0]), { id: params[0], data: params[1] });
         return { rows: [] };
       }
       if (/INSERT INTO os_audit/.test(t)) {
         api.writes++;
-        if (opts.failAfter !== undefined && api.writes > opts.failAfter) throw new Error("pg down");
-        tables.os_audit.set(Number(params[0]), { seq: params[0], data: params[1] });
-        return { rows: [] };
+        if (api.failAfter !== undefined && api.writes > api.failAfter) throw new Error("pg down");
+        const seq = Number(params[0]);
+        const existing = tables.os_audit.get(seq) as { data: unknown } | undefined;
+        if (existing && existing.data !== params[1]) return { rows: [] };
+        tables.os_audit.set(seq, { seq: params[0], data: params[1] });
+        return { rows: [{ seq }] };
       }
 
       // SELECTs used by init()
@@ -137,15 +145,30 @@ test("a partial updateMandate re-persists the whole current row", async () => {
   assert.equal(b.store.getMandate("m1")?.status, "revoked");
 });
 
-test("flush surfaces a write failure, then clears so the store continues", async () => {
+test("flush retains a failed write and retries it after Postgres recovers", async () => {
   // Fail every write after the init writes (operator_key insert is write #1).
   const pg = fakePg({ failAfter: 1 });
   const { store, ready, flush } = createPostgresStore(pg);
   await ready;
   store.insertMandate(mandate);
   await assert.rejects(() => flush(), /pg down/);
-  // error was cleared — a subsequent flush of nothing resolves
+  assert.equal(pg.tables.os_mandates.has("m1"), false);
+  pg.failAfter = undefined;
   await assert.doesNotReject(() => flush());
+  assert.equal(pg.tables.os_mandates.has("m1"), true);
+});
+
+test("a conflicting durable audit sequence fails instead of hiding a fork", async () => {
+  const pg = fakePg();
+  const { store, ready, flush } = createPostgresStore(pg);
+  await ready;
+  const first = new AuditLog(store.operatorKey());
+  store.appendAudit(first.append("gate.decision", { outcome: "block" }, NOW));
+  await flush();
+
+  const fork = new AuditLog(store.operatorKey());
+  store.appendAudit(fork.append("gate.decision", { outcome: "auto_execute" }, NOW));
+  await assert.rejects(() => flush(), /audit fork at seq 0/);
 });
 
 test("the executor's commit barrier flushes a settled payment to Postgres", async () => {

@@ -11,6 +11,7 @@ const NOW = "2026-05-29T12:00:00.000Z";
 function sdk(opts: { challengeThresholdMinor?: number } = {}) {
   return new AgentWorth({
     store: createMemoryStore("test-key"),
+    simulation: true,
     clock: () => NOW,
     challengeThresholdMinor: opts.challengeThresholdMinor,
   });
@@ -92,6 +93,79 @@ test("a new payee → pending (a novel payee is never silently paid)", async () 
     os.pending().map((s) => s.intent.id),
     [r.intentId],
   );
+});
+
+test("the SDK forwards notifier and tracer dependencies to the executor", async () => {
+  const notifications: string[] = [];
+  const events: string[] = [];
+  const os = new AgentWorth({
+    store: createMemoryStore("test-key"),
+    simulation: true,
+    clock: () => NOW,
+    notifier: {
+      async notify(notification) {
+        notifications.push(notification.intentId);
+      },
+    },
+    tracer: {
+      event(name) {
+        events.push(name);
+      },
+    },
+  });
+  grantGroceries(os);
+
+  const result = await os.pay({
+    id: "pi_notify",
+    payee: "new-corner-shop",
+    payeeClass: "groceries",
+    amount: 40_00,
+    currency: "GBP",
+    rail: "card",
+    rationale: "first time at this shop",
+  });
+
+  assert.equal(result.status, "pending");
+  assert.deepEqual(notifications, ["pi_notify"]);
+  assert.ok(events.includes("gate.decision"));
+});
+
+test("an unconfigured SDK fails closed instead of reporting a fake settlement", async () => {
+  const os = new AgentWorth({
+    store: createMemoryStore("test-key"),
+    clock: () => NOW,
+  });
+  grantGroceries(os);
+  os.store.insertIntent({
+    intent: {
+      id: "seed",
+      payee: "tesco",
+      payeeClass: "groceries",
+      amount: 1,
+      currency: "GBP",
+      rail: "card",
+      rationale: "operator-vetted payee",
+      createdAt: NOW,
+    },
+    status: "settled",
+    mandateId: os.listMandates()[0].id,
+    reasons: [],
+    settledAt: NOW,
+    receiptId: "r_seed",
+  });
+
+  const result = await os.pay({
+    payee: "tesco",
+    payeeClass: "groceries",
+    amount: 40_00,
+    currency: "GBP",
+    rail: "card",
+    rationale: "weekly grocery shop",
+  });
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.receipt, null);
+  assert.match(os.getIntent(result.intentId)?.reasons.join(" ") ?? "", /no provider/);
 });
 
 test("over-cap → block, and it never reaches a rail", async () => {

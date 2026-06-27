@@ -5,7 +5,7 @@ import { AuditLog } from "../src/core/audit.ts";
 import { createExecutor } from "../src/core/executor.ts";
 import { createMemoryStore } from "../src/store/memoryStore.ts";
 import { createRailRegistry } from "../src/rails/registry.ts";
-import { createX402Rail } from "../src/rails/x402.ts";
+import { createOnchainRail } from "../src/rails/onchain.ts";
 import {
   createOnchainRailClient,
   type Address,
@@ -89,7 +89,7 @@ test("end-to-end: a real client settles through the executor and is read back", 
     receiptId: "r",
   });
   const rails = createRailRegistry([
-    createX402Rail(
+    createOnchainRail(
       createOnchainRailClient({
         signer,
         tokenAddress: TOKEN,

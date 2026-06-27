@@ -19,7 +19,10 @@ export interface ExampleStep {
 /** Run the scripted shopping agent and return each step's gate verdict. Pure-ish
  *  (in-memory store, fixed clock) so it's deterministic and testable. */
 export async function runShoppingAgentExample(): Promise<ExampleStep[]> {
-  const os = new AgentWorth({ clock: () => "2026-06-24T12:00:00.000Z" });
+  const os = new AgentWorth({
+    simulation: true,
+    clock: () => "2026-06-24T12:00:00.000Z",
+  });
 
   // Operator grants a weekly grocery mandate.
   os.grantMandate({

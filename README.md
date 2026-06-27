@@ -8,7 +8,7 @@
 *A money-moving AI agent needs two things to be trusted with real money: it must never spend outside what its operator allowed, and it must act in that operator's interest. AgentWorth is the layer that enforces the first and delivers the second.*
 
 [![CI](https://img.shields.io/github/actions/workflow/status/general-liquidity/agentworth/ci.yml?style=flat-square&label=CI)](https://github.com/general-liquidity/agentworth/actions)
-[![tests](https://img.shields.io/badge/tests-610%20passing-success?style=flat-square)](#develop)
+[![tests](https://img.shields.io/badge/tests-616%20passing-success?style=flat-square)](#develop)
 [![node](https://img.shields.io/badge/node-%E2%89%A522.18-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white)](#develop)
 [![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](#license)
 [![type](https://img.shields.io/badge/types-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](#tech-stack)
@@ -46,24 +46,28 @@ A gate only ever says *no*. The other half says *what to do*: the behavioural ha
 
 AgentWorth is one layer of a larger stack. It emits a falsifiable **Proof-of-Enforcement** - the checkable half of [ADP](https://github.com/general-liquidity/agent-disclosure-protocol)'s disclosure, so a counterparty can verify the gate *enforces what it discloses* before transacting. It sits above the payment rails and beside the identity protocols agents authenticate with. Operator-class today; the substrate for a consumer money experience next.
 
-## Status - built end-to-end (pre-1.0)
+## Status - kernel built end-to-end; integrations pre-1.0
 
-The **B milestone** - "an agent that structurally can't spend wrong" - is built, tested, and CI-green: kernel, ledger, rails, agent loop, behavioural harness, money-domain completeness, the agentic-economy surface, and the integration/operations layer. **610 tests** pass, plus typecheck, a `tsc → dist` build, and an end-to-end demo run green in CI on Node 24.
+The **B milestone** - "an agent that structurally can't spend wrong" - is built, tested, and CI-green: kernel, ledger, rails, agent loop, behavioural harness, money-domain completeness, the agentic-economy surface, and the integration/operations layer. **616 tests** pass, plus typecheck, a `tsc → dist` build, and an end-to-end demo run green in CI on Node 24.
 
 **Injected by the operator, not in-repo** (a deliberate boundary, not a gap): the live rail clients (Visa/Mastercard credentials, a Stripe Issuing key, a funded on-chain signer + facilitator) and the live identity verifiers. Each fails *safe* when unconfigured - a real rail never fabricates a settlement.
 
-**Follow-ons:** multi-instance cache invalidation for the Postgres store (LISTEN/NOTIFY) and the Hermes-style hibernating runtime for inbound payment-challenge events.
+**Open integration work:** migrate the legacy x402 V1 client/proxy to the current
+V2 headers and payloads, run behavioural answers through the optional LLM judge,
+and build the Hermes-style hibernating runtime for inbound payment-challenge
+events.
 
 ## Quickstart
 
 ```bash
 npm install
-npm test                                   # 610 tests - gate, audit, executor, stores, rails, harness, surfaces
+npm test                                   # 616 tests - gate, audit, executor, stores, rails, harness, surfaces
 npm run demo                               # end-to-end walkthrough on the in-memory store (any Node)
 ```
 
 ```bash
 # grant authority, then let the agent spend inside it
+export AGENTWORTH_SIMULATION=1             # explicit fake rails; moves no money
 npm run cli -- mandate grant --label groceries --class groceries \
     --currency GBP --rails card --per-tx 50000 --per-period 100000 --period week --expires-days 30
 npm run cli -- agent "PAY 8000 GBP tesco groceries card :: weekly shop"   # auto-executes (covered)
@@ -99,7 +103,7 @@ One gate, reached from everywhere agents live - the same executor, mandates, ris
 ```ts
 import { AgentWorth } from "@general-liquidity/agentworth";
 
-const os = new AgentWorth();                       // in-memory by default; pass a Store for persistence
+const os = new AgentWorth({ simulation: true });  // explicit fake rails; moves no money
 os.grantMandate({
   label: "groceries", scope: { kind: "class", value: "groceries" },
   currency: "GBP", allowedRails: ["card"],
@@ -123,6 +127,11 @@ const { store, ready, flush } = createPostgresStore(pgPool);   // pgPool: a node
 await ready;
 const os = new AgentWorth({ store, commit: flush });         // writes are durable before pay() resolves
 ```
+
+Real settlement adapters and their injectable clients are published from
+`@general-liquidity/agentworth/rails`. The behavioural harness, eval suite,
+earning desk, and x402 proxy primitives are available from `/finance`, `/evals`,
+`/earn`, and `/proxy`.
 
 Every decision is replayable, so a counterparty can **prove the gate enforced what it disclosed** - the falsifiable half of [ADP](https://github.com/general-liquidity/agent-disclosure-protocol)'s `enforced` claim:
 
@@ -216,7 +225,7 @@ never fabricates a settlement.
 
 | Integration | What it is |
 |:--|:--|
-| <img height="14" align="top" src="assets/integrations/x402.jpg" />&nbsp; **x402** | [HTTP-402 + stablecoin settlement](https://www.x402.org) (x402 Foundation) - challenge → authorize → settle. |
+| <img height="14" align="top" src="assets/integrations/x402.jpg" />&nbsp; **x402** | Legacy V1-shaped challenge → authorize → settle adapter. Current V2 (`PAYMENT-REQUIRED` / `PAYMENT-SIGNATURE`, CAIP-2 networks) is open integration work. |
 | <img height="14" align="top" src="assets/integrations/ap2.svg" />&nbsp; **AP2** | [Agent Payments Protocol](https://ap2-protocol.org) (Google + FIDO) - SD-JWT payment mandates; an AP2 mandate maps onto an AgentWorth mandate. |
 | <img height="14" align="top" src="assets/integrations/agentic-commerce-protocol.png" />&nbsp; **Agentic Commerce Protocol** | [ACP](https://www.agenticcommerce.dev) (OpenAI + Stripe) - an agent completes a merchant checkout via a delegated payment token, settled over card rails. |
 | <img height="14" align="top" src="assets/integrations/ucp.svg" />&nbsp; **UCP** · <img height="14" align="top" src="assets/integrations/mpp.svg" />&nbsp; **MPP** | [Universal Commerce Protocol](https://ucp.dev) (delegated checkout) · [Machine Payments Protocol](https://mpp.dev) (rail-agnostic, instant). |
@@ -250,7 +259,7 @@ never fabricates a settlement.
 |:--|:--|
 | **Earning desk** | The inbound mirror of the gate - publish a quote, accept a *verified* inbound payment via an acceptance policy (income never recorded on faith). |
 | **Service discovery + price evaluation** | Find → evaluate an x402 service's machine-readable price against the mandate before paying. |
-| **x402 gating proxy** | A transparent proxy any HTTP-spending agent points at - outbound 402 challenges flow *through the gate* automatically, so agents that don't integrate explicitly are still governed. |
+| **x402 gating proxy** | Experimental V1-shaped proxy primitive. It is exported for integration work but is not current-V2 production-ready. |
 | **Non-custodial account connector** | Read-only by design (no transfer method) - a structural non-custodial guarantee. |
 
 ## What it enforces
@@ -290,14 +299,14 @@ agent / editor / MCP client / HTTP caller
 |:--|:--|
 | **1 · Trust kernel** | The pure gate invariant + mandate + spend-risk + deny-list + hash-linked signed audit. No I/O, no clock - fully deterministic and replayable. |
 | **2 · Ledger** | A `Store` interface with three backends: `MemoryStore` (tests), `SqliteStore` (`node:sqlite`), and `PostgresStore` (durable source of truth + in-process read mirror + a `flush()` durability barrier the executor awaits - so the sync `Store` contract and the pure gate are unchanged). |
-| **3 · Rails** | A `PaymentProvider` interface + adapters for **x402, Agentic Commerce, UCP, MPP, Visa, Mastercard, AP2** (+ `FakeRail`). Each declares accurate capabilities and takes an injected `RailClient`; **with none it fails safe - a real rail never fabricates a settlement.** Reference clients: on-chain ERC-20 transfer, single-use virtual card, and the x402 challenge→authorize→settle flow. |
+| **3 · Rails** | A `PaymentProvider` interface + adapters for **x402 V1, Agentic Commerce, UCP, MPP, Visa, Mastercard, AP2** (+ opt-in `FakeRail`). Each takes an injected `RailClient`; **with none it fails safe - a real rail never fabricates a settlement.** Reference clients: direct on-chain ERC-20 transfer, single-use virtual card, and the legacy x402 flow. |
 | **4 · Agent + CLI** | The `Executor` is the *only* path to a rail. The agent runs on the **Vercel AI SDK** multi-step loop, but its sole money tool (`pay`) executes *through* the gate, so even the autonomous loop can't bypass it. A deterministic offline stub backs tests + air-gapped runs. |
 | **5 · Behavioural harness** | The *helpfulness* half, from our behavioural research. The **Four Pillars of Resilience** model the operator; the weakest pillar becomes the agent's standing agenda. Plus teachable-moment detection, "watching-your-back" concerns, goals-as-objectives, an empower-don't-exploit guardrail, anxiety-aware comms, cognitive-trap + knowledge-gap detectors, slip-cost + retirement projections, and an **i-frame/s-frame** honesty guardrail. |
 | **6 · Harness depth** | **Trust trajectory** (payees earn auto-approval; floor never relaxed), **hot-tier memory** + cold recall, **skills** (markdown playbooks on demand), a **self-evolution envelope** (Tier-1 lessons over a frozen Tier-0 floor), the **reasoning sandwich**, and a counterfactual **policy-replay simulator**. |
 | **7 · Money-domain completeness** | **Refunds** (reversible rails only - irreversible refused), **multi-currency FX** (capped in the mandate's currency), **mandate lifecycle** (amend/extend/templates), **reconciliation** (flags unauthorized spend), **non-custodial account connection** (read-only by design) + **key custody**. |
 | **8 · Agentic-economy surface** | **Network reputation** (feeds risk, never the floor), **service discovery + price evaluation**, the **earning side** (publish a quote, accept a *verified* inbound payment - income never recorded on faith), and the **MCP server**. |
 | **9 · Integration + operations** | The gate everywhere agents live: **MCP**, **ACP**, and **HTTP ingress** with **OpenAPI 3.1** + **bearer-token** auth, **idempotency keys**, a **rate limiter**, a **body-size cap**, and a `/ready` probe. Operationally: an injected **notifier** (noop/console/webhook) pings the operator out-of-band on a pending payment - best-effort, never blocks a decision - and an **OTLP/HTTP tracer** ships events to any OpenTelemetry collector, dep-free. |
-| **10 · Eval harness** | The payments-domain analogue of Gordon's RULER harness. **Generated scenarios** (from the gate-acceptance spec + the deny-list, each `derivedFrom`-stamped) run **live** through a deterministic executor + `FakeRail`; **process checks** replay the signed audit trace and fail on the catastrophic money-agent failures (settling a blocked intent, settling with no gate decision, settling while halted); **pass^k** (`mode "all"` for safety) demands every run be safe; an opt-in **LLM-judge** leg scores advisory quality. A deterministic **CI gate** (`npm run eval-gate`) blocks regressions. |
+| **10 · Eval harness** | **Generated scenarios** run live through a deterministic executor + `FakeRail`; process checks fail catastrophic money-agent violations and pass^k aggregates repeated runs. The judge adapters/rubrics ship, but `runEvalSuite` does not yet run behavioural agent answers through them; the deterministic CI gate covers gate outcomes and process safety today. |
 
 #### Runtime posture (decided, deferred)
 Hermes-style serverless-hibernation (always-reachable, ~$0 idle) - **not** Aeon's GitHub-Actions cron: a money agent must answer inbound payment challenges (x402/ACP) as *events*, which a 5-minute cron can't. Execution is non-custodial - it runs through the operator's own connected accounts.
@@ -354,7 +363,7 @@ From **FinancialClaw** (data-layer patterns): integer minor-units, multi-currenc
 
 ```bash
 npm install
-npm test          # 610 tests
+npm test          # 616 tests
 npm run typecheck # tsc --noEmit, strict
 npm run demo      # end-to-end walkthrough on the in-memory store (any Node)
 ```
@@ -364,6 +373,11 @@ A real model (via the Vercel AI SDK) is used automatically when a key is present
 - `AGENTWORTH_MODEL_PROVIDER` - `openai` (default), `anthropic`, or `google`.
 - key - `AGENTWORTH_MODEL_API_KEY`, or the provider's standard env var.
 - `AGENTWORTH_MODEL` - model id (defaults per provider).
+- `AGENTWORTH_SIMULATION=1` - explicitly enable fake rails that mint test receipts
+  and move no money. Without real rails or this flag, settlement fails closed.
+- `AGENTWORTH_NOTIFY_WEBHOOK_URL` / `AGENTWORTH_NOTIFY_WEBHOOK_TOKEN` - push
+  pending approvals to an operator webhook.
+- `AGENTWORTH_OTLP_ENDPOINT` - send lifecycle events to an OTLP/HTTP collector.
 
 ## Documentation
 

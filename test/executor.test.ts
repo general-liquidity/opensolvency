@@ -8,6 +8,7 @@ import { createRailRegistry } from "../src/rails/registry.ts";
 import { createFakeRail } from "../src/rails/fakeRail.ts";
 import { DEFAULT_DENY_RULES } from "../src/core/denyList.ts";
 import { DEFAULT_GATE_CONFIG, type Mandate, type PaymentIntent } from "../src/core/types.ts";
+import { fixedRateSource } from "../src/core/fx.ts";
 import type { Store } from "../src/core/store.ts";
 
 const NOW = "2026-05-29T12:00:00.000Z";
@@ -86,6 +87,63 @@ test("a known payee in a live mandate settles, and a receipt is written", async 
   assert.equal(r.status, "settled");
   assert.ok(r.receipt);
   assert.equal(store.getReceipt(r.receipt.id)?.intentId, "pi_live");
+});
+
+test("the executor enforces a GBP cap against a zero-decimal JPY payment", async () => {
+  const store = createMemoryStore("k");
+  store.insertMandate(
+    mandate({
+      id: "m_travel",
+      label: "travel",
+      scope: { kind: "class", value: "travel" },
+      currency: "GBP",
+      perTxCap: 100_00,
+      perPeriodCap: 1000_00,
+      period: "month",
+      grantedAt: "2026-05-01T00:00:00.000Z",
+      expiresAt: "2026-12-01T00:00:00.000Z",
+    }),
+  );
+  store.insertIntent({
+    intent: {
+      id: "seed",
+      payee: "tokyo-hotel",
+      payeeClass: "travel",
+      amount: 1,
+      currency: "GBP",
+      rail: "card",
+      rationale: "operator-vetted payee",
+      createdAt: "2026-05-01T00:00:00.000Z",
+    },
+    status: "settled",
+    mandateId: "m_travel",
+    reasons: [],
+    settledAt: "2026-05-01T00:00:00.000Z",
+    receiptId: "r_seed",
+  });
+  const executor = createExecutor({
+    store,
+    rails: createRailRegistry([createFakeRail("card")]),
+    audit: new AuditLog(store.operatorKey()),
+    config: DEFAULT_GATE_CONFIG,
+    denyRules: DEFAULT_DENY_RULES,
+    clock: () => NOW,
+    fxRates: fixedRateSource({ "JPY/GBP": 0.0053 }),
+  });
+
+  const result = await executor.execute({
+    id: "pi_jpy",
+    payee: "tokyo-hotel",
+    payeeClass: "travel",
+    amount: 20_000,
+    currency: "JPY",
+    rail: "card",
+    rationale: "hotel booking in Tokyo",
+    createdAt: NOW,
+  });
+
+  assert.equal(result.status, "blocked");
+  assert.match(result.decision.reasons.join(" "), /amount 10600 GBP exceeds/);
 });
 
 test("an over-cap payment is blocked and never reaches the rail", async () => {

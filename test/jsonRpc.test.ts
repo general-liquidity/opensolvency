@@ -6,7 +6,7 @@ import { handleJsonRpcCall, RPC_METHODS, type JsonRpcRequest } from "../src/rpc/
 
 const NOW = "2026-06-24T12:00:00.000Z";
 function sdk() {
-  return new AgentWorth({ clock: () => NOW });
+  return new AgentWorth({ clock: () => NOW, simulation: true });
 }
 const call = (sdk: AgentWorth, method: string, params?: unknown, id: number | string = 1) =>
   handleJsonRpcCall(sdk, { jsonrpc: "2.0", id, method, params } as JsonRpcRequest);

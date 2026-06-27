@@ -9,6 +9,7 @@ import { DEFAULT_GATE_CONFIG, type Mandate, type PaymentIntent } from "../src/co
 import { createRailRegistry } from "../src/rails/registry.ts";
 import { createFakeRail } from "../src/rails/fakeRail.ts";
 import { createX402Rail } from "../src/rails/x402.ts";
+import { createOnchainRail } from "../src/rails/onchain.ts";
 import { createAgenticCommerceRail } from "../src/rails/agentic-commerce.ts";
 import { createUcpRail } from "../src/rails/ucp.ts";
 import { createMppRail } from "../src/rails/mpp.ts";
@@ -21,6 +22,7 @@ const NOW = "2026-05-29T12:00:00.000Z";
 
 const ALL: Array<{ id: string; rail: string; make: (c?: RailClient) => PaymentProvider }> = [
   { id: "x402", rail: "onchain", make: createX402Rail },
+  { id: "direct-onchain", rail: "onchain", make: createOnchainRail },
   { id: "agentic-commerce", rail: "checkout", make: createAgenticCommerceRail },
   { id: "ucp", rail: "checkout", make: createUcpRail },
   { id: "mpp", rail: "checkout", make: createMppRail },

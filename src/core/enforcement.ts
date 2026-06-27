@@ -19,6 +19,8 @@ import { createHash } from "node:crypto";
 import { canonicalize } from "@general-liquidity/agent-disclosure";
 
 import { evaluateGate } from "./gate.ts";
+import { convertMinorCrossDecimal } from "./fx.ts";
+import type { AuditEntry } from "./audit.ts";
 import type { Store } from "./store.ts";
 import type {
   Attestation,
@@ -82,6 +84,8 @@ export interface ReplayInputs {
   knownPayees: string[];
   /** spend attributable to each mandate in its current period, by mandate id */
   periodSpendByMandate: Record<string, PriorSpend[]>;
+  /** major-unit FX rates used by the decision, keyed as `FROM/TO` */
+  fxRates?: Record<string, number>;
 }
 
 /** What the live handshake returns and the disclosure builder embeds a
@@ -157,6 +161,45 @@ export function computePolicyHash(policy: EffectivePolicy): string {
   return createHash("sha256").update(canonicalize(normalized)).digest("hex");
 }
 
+/** Stable commitment to the non-policy inputs captured for one decision. */
+export function computeContextDigest(inputs: ReplayInputs): string {
+  return createHash("sha256").update(canonicalize(inputs)).digest("hex");
+}
+
+/** Convert a production `gate.decision` audit entry into the replay shape. */
+export function decisionRecordFromAuditEntry(
+  entry: AuditEntry,
+): DecisionRecord | undefined {
+  if (entry.type !== "gate.decision" || !entry.payload || typeof entry.payload !== "object") {
+    return undefined;
+  }
+  const payload = entry.payload as {
+    phase?: string;
+    intent?: PaymentIntent;
+    verdict?: GateDecision;
+    policyHash?: string;
+    inputs?: ReplayInputs;
+    ctxDigest?: string;
+  };
+  if (
+    payload.phase !== "agent" ||
+    !payload.intent ||
+    !payload.verdict ||
+    !payload.policyHash ||
+    !payload.inputs
+  ) {
+    return undefined;
+  }
+  return {
+    intent: payload.intent,
+    verdict: payload.verdict,
+    policyHash: payload.policyHash,
+    at: entry.ts,
+    inputs: payload.inputs,
+    ctxDigest: payload.ctxDigest ?? computeContextDigest(payload.inputs),
+  };
+}
+
 /**
  * Re-run the PURE gate over a recorded decision's captured inputs under the
  * disclosed policy and compare to the signed verdict. No clock, no I/O — fully
@@ -177,6 +220,14 @@ export function replayDecision(
     trustOf: record.inputs.trust ? () => record.inputs.trust as TrustLevel : undefined,
     reputationOf: record.inputs.reputation
       ? () => record.inputs.reputation
+      : undefined,
+    convert: record.inputs.fxRates
+      ? (amount, from, to) => {
+          const rate = record.inputs.fxRates?.[`${from}/${to}`];
+          return rate === undefined
+            ? undefined
+            : convertMinorCrossDecimal(amount, rate, from, to);
+        }
       : undefined,
     attestation: record.inputs.attestation,
     denyRules: policyDenyRules,
