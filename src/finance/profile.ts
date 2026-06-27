@@ -1,4 +1,4 @@
-// The operator's financial situation — the input the Networth-derived behavioural
+// The operator's financial situation — the input the behavioural
 // harness reasons over. Grounded in the Four Pillars of Financial Resilience
 // (Angsten) plus the research's behaviour-over-knowledge findings (anxiety drives
 // avoidance; informal-credit reliance is the systemic gap; life-stage shifts the
@@ -9,11 +9,11 @@ import type { CurrencyCode } from "../core/types.ts";
 export type IncomeVolatility = "stable" | "variable" | "irregular";
 export type SupportLevel = "strong" | "some" | "none";
 // "defeated" is distinct from "high" anxiety: not overwhelm (too much to handle)
-// but learned helplessness ("nothing is attainable, not worth trying" — Networth
-// interview #2). It needs agency-restoring tone, not reassurance — see communication.ts.
+// but learned helplessness ("nothing is attainable, not worth trying" — a recurring
+// field-interview finding). It needs agency-restoring tone, not reassurance — see communication.ts.
 export type AnxietyLevel = "low" | "moderate" | "high" | "defeated";
 
-/** Networth found the horizon matures across this arc (short-term → long-term). */
+/** The research found the horizon matures across this arc (short-term → long-term). */
 export type LifeStage = "early-student" | "late-student" | "early-career" | "established";
 
 export interface FinancialProfile {
@@ -36,7 +36,7 @@ export interface FinancialProfile {
 
   // Infrastructure
   hasFormalBanking: boolean;
-  reliesOnInformalCredit: boolean; // the Networth "informal credit gap"
+  reliesOnInformalCredit: boolean; // the "informal credit gap"
 
   // Context + behaviour (behaviour > knowledge)
   stage: LifeStage;

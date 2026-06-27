@@ -1,9 +1,9 @@
-// Retirement decision-sensitivity simulator — the long-horizon lever the Networth
+// Retirement decision-sensitivity simulator — the long-horizon lever the field
 // field research flagged as the single most-AVOIDED topic across the whole corpus.
 // Retirement triggers present bias / temporal discounting (hyperbolic discounting
 // of the far-future self), and the research found this is exaggerated in young
 // people: the payoff is decades out, so it feels intangible and gets deferred
-// indefinitely. The neuroscientist consulted on Networth (Konstantinos) validated
+// indefinitely. A neuroscientist we consulted validated
 // that a SIMULATOR — showing how a present decision changes the future-retirement
 // outcome — makes the intangible tangible and is genuinely impactful against the
 // bias. So this module's job is NOT to nag about retirement; it's to make the

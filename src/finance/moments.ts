@@ -1,4 +1,4 @@
-// Teachable + reachable moments — Networth's core innovation. Surface guidance
+// Teachable + reachable moments — the harness's core innovation. Surface guidance
 // or an agent action ONLY when the operator is both receptive (a salient event
 // makes the topic teachable) AND able to act now (reachable). Teachable-but-not-
 // reachable is frustrating; reachable-but-not-teachable is spam. We act on both.

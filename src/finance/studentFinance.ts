@@ -1,4 +1,4 @@
-// Maintenance-loan reality — the truth the Networth field research kept surfacing:
+// Maintenance-loan reality — the truth the field research kept surfacing:
 // the UK student maintenance loan often DOESN'T cover rent, and that gap is the
 // core pain. In London rent frequently exceeds the loan outright; the loan also
 // tapers sharply past a ~£30k household income, so students without well-off
@@ -97,7 +97,7 @@ export interface MaintenanceShortfall {
 /**
  * Surface the loan-vs-rent reality concretely. Returns the annual gap, the
  * per-month figure the student must earn or source, and whether the loan even
- * covers the rent. This is the number Networth students asked someone to just
+ * covers the rent. This is the number the students we studied asked someone to just
  * tell them — they will not compute it themselves.
  */
 export function maintenanceShortfall(

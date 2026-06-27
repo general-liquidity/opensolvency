@@ -1,4 +1,4 @@
-// Goal-anchoring — transformed. Networth made goals a motivational tracking page.
+// Goal-anchoring — transformed. Conventional finance apps made goals a motivational tracking page.
 // Here a goal is an AGENT OBJECTIVE: the agent computes what reaching it requires
 // and whether it's feasible given the operator's room to manoeuvre, so it can
 // propose a concrete move/mandate (e.g. a recurring auto-save) — gated as usual.

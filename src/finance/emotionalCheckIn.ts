@@ -1,4 +1,4 @@
-// Emotional check-in — Networth's zero-friction emotional-state capture. In the
+// Emotional check-in — a zero-friction emotional-state capture. In the
 // field research, students were asked to pick an EMOJI for how money makes them
 // feel before any numbers were discussed; that single tap surfaced an affect
 // state the harness can calibrate tone from. This productizes that as an
@@ -17,7 +17,7 @@
 
 import type { AnxietyLevel, FinancialProfile } from "./profile.ts";
 
-/** The five money-feeling clusters from the Networth interviews. */
+/** The five money-feeling clusters from the field interviews. */
 export type MoneyFeeling =
   | "overwhelm" // 😰 scared / too much (#1, #17)
   | "confusion" // 😵‍💫 baffled / don't understand it (#2, #3, #5, #6)

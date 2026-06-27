@@ -1,7 +1,7 @@
 // The LLM-as-judge leg (Gordon's RULER pattern) — OPTIONAL and trajectory-agnostic.
 // The deterministic process checks gate safety; this scores the QUALITY of the
 // agent's final answer (was the advice empowering, non-exploitative, action-first
-// — the Networth harness's bar). It's opt-in: CI runs the deterministic legs
+// — the behavioural harness's bar). It's opt-in: CI runs the deterministic legs
 // always, and this leg only when a judge model is supplied.
 //
 // `JudgeModel` is a tiny seam so the harness depends on a scoring function, not on

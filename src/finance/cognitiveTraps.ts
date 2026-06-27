@@ -1,5 +1,5 @@
-// Cognitive traps — the named false beliefs that block engagement. Networth's
-// 19 in-depth student interviews surfaced the same handful of beliefs over and
+// Cognitive traps — the named false beliefs that block engagement. Our
+// in-depth student interviews surfaced the same handful of beliefs over and
 // over: students KNOW what to do and WANT to, but DON'T. The bottleneck is
 // activation energy + a trusted nudge, NOT information. So each trap pairs a
 // deterministic detection signal (over FinancialProfile fields + optional
@@ -317,7 +317,7 @@ const SPECS: TrapSpec[] = [
     },
   },
   {
-    // Research pattern (latest Networth batch): the spender's self-justification —
+    // Research pattern (latest field batch): the spender's self-justification —
     // "being financially savvy means not having fun." ~73% of the cohort value
     // quality-of-life over saving, so "responsible" reads as "joyless". Counter:
     // make being sensible cost ZERO fun — ONE small automated transfer so the
@@ -359,7 +359,7 @@ const SPECS: TrapSpec[] = [
     },
   },
   {
-    // Research pattern (latest Networth batch): people hold retirement aspirations
+    // Research pattern (latest field batch): people hold retirement aspirations
     // with ZERO financial planning — conflating "planning my life" with "planning
     // my finances". The distortion is between WANTING to retire and the financial
     // ABILITY to. "Far off" is used to defer the first tiny step indefinitely.

@@ -1,5 +1,5 @@
 // The personal-finance agent persona — where the harness becomes the agent's
-// system prompt. It encodes the Networth thesis the product carries forward: the
+// system prompt. It encodes the thesis the product carries forward: the
 // advice-gap wedge (the agent IS the personalised advice the ~92% can't afford),
 // behaviour-over-knowledge (act and ask approval, don't lecture), empower-don't-
 // exploit, and the operator-aligned / non-custodial posture (the agent acts only
@@ -56,7 +56,7 @@ export function buildFinanceSystemPrompt(
       "problem is a plaster over a wound.",
   ];
 
-  // The product's wedge (Networth): good money moves come from a financially-savvy
+  // The product's wedge: good money moves come from a financially-savvy
   // family member the person follows on trust. An operator with no role model is the
   // exact person the agent exists for — occupy that seat explicitly.
   if (!profile.hasRoleModel) {

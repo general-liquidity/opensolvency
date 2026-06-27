@@ -1,4 +1,4 @@
-// "Watching your back" — transformed. Networth monitored spending and pushed
+// "Watching your back" — transformed. Earlier tools monitored spending and pushed
 // personalised, non-punitive notifications. Here it produces structured CONCERNS
 // the agent acts on (propose a move/mandate, gated as usual) rather than nagging
 // the user. Concerns are facts + a non-punitive suggested action; the

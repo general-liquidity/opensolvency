@@ -1,4 +1,4 @@
-// Onboarding — Networth's "ask the right questions to curate the experience".
+// Onboarding — the "ask the right questions to curate the experience" principle.
 // Turns a set of answers into a FinancialProfile, filling sensible (conservative)
 // defaults for anything unspecified. Income + essentials are required; everything
 // else has a default that errs toward LOWER assumed resilience (so the agent

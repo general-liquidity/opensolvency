@@ -1,5 +1,5 @@
 // Forecast + coverage — the "make the timeline concrete and flag the gaps FOR me"
-// layer the Networth field research asked for in almost the same words:
+// layer the field research asked for in almost the same words:
 //   #3 "calculate all my costs, present how much is needed, give suggestions";
 //   #5 "flag what I'm missing, forecast long-term, aligned to my life goals";
 //   #4 "a helping hand on where to put my money, without selling me anything".
@@ -221,7 +221,7 @@ export function coverageReport(
     });
   }
 
-  // 2. High-cost debt (clear it before investing — the dominant Networth gap).
+  // 2. High-cost debt (clear it before investing — the dominant research gap).
   if (profile.highCostDebtMinor > 0) {
     gaps.push({
       kind: "high_cost_debt",

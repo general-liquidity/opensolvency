@@ -1,7 +1,7 @@
-// Empower-don't-exploit guardrail — Networth's cornerstone, elevated to a
+// Empower-don't-exploit guardrail — the harness's cornerstone, elevated to a
 // first-class check (now that we've dropped the engagement/gamification mechanics
 // that could themselves exploit). It screens a proposed AGENT action against the
-// patterns Networth named as predatory — high-cost credit, manufactured urgency,
+// patterns the research named as predatory — high-cost credit, manufactured urgency,
 // preying on anxiety — and against the positive test: does it serve the operator's
 // resilience or a goal? This guards the AGENT'S suggestions, on the operator's side.
 

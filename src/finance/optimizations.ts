@@ -1,6 +1,6 @@
 // Free-money / optimization watcher — the killer first feature.
 //
-// The Networth field research (19 UK-student interviews) found a recurring,
+// The field research (in-depth student interviews) found a recurring,
 // expensive pattern: students KNOW free money exists but never claim it. Cash
 // sits at 0%/low interest eaten by inflation (#3, #8); they don't switch banks
 // for ~£200/yr bonuses or better savings rates even though "2 hours for £200 is

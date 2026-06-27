@@ -1,4 +1,4 @@
-// Four Pillars of Financial Resilience — the heart of Networth's research
+// Four Pillars of Financial Resilience — the heart of the resilience research
 // (Anne Angsten: "financial resilience is supported by four main pillars:
 // economic conditions, social support, policy, and infrastructure"). Each pillar
 // scores 0–100 from the profile; the overall score deliberately leans on the

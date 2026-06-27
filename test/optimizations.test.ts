@@ -8,7 +8,7 @@ import {
 } from "../src/finance/optimizations.ts";
 import type { FinancialProfile } from "../src/finance/profile.ts";
 
-// A thin-income student profile — the Networth subject.
+// A thin-income student profile — the target subject.
 function studentProfile(
   over: Partial<FinancialProfile> = {},
 ): FinancialProfile {

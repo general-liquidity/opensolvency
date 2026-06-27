@@ -1,5 +1,5 @@
 // The "slip-and-slide" — make the long-term cost of a small recurring habit
-// VISIBLE, then propose the swap. The highest-conviction finding in the Networth
+// VISIBLE, then propose the swap. The highest-conviction finding in the
 // corpus: small recurring discretionary spend compounds into a huge lost
 // potential. Independently confirmed by a University of Bristol money advisor —
 // a daily meal-deal + Costa coffee ≈ HALF a student's annual maintenance loan.

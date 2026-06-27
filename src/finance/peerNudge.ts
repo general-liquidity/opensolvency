@@ -1,5 +1,5 @@
 // Peer comparison / social proof — the single strongest behavioural-economics
-// lever in the Networth field research. Konstantinos (neuroscientist): "knowing
+// lever in the field research. A consulting neuroscientist: "knowing
 // your neighbour's electricity bill makes you save" — social proof beats every
 // other nudge in the experimental literature (Schultz et al. 2007's normative-
 // messaging study; Allcott 2011 on OPOWER home-energy reports both isolate the

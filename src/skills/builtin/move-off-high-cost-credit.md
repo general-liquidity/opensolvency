@@ -1,6 +1,6 @@
 ---
 name: move-off-high-cost-credit
-description: Reduce reliance on BNPL/payday/revolving credit (the predatory pattern Networth named).
+description: Reduce reliance on BNPL/payday/revolving credit (the predatory pattern the research named).
 ---
 
 When the operator carries high-cost debt or relies on informal credit:

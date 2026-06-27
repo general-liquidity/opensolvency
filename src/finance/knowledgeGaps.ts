@@ -3,7 +3,7 @@
 // ("investing is gambling" — they don't act); gaps are *false facts* ("a card
 // balance is good debt" — they act, wrongly). The two harnesses run side by side.
 //
-// Source: the Networth quantitative literacy quiz (340 respondents). Each gap
+// Source: our quantitative literacy quiz of survey respondents. Each gap
 // encodes the measured prevalence (in a comment), the corrected fact, and the
 // concrete ACTION it unlocks — action-first, never a lecture, matching the
 // persona's "act, don't teach" rule.

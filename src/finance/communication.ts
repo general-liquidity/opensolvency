@@ -1,4 +1,4 @@
-// Behaviour-over-knowledge — operationalised. Networth's finding: literacy isn't
+// Behaviour-over-knowledge — operationalised. Our research's finding: literacy isn't
 // the gap; anxiety drives avoidance, and advice fails when it's a lecture at the
 // wrong complexity. So the harness chooses HOW the agent communicates from the
 // operator's anxiety + stage, not just WHAT it says. (Greig Dickson's "adaptive
@@ -25,7 +25,7 @@ export function chooseCommunication(
 ): CommunicationGuidance {
   // Defeat ("nothing is attainable") needs agency restored, not reassurance: the
   // operator already believes effort is futile, so simplifying isn't the lever —
-  // proof that one concrete win is reachable is. (Networth #2.)
+  // proof that one concrete win is reachable is. (Research finding #2.)
   if (profile.financialAnxiety === "defeated") {
     return {
       mode: "restore_agency",

@@ -144,7 +144,7 @@ complete integrations catalog in the README.
 ## [0.1.0] — 2026-06-24
 
 First named release (graduated from the `agentworth` placeholder). The kernel,
-gate, audit chain, rails, agent loop, and the Networth-derived behavioural harness
+gate, audit chain, rails, agent loop, and the behavioural harness
 were built across the preceding milestones; this release adds the production
 hardening and integration surfaces.
 

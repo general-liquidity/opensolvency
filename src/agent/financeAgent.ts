@@ -1,6 +1,6 @@
 // The personal-finance agent — where the behavioural harness drives the agent.
 //
-//   system prompt = the Networth persona (buildFinanceSystemPrompt)
+//   system prompt = the finance persona (buildFinanceSystemPrompt)
 //   tools = the harness (assess_resilience / plan_goal / review_spending /
 //           check_action) + the ONE gate-enforced money-moving tool (pay)
 //
