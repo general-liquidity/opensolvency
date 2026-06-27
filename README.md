@@ -8,7 +8,7 @@
 *A money-moving AI agent needs two things to be trusted with real money: it must never spend outside what its operator allowed, and it must act in that operator's interest. AgentWorth is the layer that enforces the first and delivers the second.*
 
 [![CI](https://img.shields.io/github/actions/workflow/status/general-liquidity/agentworth/ci.yml?style=flat-square&label=CI)](https://github.com/general-liquidity/agentworth/actions)
-[![tests](https://img.shields.io/badge/tests-655%20passing-success?style=flat-square)](#develop)
+[![tests](https://img.shields.io/badge/tests-659%20passing-success?style=flat-square)](#develop)
 [![node](https://img.shields.io/badge/node-%E2%89%A522.18-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white)](#develop)
 [![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](#license)
 [![type](https://img.shields.io/badge/types-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](#tech-stack)
@@ -48,7 +48,7 @@ AgentWorth is one layer of a larger stack. It emits a falsifiable **Proof-of-Enf
 
 ## Status - kernel built end-to-end; integrations pre-1.0
 
-The **B milestone** - "an agent that structurally can't spend wrong" - is built, tested, and CI-green: kernel, ledger, rails, agent loop, behavioural harness, money-domain completeness, the agentic-economy surface, and the integration/operations layer. **655 tests** pass, plus typecheck, a `tsc → dist` build, and an end-to-end demo run green in CI on Node 24.
+The **B milestone** - "an agent that structurally can't spend wrong" - is built, tested, and CI-green: kernel, ledger, rails, agent loop, behavioural harness, money-domain completeness, the agentic-economy surface, and the integration/operations layer. **659 tests** pass, plus typecheck, a `tsc → dist` build, and an end-to-end demo run green in CI on Node 24.
 
 **Injected by the operator, not in-repo** (a deliberate boundary, not a gap): the live rail clients (Visa/Mastercard credentials, a Stripe Issuing key, a funded on-chain signer + facilitator) and the live identity verifiers. Each fails *safe* when unconfigured - a real rail never fabricates a settlement.
 
@@ -61,7 +61,7 @@ events.
 
 ```bash
 npm install
-npm test                                   # 655 tests - gate, audit, executor, stores, rails, harness, surfaces
+npm test                                   # 659 tests - gate, audit, executor, stores, rails, harness, surfaces
 npm run demo                               # end-to-end walkthrough on the in-memory store (any Node)
 ```
 
@@ -363,7 +363,7 @@ From **FinancialClaw** (data-layer patterns): integer minor-units, multi-currenc
 
 ```bash
 npm install
-npm test          # 655 tests
+npm test          # 659 tests
 npm run typecheck # tsc --noEmit, strict
 npm run demo      # end-to-end walkthrough on the in-memory store (any Node)
 ```

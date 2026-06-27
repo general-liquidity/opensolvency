@@ -7,7 +7,7 @@ import {
   statementToObservations,
   statementToPayments,
 } from "../src/connectors/account.ts";
-import { staticKeyProvider, envKeyProvider } from "../src/core/keys.ts";
+import { staticKeyProvider, EnvKeyProvider } from "../src/core/keyCustody.ts";
 import { templateMandate } from "../src/core/mandateTemplates.ts";
 
 const NOW = "2026-05-30T12:00:00.000Z";
@@ -46,10 +46,10 @@ test("the account connector is read-only and feeds reconcile/watch", () => {
 
 // --- key custody ---
 test("key providers supply the audit key from custody, not the DB", () => {
-  assert.equal(staticKeyProvider("k123").operatorKey(), "k123");
+  assert.equal(staticKeyProvider("k123").current().material.toString(), "k123");
   assert.throws(() => staticKeyProvider(""));
   process.env.AGENTWORTH_AUDIT_KEY = "env-key";
-  assert.equal(envKeyProvider().operatorKey(), "env-key");
+  assert.equal(new EnvKeyProvider().current().material.toString(), "env-key");
   delete process.env.AGENTWORTH_AUDIT_KEY;
 });
 

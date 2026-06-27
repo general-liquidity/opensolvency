@@ -171,3 +171,36 @@ export class KeyRing {
     return [...this.#keys.keys()];
   }
 }
+
+/**
+ * A KeyProvider over a single fixed key (the simplest custody: a string in hand).
+ * Versioned so it composes with the rotation-aware AuditLog. Supersedes the old
+ * non-versioned `keys.ts` staticKeyProvider.
+ */
+export function staticKeyProvider(key: string, version = "static-1"): KeyProvider {
+  if (!key) throw new Error("staticKeyProvider requires a non-empty key");
+  const vk: VersionedKey = { version, material: utf8(key) };
+  return {
+    current: () => vk,
+    resolve: (v) => {
+      if (v !== version) throw new Error(`staticKeyProvider: unknown key version "${v}"`);
+      return vk;
+    },
+  };
+}
+
+/**
+ * A read-only KeyProvider over an explicit set of versioned keys, for verifying a
+ * persisted (possibly rotated) chain offline without a live KMS — `current` is the
+ * latest, `resolve` is backed by a KeyRing of every version the chain references.
+ */
+export function keyRingProvider(
+  current: VersionedKey,
+  historical: Iterable<VersionedKey> = [],
+): KeyProvider {
+  const ring = new KeyRing([current, ...historical]);
+  return {
+    current: () => current,
+    resolve: (v) => ring.resolve(v),
+  };
+}

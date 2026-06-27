@@ -13,6 +13,7 @@ import { AuditLog } from "../core/audit.ts";
 import type { AuditEntry, AuditEventType, VerifyResult } from "../core/audit.ts";
 import { createExecutor, type ExecuteResult, type RefundResult } from "../core/executor.ts";
 import { DEFAULT_DENY_RULES } from "../core/denyList.ts";
+import type { KeyProvider } from "../core/keyCustody.ts";
 import { DEFAULT_GATE_CONFIG } from "../core/types.ts";
 import { createMemoryStore } from "../store/memoryStore.ts";
 import { createRailRegistry, type RailRegistry } from "../rails/registry.ts";
@@ -78,8 +79,10 @@ export interface ApproveOptions {
 export interface AgentWorthOptions {
   /** Persistence boundary. Defaults to a fresh in-memory store. */
   store?: Store;
-  /** Audit-signing key. Defaults to the store's own operator key. */
-  auditKey?: string;
+  /** Audit-signing key: a raw key (default), or a versioned `KeyProvider`
+   *  (`EnvKeyProvider` / `KmsKeyProvider`) for per-entry key versions + rotation.
+   *  Defaults to the store's own operator key. */
+  auditKey?: string | KeyProvider;
   /** Rail registry. Defaults to an empty fail-closed registry. */
   rails?: RailRegistry;
   /** Explicitly use in-process fake rails. They mint test receipts and move no
@@ -137,7 +140,9 @@ export class AgentWorth {
   readonly #executor: ReturnType<typeof createExecutor>;
 
   constructor(options: AgentWorthOptions = {}) {
-    this.store = options.store ?? createMemoryStore(options.auditKey);
+    this.store =
+      options.store ??
+      createMemoryStore(typeof options.auditKey === "string" ? options.auditKey : undefined);
     this.audit = new AuditLog(
       options.auditKey ?? this.store.operatorKey(),
       this.store.loadAudit(),
@@ -338,8 +343,20 @@ export { createMemoryStore } from "../store/memoryStore.ts";
 // Deny-list: the default hard rules + a factory for an operator sanctioned/scam
 // payee blocklist (homoglyph-normalized), composable as
 // `denyRules: [...DEFAULT_DENY_RULES, blocklistedPayeeRule(myList)]`.
-export { DEFAULT_DENY_RULES, blocklistedPayeeRule } from "../core/denyList.ts";
+export { DEFAULT_DENY_RULES, blocklistedPayeeRule, irreversibleUnknownPayeeRule } from "../core/denyList.ts";
 export { normalizePayee, hasInvisibleChars } from "../core/payeeNormalize.ts";
+// Audit-key custody + rotation: env/KMS-backed signing key with per-entry key
+// versions, and a ring for offline verification of a rotated chain.
+export {
+  EnvKeyProvider,
+  KmsKeyProvider,
+  KeyRing,
+  staticKeyProvider,
+  keyRingProvider,
+  type KeyProvider,
+  type KmsClient,
+  type VersionedKey,
+} from "../core/keyCustody.ts";
 export {
   exportAuditChain,
   parseAuditExport,
